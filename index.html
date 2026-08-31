@@ -45,7 +45,7 @@ h1{margin:0;font-size:24px}.sub,.status,.small{color:var(--m)}.sub{font-size:13p
 .toolcard b{display:block;margin-bottom:4px}.toolcard span{font-size:12px;color:var(--m)}
 .choice{background:#0d1a2c;border:1px solid #ffffff18;border-radius:18px;padding:14px;margin:14px 0}
 .choice h3{margin:0 0 7px}.choice p{margin:0;color:var(--m);line-height:1.45}
-.radarlegend{position:absolute;z-index:500;bottom:12px;left:12px;background:#07111faa;border:1px solid #ffffff22;border-radius:10px;padding:6px 8px;font-size:10px;color:#dce7f5;backdrop-filter:blur(6px)}
+.radarlegend{position:absolute;z-index:500;bottom:10px;left:10px;background:#07111f99;border:1px solid #ffffff18;border-radius:9px;padding:5px 7px;font-size:9px;color:#dce7f5;backdrop-filter:blur(5px);opacity:.46;transition:opacity .2s ease}.radarlegend:active,.radarlegend:hover{opacity:.95}
 .mapwrap{position:relative}
 body.drive .hero,body.drive .timeline,body.drive h2:last-of-type,body.drive .note,body.drive .banner{display:none}
 body.drive .wrap{max-width:none;padding:8px}
@@ -74,7 +74,7 @@ body.drive .mapwrap{margin-top:10px}
 .tripstate{display:none}
 body.drive .tripstate{display:flex;align-items:center;gap:10px;position:sticky;top:6px;z-index:900;margin:6px 0;padding:12px 16px;border-radius:18px;background:#102033ee;border:1px solid #ffffff20;font-size:20px;font-weight:900;backdrop-filter:blur(10px)}
 body.drive .tripstate small{font-size:12px;font-weight:600;color:var(--m);margin-left:auto}
-body.drive .centerbtn{right:14px;bottom:78px}
+body.drive .centerbtn{right:10px;top:62px;bottom:auto}
 body.drive .radarlegend{left:12px;bottom:12px;max-width:65%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 body.drive #map{height:58vh}
 .weatherchange{margin-top:8px;font-size:13px;color:var(--m)}
@@ -107,7 +107,7 @@ body.drive .alertbig.bad .alertico{font-size:34px}
 </head>
 <body>
 <div class="wrap">
-<div class="top"><div class="brand"><div class="logo">🌦️</div><div><h1>Meteo Viaggio</h1><div class="sub">Meteo lungo la strada</div></div></div><div class="pill">V3.0</div></div>
+<div class="top"><div class="brand"><div class="logo">🌦️</div><div><h1>Meteo Viaggio</h1><div class="sub">Meteo lungo la strada</div></div></div><div class="pill">V3.1</div></div>
 
 <section class="hero">
 <div class="form">
@@ -180,7 +180,7 @@ body.drive .alertbig.bad .alertico{font-size:34px}
 <h2>Mappa del viaggio</h2>
 <div class="mapwrap">
 <div class="mapbar"><span><span class="dot"></span><span id="mapstate">Percorso calcolato</span></span><span id="upd">—</span></div>
-<div id="map"></div><button id="centerBtn" class="centerbtn" aria-label="Centra su di me">🎯</button><div id="radarLegend" class="radarlegend">🌧️ Radar precipitazioni · aggiornamento recente</div>
+<div id="map"></div><button id="centerBtn" class="centerbtn" aria-label="Centra su di me">🎯</button><div id="routeLegend" class="radarlegend" style="left:auto;right:10px;bottom:10px;opacity:.78">🟡 attenzione · 🔴 rischio alto</div><div id="radarLegend" class="radarlegend">🌧️ Radar precipitazioni · aggiornamento recente</div>
 </div>
 
 <h2>Meteo lungo il percorso</h2>
@@ -189,14 +189,14 @@ body.drive .alertbig.bad .alertico{font-size:34px}
 <div class="note">
 <b>Grandine e deviazioni:</b> la grandine è una stima prudenziale basata su temporali, CAPE e intensità prevista.
 La deviazione confronta il meteo previsto su percorsi alternativi e viene proposta solo se risulta sensibilmente più favorevole.
-La web app non sostituisce il navigatore né gli avvisi ufficiali sulla viabilità.
+Sulla mappa i tratti gialli indicano attenzione meteo e quelli rossi un rischio più alto. La web app non sostituisce il navigatore né gli avvisi ufficiali sulla viabilità.
 </div>
 </div>
 </div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-let here=null,destObj=null,map,routeLine,meMarker,wxMarkers=[],watch=null,lastSpeech='',busy=false,lastRefresh=0,lastRefreshPos=null,lastWarnKey='',lastRouteKm=0,lastRouteSec=0;
+let here=null,destObj=null,map,routeLine,meMarker,wxMarkers=[],riskLines=[],watch=null,lastSpeech='',busy=false,lastRefresh=0,lastRefreshPos=null,lastWarnKey='',lastRouteKm=0,lastRouteSec=0;
 let viaPoint=null,bestDiversion=null,lastDiversionKey='',radarLayer=null,radarOn=true,radarTimestamp=null,currentEval=null,lastHeading=null;
 const $=x=>document.getElementById(x);
 function st(x){$('status').textContent=x}
@@ -267,7 +267,47 @@ function updateMarker(){
   if(meMarker){meMarker.setLatLng([here.lat,here.lon]);meMarker.setIcon(icon)}
   else meMarker=L.marker([here.lat,here.lon],{icon}).addTo(map).bindPopup('Sei qui');
 }
-function drawMap(r,items){initMap();if(routeLine)map.removeLayer(routeLine);wxMarkers.forEach(m=>map.removeLayer(m));wxMarkers=[];let latlng=r.geometry.coordinates.map(x=>[x[1],x[0]]);routeLine=L.polyline(latlng,{color:'#55c2ff',weight:6,opacity:.85}).addTo(map);items.forEach(x=>{let hr=hail(x.w),col=hr[1]=='bad'?'#ff6b6b':hr[1]=='warn'?'#ffd166':'#63d69b',m=L.circleMarker([x.p.lat,x.p.lon],{radius:8,color:col,fillColor:col,fillOpacity:.9}).addTo(map).bindPopup(`${wi(x.w.code)[1]} · ${Math.round(x.w.temp)}°C<br>Pioggia ${Math.round(x.w.rain)}%<br><b>Grandine ${hr[0]}</b>`);wxMarkers.push(m)});map.fitBounds(routeLine.getBounds(),{padding:[25,25]});updateMarker();setTimeout(()=>map.invalidateSize(),100)}
+function drawMap(r,items){
+  initMap();
+  if(routeLine)map.removeLayer(routeLine);
+  wxMarkers.forEach(m=>map.removeLayer(m));wxMarkers=[];
+  riskLines.forEach(l=>map.removeLayer(l));riskLines=[];
+  let latlng=r.geometry.coordinates.map(x=>[x[1],x[0]]);
+  routeLine=L.polyline(latlng,{color:'#55c2ff',weight:6,opacity:.82}).addTo(map);
+
+  // Evidenzia i tratti del percorso interessati da meteo rilevante.
+  if(items?.length>1 && latlng.length>2){
+    for(let i=0;i<items.length;i++){
+      let sev=severity(items[i].w);
+      if(sev<2)continue;
+      let startF=i===0?0:(items[i-1].p.f+items[i].p.f)/2;
+      let endF=i===items.length-1?1:(items[i].p.f+items[i+1].p.f)/2;
+      let a=Math.max(0,Math.floor(startF*(latlng.length-1)));
+      let b=Math.min(latlng.length-1,Math.ceil(endF*(latlng.length-1)));
+      if(b<=a)continue;
+      let col=sev>=5?'#ff4d4d':'#ffd166';
+      let seg=L.polyline(latlng.slice(a,b+1),{
+        color:col,
+        weight:9,
+        opacity:.9,
+        lineCap:'round'
+      }).addTo(map);
+      riskLines.push(seg);
+    }
+  }
+
+  items.forEach(x=>{
+    let hr=hail(x.w),sev=severity(x.w),col=sev>=5?'#ff4d4d':sev>=2?'#ffd166':'#63d69b';
+    let m=L.circleMarker([x.p.lat,x.p.lon],{radius:8,color:col,fillColor:col,fillOpacity:.92})
+      .addTo(map)
+      .bindPopup(`${wi(x.w.code)[1]} · ${Math.round(x.w.temp)}°C<br>Pioggia ${Math.round(x.w.rain)}%<br><b>Grandine ${hr[0]}</b>`);
+    wxMarkers.push(m);
+  });
+
+  map.fitBounds(routeLine.getBounds(),{padding:[25,25]});
+  updateMarker();
+  setTimeout(()=>map.invalidateSize(),100);
+}
 async function evaluateRoute(r,maxPoints=6){
   let km=r.distance/1000,pts=sample(r.geometry.coordinates,km,maxPoints),now=new Date(),items=[];
   for(let p of pts){let eta=new Date(now.getTime()+r.duration*1000*p.f),w=await weather(p,eta);items.push({p,eta,w})}
