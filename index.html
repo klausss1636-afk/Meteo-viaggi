@@ -84,18 +84,18 @@ body.drive .choice,body.drive .diversion{margin:7px 0}
   body.drive #map{height:60vh}
 }
 .weatherhere{position:fixed;inset:0;z-index:2000;background:#07111ff7;overflow:auto;padding:18px 14px 36px}.weatherhere-inner{max-width:760px;margin:auto}.weatherhere-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}.weatherhere-close{width:48px;height:48px;border-radius:14px;border:1px solid #ffffff22;background:#13243a;color:white;font-size:24px}.weatherhere-card{background:#101c2d;border:1px solid #ffffff18;border-radius:20px;padding:16px;margin-bottom:12px}.weatherhere-now{font-size:46px;font-weight:900}.weatherhere-grid,.weatherhere-hours{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:12px}.weatherhere-item,.weatherhere-hour{background:#0d1a2c;border-radius:14px;padding:10px;text-align:center}.weatherhere-item small{display:block;color:var(--m)}.weatherhere-radar{height:300px;border-radius:18px;overflow:hidden;margin-top:10px}@media(max-width:700px){.weatherhere-grid,.weatherhere-hours{grid-template-columns:repeat(2,1fr)}body.drive .v25tools{grid-template-columns:repeat(2,1fr)}}@media(max-width:430px){.actions{grid-template-columns:1fr}}
-.weatherhere-days{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:12px}
-.weatherhere-day{background:#0d1a2c;border:1px solid #ffffff12;border-radius:14px;padding:10px;text-align:center}
-.weatherhere-day .dayname{font-size:12px;color:var(--m)}
-.weatherhere-day .dayico{font-size:28px;margin:5px 0}
-.weatherhere-day .daytemp{font-weight:900;font-size:17px}
-.weatherhere-day .dayrain{font-size:12px;color:var(--m);margin-top:4px}
-@media(max-width:700px){.weatherhere-days{grid-template-columns:repeat(2,1fr)}}
+.weatherhere-days{display:grid;grid-template-columns:repeat(7,minmax(92px,1fr));gap:8px;margin-top:12px;overflow-x:auto;padding-bottom:4px;scroll-snap-type:x proximity}
+.weatherhere-day{background:#0d1a2c;border:1px solid #ffffff12;border-radius:14px;padding:10px 8px;text-align:center;scroll-snap-align:start}
+.weatherhere-day .dayname{font-size:12px;color:var(--m);text-transform:uppercase;font-weight:800}
+.weatherhere-day .dayico{font-size:27px;margin:4px 0}
+.weatherhere-day .daytemp{font-weight:900;font-size:16px;white-space:nowrap}
+.weatherhere-day .dayrain{font-size:11px;color:var(--m);margin-top:4px;white-space:nowrap}
+@media(max-width:700px){.weatherhere-days{display:flex;gap:8px;overflow-x:auto}.weatherhere-day{min-width:104px;flex:0 0 104px}}
 </style>
 </head>
 <body>
 <div class="wrap">
-<div class="top"><div class="brand"><div class="logo">🌦️</div><div><h1>Meteo Viaggio</h1><div class="sub">Meteo lungo la strada</div></div></div><div class="pill">V4.5</div></div>
+<div class="top"><div class="brand"><div class="logo">🌦️</div><div><h1>Meteo Viaggio</h1><div class="sub">Meteo lungo la strada</div></div></div><div class="pill">V4.6</div></div>
 
 <section class="hero">
 <div class="form">
