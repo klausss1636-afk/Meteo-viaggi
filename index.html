@@ -80,11 +80,34 @@ body.drive #map{height:58vh}
 .weatherchange{margin-top:8px;font-size:13px;color:var(--m)}
 .weatherchange b{color:#fff;font-size:18px}
 @media(max-width:700px){body.drive #map{height:54vh}.tripstate{font-size:18px}}
+
+body.drive .alertbig.ok{
+  grid-template-columns:auto 1fr auto;
+  padding:10px 14px;
+  min-height:0;
+  border-radius:16px;
+}
+body.drive .alertbig.ok .alertico{font-size:24px}
+body.drive .alertbig.ok .alerttitle{display:none}
+body.drive .alertbig.ok .alertmain{font-size:18px;margin:0}
+body.drive .alertbig.ok .alertsub{font-size:12px;margin-top:2px}
+body.drive .alertbig.ok .alertdist{display:none}
+body.drive .alertbig.warn,
+body.drive .alertbig.bad{
+  padding:16px;
+  border-radius:20px;
+}
+body.drive .alertbig.warn .alerttitle,
+body.drive .alertbig.bad .alerttitle{display:block}
+body.drive .alertbig.warn .alertdist,
+body.drive .alertbig.bad .alertdist{display:block}
+body.drive .alertbig.warn .alertico,
+body.drive .alertbig.bad .alertico{font-size:34px}
 </style>
 </head>
 <body>
 <div class="wrap">
-<div class="top"><div class="brand"><div class="logo">🌦️</div><div><h1>Meteo Viaggio</h1><div class="sub">Meteo lungo la strada</div></div></div><div class="pill">V2.9</div></div>
+<div class="top"><div class="brand"><div class="logo">🌦️</div><div><h1>Meteo Viaggio</h1><div class="sub">Meteo lungo la strada</div></div></div><div class="pill">V3.0</div></div>
 
 <section class="hero">
 <div class="form">
@@ -305,6 +328,10 @@ function updateDrivePanel(km,r,bad,nextKm,nextMin){
     $('tripStateIcon').textContent='🟢';
     $('tripStateText').textContent='Tranquillo';
     $('tripStateSub').textContent=changeKm?`cambio meteo tra ${changeKm} km`:'nessun rischio rilevante';
+    if(document.body.classList.contains('drive')){
+      $('alertMain').textContent='Nessun rischio rilevante';
+      $('alertSub').textContent=changeKm?`Cambio meteo tra circa ${changeKm} km`:'Percorso tranquillo';
+    }
   }
   $('driveDiversionBtn').classList.toggle('hidden', !bestDiversion);
 }
@@ -381,6 +408,19 @@ $('driveModeBtn').onclick=()=>{
   document.body.classList.toggle('drive');
   let on=document.body.classList.contains('drive');
   $('driveModeBtn').textContent=on?'↩️ Vista completa':'🚘 Modalità Carlink';
+  if(currentEval){
+    let km=currentEval.km,r=currentEval.r,items=currentEval.items;
+    let bad=items.find(x=>severity(x.w)>=3);
+    let nextKm=bad?Math.max(0,Math.round(km*bad.p.f)):null;
+    let nextMin=bad?Math.max(0,Math.round((r.duration*bad.p.f)/60)):null;
+    updateDrivePanel(km,r,bad,nextKm,nextMin);
+    if(!bad){
+      let change=items.find((x,i,a)=>i>0 && wi(x.w.code)[1]!==wi(a[0].w.code)[1]);
+      let changeKm=change?Math.round(km*change.p.f):null;
+      $('alertMain').textContent='Nessun rischio rilevante';
+      $('alertSub').textContent=on?(changeKm?`Cambio meteo tra circa ${changeKm} km`:'Percorso tranquillo'):'Il percorso risulta tranquillo nei punti controllati.';
+    }
+  }
   setTimeout(()=>{if(map){map.invalidateSize();if(on&&here)map.setView([here.lat,here.lon],13,{animate:true})}},150);
 };
 $('radarBtn').onclick=()=>{
