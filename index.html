@@ -25,6 +25,11 @@ h1{margin:0;font-size:24px}.sub,.status,.small{color:var(--m)}.sub{font-size:13p
 .summary{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.card{padding:14px}.k{font-size:12px;color:var(--m)}.v{font-size:21px;font-weight:900;margin-top:4px}
 .banner{padding:15px;margin:14px 0}.banner.ok{box-shadow:inset 4px 0 var(--ok)}.banner.warn{box-shadow:inset 4px 0 var(--w)}.banner.bad{box-shadow:inset 4px 0 var(--bad)}
 .banner h3{margin:0 0 5px}.banner p{margin:0;color:var(--m)}h2{font-size:18px}
+.alertbig{display:grid;grid-template-columns:auto 1fr auto;gap:14px;align-items:center;padding:16px;margin:14px 0;border-radius:20px;background:#101c2d;border:1px solid #ffffff14}
+.alertbig.ok{box-shadow:inset 5px 0 var(--ok)}.alertbig.warn{box-shadow:inset 5px 0 var(--w)}.alertbig.bad{box-shadow:inset 5px 0 var(--bad)}
+.alertico{font-size:34px}.alerttitle{font-size:12px;color:var(--m);text-transform:uppercase;letter-spacing:.06em}.alertmain{font-size:20px;font-weight:900;margin-top:3px}
+.alertsub{font-size:13px;color:var(--m);margin-top:4px}.alertdist{text-align:right;font-size:24px;font-weight:900}.alertdist small{display:block;font-size:11px;color:var(--m);font-weight:600}
+
 .mapwrap{overflow:hidden;border-radius:20px;border:1px solid #ffffff14;background:var(--c)}.mapbar{padding:11px 13px;color:var(--m);font-size:12px;display:flex;justify-content:space-between}
 #map{height:330px}.timeline{display:grid;gap:10px}.stop{padding:14px;display:grid;grid-template-columns:68px 1fr auto;gap:10px;align-items:center}
 .stop.warn{box-shadow:inset 4px 0 var(--w)}.stop.bad{box-shadow:inset 4px 0 var(--bad)}.place{font-weight:800}.det{font-size:13px;color:var(--m);line-height:1.5;margin-top:4px}
@@ -37,7 +42,7 @@ h1{margin:0;font-size:24px}.sub,.status,.small{color:var(--m)}.sub{font-size:13p
 </head>
 <body>
 <div class="wrap">
-<div class="top"><div class="brand"><div class="logo">🌦️</div><div><h1>Meteo Viaggio</h1><div class="sub">Meteo lungo la strada</div></div></div><div class="pill">V2.1</div></div>
+<div class="top"><div class="brand"><div class="logo">🌦️</div><div><h1>Meteo Viaggio</h1><div class="sub">Meteo lungo la strada</div></div></div><div class="pill">V2.2</div></div>
 
 <section class="hero">
 <div class="form">
@@ -60,6 +65,16 @@ h1{margin:0;font-size:24px}.sub,.status,.small{color:var(--m)}.sub{font-size:13p
 <div class="card"><div class="k">Rischio viaggio</div><div id="risk" class="v">—</div></div>
 </section>
 
+<section id="nextAlert" class="alertbig ok">
+<div id="alertIcon" class="alertico">✅</div>
+<div>
+  <div class="alerttitle">Prossimo fenomeno importante</div>
+  <div id="alertMain" class="alertmain">Nessun rischio rilevante</div>
+  <div id="alertSub" class="alertsub">Il percorso risulta tranquillo nei punti controllati.</div>
+</div>
+<div id="alertDist" class="alertdist">—<small>distanza</small></div>
+</section>
+
 <section id="banner" class="banner ok">
 <h3 id="bt">Viaggio tranquillo</h3><p id="bd">Nessun fenomeno importante rilevato.</p>
 </section>
@@ -75,14 +90,14 @@ h1{margin:0;font-size:24px}.sub,.status,.small{color:var(--m)}.sub{font-size:13p
 
 <div class="note">
 <b>Grandine:</b> il livello è una stima prudenziale basata su temporali, CAPE e intensità prevista.
-Non sostituisce un radar grandine dedicato. Durante il viaggio la web app si aggiorna soprattutto quando resta aperta in primo piano.
+Non sostituisce un radar grandine dedicato. Durante il viaggio la web app si aggiorna soprattutto quando resta aperta in primo piano. Gli avvisi vocali si attivano quando un fenomeno importante entra entro circa 30 km.
 </div>
 </div>
 </div>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-let here=null,destObj=null,map,routeLine,meMarker,wxMarkers=[],watch=null,lastSpeech='',busy=false,lastRefresh=0,lastRefreshPos=null;
+let here=null,destObj=null,map,routeLine,meMarker,wxMarkers=[],watch=null,lastSpeech='',busy=false,lastRefresh=0,lastRefreshPos=null,lastWarnKey='',lastRouteKm=0,lastRouteSec=0;
 const $=x=>document.getElementById(x);
 function st(x){$('status').textContent=x}
 function hav(a,b){const R=6371,r=x=>x*Math.PI/180,d1=r(b.lat-a.lat),d2=r(b.lon-a.lon),q=Math.sin(d1/2)**2+Math.cos(r(a.lat))*Math.cos(r(b.lat))*Math.sin(d2/2)**2;return 2*R*Math.asin(Math.sqrt(q))}
@@ -122,14 +137,58 @@ busy=true;st(auto?'Aggiorno percorso e meteo…':'Calcolo percorso e meteo…');
 if(!destObj){let n=$('dest').value.trim();if(!n)throw Error('Scrivi una destinazione');destObj=await geocode(n)}
 let r=await route(here,destObj),km=r.distance/1000,pts=sample(r.geometry.coordinates,km),now=new Date(),items=[];
 for(let p of pts){let eta=new Date(now.getTime()+r.duration*1000*p.f),w=await weather(p,eta);items.push({p,eta,w})}
-let total=items.reduce((a,x)=>a+severity(x.w),0),risk=total>=8?'ALTO':total>=3?'MEDIO':'BASSO',bad=items.find(x=>severity(x.w)>=3),next=bad?Math.max(0,Math.round(km*bad.p.f))+' km':'Nessuno';
+let total=items.reduce((a,x)=>a+severity(x.w),0),risk=total>=8?'ALTO':total>=3?'MEDIO':'BASSO';
+let bad=items.find(x=>severity(x.w)>=3);
+let nextKm=bad?Math.max(0,Math.round(km*bad.p.f)):null;
+let nextMin=bad?Math.max(0,Math.round((r.duration*bad.p.f)/60)):null;
+let next=bad?nextKm+' km':'Nessuno';
+lastRouteKm=km; lastRouteSec=r.duration;
 $('dist').textContent=Math.round(km)+' km';$('dur').textContent=fd(r.duration);$('risk').textContent=risk;$('next').textContent=next;
+let aCard=$('nextAlert'), aIcon=$('alertIcon'), aMain=$('alertMain'), aSub=$('alertSub'), aDist=$('alertDist');
+if(bad){
+  let info=wi(bad.w.code), hr=hail(bad.w), sev=severity(bad.w);
+  let kind = hr[0]=='ALTO' ? 'Possibile grandine forte' :
+             [95,96,99].includes(bad.w.code) ? 'Temporale' :
+             bad.w.gust>=70 ? 'Vento forte' :
+             bad.w.rain>=70 ? 'Pioggia intensa' : 'Meteo da controllare';
+  let ico = hr[0]=='ALTO' ? '🧊' :
+            [95,96,99].includes(bad.w.code) ? '⛈️' :
+            bad.w.gust>=70 ? '💨' :
+            bad.w.rain>=70 ? '🌧️' : info[0];
+  let cls = sev>=5?'bad':'warn';
+  aCard.className='alertbig '+cls;
+  aIcon.textContent=ico;
+  aMain.textContent=kind;
+  aSub.textContent=`Previsto tra circa ${nextMin} min · pioggia ${Math.round(bad.w.rain)}% · raffiche ${Math.round(bad.w.gust)} km/h · grandine ${hr[0]}`;
+  aDist.innerHTML=`${nextKm} km<small>circa ${nextMin} min</small>`;
+} else {
+  aCard.className='alertbig ok';
+  aIcon.textContent='✅';
+  aMain.textContent='Nessun rischio rilevante';
+  aSub.textContent='Il percorso risulta tranquillo nei punti controllati.';
+  aDist.innerHTML='—<small>distanza</small>';
+}
 let b=$('banner');b.className='banner '+(risk=='ALTO'?'bad':risk=='MEDIO'?'warn':'ok');$('bt').textContent=risk=='ALTO'?'Attenzione lungo il viaggio':risk=='MEDIO'?'Qualche tratto da controllare':'Viaggio abbastanza tranquillo';
 $('bd').textContent=bad?`Possibili fenomeni rilevanti tra circa ${next}. Controlla temporali, vento e grandine nei punti sotto.`:'Non risultano fenomeni importanti nei punti controllati lungo il percorso.';
 let tl=$('timeline');tl.innerHTML='';
 items.forEach((x,i)=>{let info=wi(x.w.code),hr=hail(x.w),sev=severity(x.w),snow=x.w.zero?Math.max(0,Math.round(x.w.zero-300)):null,d=document.createElement('div');d.className='stop '+(sev>=5?'bad':sev>=2?'warn':'');d.innerHTML=`<div class="small">${ti(x.eta)}</div><div><div class="place">${i==0?'Partenza':i==items.length-1?destObj.label:'Percorso '+Math.round(x.p.f*100)+'%'}</div><div class="det">${info[1]} · ${Math.round(x.w.temp)}°C · Pioggia ${Math.round(x.w.rain)}%<br>Raffiche ${Math.round(x.w.gust)} km/h · CAPE ${Math.round(x.w.cape)} J/kg${x.w.zero?`<br>Zero termico ${Math.round(x.w.zero)} m · Quota neve ~${snow} m`:''}</div><span class="chip">🧊 Grandine: ${hr[0]}</span></div><div class="ico">${info[0]}</div>`;tl.appendChild(d)});
 $('res').classList.remove('hidden');drawMap(r,items);$('upd').textContent='Aggiornato '+ti(new Date());$('mapstate').textContent=watch?'Aggiornamento in viaggio attivo':'Percorso calcolato';
-lastSpeech=bad?`Viaggio di ${Math.round(km)} chilometri. Attenzione: condizioni da controllare tra circa ${next}, con possibile temporale, vento forte o grandine.`:`Viaggio di ${Math.round(km)} chilometri. Al momento non risultano fenomeni importanti lungo il percorso.`;
+lastSpeech=bad?`Viaggio di ${Math.round(km)} chilometri. Attenzione: il prossimo fenomeno importante è tra circa ${nextKm} chilometri, cioè circa ${nextMin} minuti. Controlla temporali, vento forte e grandine.`:`Viaggio di ${Math.round(km)} chilometri. Al momento non risultano fenomeni importanti lungo il percorso.`;
+if(watch!==null && bad && nextKm<=30){
+  let hr=hail(bad.w), key=`${Math.round(nextKm/5)*5}-${bad.w.code}-${hr[0]}`;
+  if(key!==lastWarnKey && 'speechSynthesis' in window){
+    lastWarnKey=key;
+    speechSynthesis.cancel();
+    let msg=hr[0]=='ALTO'
+      ? `Attenzione. Possibile grandine forte tra circa ${nextKm} chilometri.`
+      : [95,96,99].includes(bad.w.code)
+      ? `Attenzione. Temporale tra circa ${nextKm} chilometri.`
+      : bad.w.gust>=70
+      ? `Attenzione. Vento forte tra circa ${nextKm} chilometri.`
+      : `Attenzione. Meteo avverso tra circa ${nextKm} chilometri.`;
+    let u=new SpeechSynthesisUtterance(msg);u.lang='it-IT';speechSynthesis.speak(u);
+  }
+}
 st(`Percorso verso ${destObj.label} aggiornato con il meteo all'orario di passaggio.`);lastRefresh=Date.now();lastRefreshPos={...here}
 }catch(e){st('Errore: '+e.message)}finally{busy=false}}
 async function toggleLive(){
