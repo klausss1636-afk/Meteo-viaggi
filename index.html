@@ -105,7 +105,7 @@ body.drive .choice,body.drive .diversion{margin:7px 0}
 </head>
 <body>
 <div class="wrap">
-<div class="top"><div class="brand"><div class="logo">🌦️</div><div><h1>Meteo Viaggio</h1><div class="sub">Meteo lungo la strada</div></div></div><div class="pill">V5.3</div></div>
+<div class="top"><div class="brand"><div class="logo">🌦️</div><div><h1>Meteo Viaggio</h1><div class="sub">Meteo lungo la strada</div></div></div><div class="pill">V5.4</div></div>
 
 <section class="hero">
 <div class="form">
@@ -251,7 +251,7 @@ function hail(w){
   if(s>=6)return['ALTO','bad'];
   if(s>=3)return['MEDIO','warn'];
   if(th || (w.cape||0)>=800)return['BASSO','warn'];
-  return['basso','ok'];
+  return['BASSO','ok'];
 }
 function severity(w){let s=0;if([95,96,99].includes(w.code))s+=4;if(w.rain>=70)s+=2;if(w.gust>=70)s+=3;else if(w.gust>=50)s++;if(hail(w)[0]=='ALTO')s+=4;return s}
 function riskLabel(score){return score>=8?'ALTO':score>=3?'MEDIO':'BASSO'}
@@ -277,7 +277,7 @@ async function findSaferDiversion(mainEval){
 function updateArrivalWeather(r,items){
  let a=items.at(-1),info=wi(a.w.code),hr=hail(a.w),eta=new Date(Date.now()+r.duration*1000);
  $('arrTime').textContent=ti(eta);$('arrTemp').textContent=Math.round(a.w.temp)+'°C';$('arrRain').textContent=Math.round(a.w.rain)+'%';$('arrWind').textContent=Math.round(a.w.gust)+' km/h';$('arrHail').textContent=hr[0];
- $('arrStripTime').textContent=ti(eta);$('arrStripTemp').textContent=Math.round(a.w.temp)+'°';$('arrStripIcon').textContent=info[0];$('arrStripRain').textContent=Math.round(a.w.rain)+'%';$('arrStripWind').textContent=Math.round(a.w.gust)+'km/h';$('arrStripHail').textContent=hr[0].toLowerCase();
+ $('arrStripTime').textContent=ti(eta);$('arrStripTemp').textContent=Math.round(a.w.temp)+'°';$('arrStripIcon').textContent=info[0];$('arrStripRain').textContent=Math.round(a.w.rain)+'%';$('arrStripWind').textContent=Math.round(a.w.gust)+'km/h';$('arrStripHail').textContent=hr[0];
  let parts=[info[1]];if(hr[0]=='MEDIO'||hr[0]=='ALTO')parts.push('grandine '+hr[0].toLowerCase());if(a.w.zero)parts.push('zero termico '+Math.round(a.w.zero)+' m');$('arrNote').textContent=parts.join(' · ')
 }
 function updateDrivePanel(km,r,bad,nextKm,nextMin){
@@ -366,7 +366,7 @@ async function openWeatherHere(){
   j.hourly.time.forEach((t,i)=>{let d=Math.abs(new Date(t).getTime()-now);if(d<dd){dd=d;ix=i}});
   let w={temp:j.current?.temperature_2m??j.hourly.temperature_2m[ix],code:j.current?.weather_code??j.hourly.weather_code[ix],gust:j.current?.wind_gusts_10m??j.hourly.wind_gusts_10m[ix],rain:j.hourly.precipitation_probability[ix],precip:j.hourly.precipitation?.[ix]||0,showers:j.hourly.showers?.[ix]||0,cape:j.hourly.cape?.[ix]||0,zero:j.hourly.freezing_level_height?.[ix]||null},info=wi(w.code),hr=hail(w);
   $('whIcon').textContent=info[0];$('whTemp').textContent=Math.round(w.temp)+'°C';$('whDesc').textContent=info[1];$('whRain').textContent=Math.round(w.rain)+'%';$('whWind').textContent=Math.round(w.gust)+' km/h';$('whHail').textContent=hr[0];$('whZero').textContent=w.zero?Math.round(w.zero)+' m':'—';
-  $('whHours').innerHTML='';for(let n=0;n<8;n+=2){let i=Math.min(ix+n,j.hourly.time.length-1),inf=wi(j.hourly.weather_code[i]),hh=hail({code:j.hourly.weather_code[i],cape:j.hourly.cape?.[i]||0,rain:j.hourly.precipitation_probability[i],precip:j.hourly.precipitation?.[i]||0,showers:j.hourly.showers?.[i]||0,gust:j.hourly.wind_gusts_10m[i],zero:j.hourly.freezing_level_height?.[i]||null}),d=document.createElement('div');d.className='weatherhere-hour';d.innerHTML=`${ti(new Date(j.hourly.time[i]))}<br><b>${inf[0]} ${Math.round(j.hourly.temperature_2m[i])}°</b><br>💧${Math.round(j.hourly.precipitation_probability[i])}% · 🧊${hh[0].toLowerCase()}`;$('whHours').appendChild(d)}
+  $('whHours').innerHTML='';for(let n=0;n<8;n+=2){let i=Math.min(ix+n,j.hourly.time.length-1),inf=wi(j.hourly.weather_code[i]),hh=hail({code:j.hourly.weather_code[i],cape:j.hourly.cape?.[i]||0,rain:j.hourly.precipitation_probability[i],precip:j.hourly.precipitation?.[i]||0,showers:j.hourly.showers?.[i]||0,gust:j.hourly.wind_gusts_10m[i],zero:j.hourly.freezing_level_height?.[i]||null}),d=document.createElement('div');d.className='weatherhere-hour';d.innerHTML=`${ti(new Date(j.hourly.time[i]))}<br><b>${inf[0]} ${Math.round(j.hourly.temperature_2m[i])}°</b><br>💧${Math.round(j.hourly.precipitation_probability[i])}% · 🧊${hh[0]}`;$('whHours').appendChild(d)}
   
   let days=$('whDays');days.innerHTML='';
   if(j.daily?.time?.length){
