@@ -72,7 +72,7 @@ body.drive .mapwrap{margin-top:10px}
 }
 
 .tripstate{display:none}
-body.drive .tripstate{display:flex;align-items:center;gap:10px;position:sticky;top:6px;z-index:900;margin:6px 0;padding:12px 16px;border-radius:18px;background:#102033ee;border:1px solid #ffffff20;font-size:20px;font-weight:900;backdrop-filter:blur(10px)}
+body.drive .tripstate{display:flex;align-items:center;gap:10px;position:sticky;top:10px;z-index:900;margin:6px 0;padding:12px 16px;border-radius:18px;background:#102033e8;border:1px solid #ffffff20;font-size:20px;font-weight:900;backdrop-filter:blur(10px)}
 body.drive .tripstate small{font-size:12px;font-weight:600;color:var(--m);margin-left:auto}
 body.drive .centerbtn{right:10px;top:62px;bottom:auto}
 body.drive .radarlegend{left:12px;bottom:12px;max-width:65%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -111,7 +111,7 @@ body.drive .alertbig.bad .alertico{font-size:34px}
 .arrivalitem .ak{font-size:11px;color:var(--m)}
 .arrivalitem .av{font-size:19px;font-weight:900;margin-top:3px}
 .arrivalnote{margin-top:10px;color:var(--m);font-size:12px;line-height:1.4}
-body.drive .arrivalbox{display:block}
+body.drive .arrivalbox{display:block;margin-top:18px}
 body.drive .arrivalgrid{grid-template-columns:repeat(4,1fr)}
 body.drive .arrivalbox h3{font-size:17px}
 @media(max-width:700px){.arrivalgrid{grid-template-columns:1fr 1fr}body.drive .arrivalgrid{grid-template-columns:1fr 1fr}}
@@ -119,7 +119,7 @@ body.drive .arrivalbox h3{font-size:17px}
 </head>
 <body>
 <div class="wrap">
-<div class="top"><div class="brand"><div class="logo">🌦️</div><div><h1>Meteo Viaggio</h1><div class="sub">Meteo lungo la strada</div></div></div><div class="pill">V3.3</div></div>
+<div class="top"><div class="brand"><div class="logo">🌦️</div><div><h1>Meteo Viaggio</h1><div class="sub">Meteo lungo la strada</div></div></div><div class="pill">V3.4</div></div>
 
 <section class="hero">
 <div class="form">
@@ -183,6 +183,7 @@ body.drive .arrivalbox h3{font-size:17px}
   <div class="arrivalitem"><div class="ak">Temperatura</div><div id="arrTemp" class="av">—</div></div>
   <div class="arrivalitem"><div class="ak">Pioggia</div><div id="arrRain" class="av">—</div></div>
   <div class="arrivalitem"><div class="ak">Vento</div><div id="arrWind" class="av">—</div></div>
+  <div class="arrivalitem"><div class="ak">Grandine</div><div id="arrHail" class="av">—</div></div>
 </div>
 <div id="arrNote" class="arrivalnote">Calcolo il meteo previsto esattamente all'orario di arrivo.</div>
 </section>
@@ -377,9 +378,10 @@ function updateArrivalWeather(r,items){
   $('arrTemp').textContent=`${Math.round(a.w.temp)}°C`;
   $('arrRain').textContent=`${Math.round(a.w.rain)}%`;
   $('arrWind').textContent=`${Math.round(a.w.gust)} km/h`;
+  $('arrHail').textContent=hr[0];
   let parts=[info[1]];
   if([95,96,99].includes(a.w.code))parts.push('temporale possibile');
-  if(hr[0]=='MEDIO'||hr[0]=='ALTO')parts.push(`grandine ${hr[0].toLowerCase()}`);
+  if(hr[0]=='MEDIO'||hr[0]=='ALTO')parts.push(`rischio grandine ${hr[0].toLowerCase()}`);
   if(a.w.zero)parts.push(`zero termico ${Math.round(a.w.zero)} m`);
   $('arrNote').textContent=parts.join(' · ');
 }
