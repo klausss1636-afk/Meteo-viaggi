@@ -22,7 +22,7 @@ h1{margin:0;font-size:24px}.sub,.status,.small{color:var(--m)}.sub{font-size:13p
 .btn{border:0;padding:0 17px;background:linear-gradient(135deg,#55c2ff,#6a7cff);color:#fff;font-weight:800;cursor:pointer}
 .btn.alt{background:#13243a;border:1px solid #ffffff18}.btn.live{outline:2px solid var(--ok);background:#183825}
 .actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}.actions .btn{flex:1;min-width:160px}.status{margin-top:12px;font-size:13px}
-.v25tools{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:14px 0}
+.v25tools{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin:14px 0}
 .summary{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.card{padding:14px}.k{font-size:12px;color:var(--m);text-transform:none}.v{font-size:21px;font-weight:900;margin-top:4px}
 .banner{padding:15px;margin:14px 0}.banner.ok{box-shadow:inset 4px 0 var(--ok)}.banner.warn{box-shadow:inset 4px 0 var(--w)}.banner.bad{box-shadow:inset 4px 0 var(--bad)}
 .banner h3{margin:0 0 5px}.banner p{margin:0;color:var(--m)}h2{font-size:18px}
@@ -55,7 +55,7 @@ body.drive .top .sub{display:none}
 body.drive .logo{width:42px;height:42px;border-radius:13px;font-size:23px}
 body.drive h1{font-size:21px}
 body.drive .pill{padding:6px 9px;font-size:14px}
-body.drive .v25tools{grid-template-columns:repeat(3,1fr);gap:7px;margin:7px 0}
+body.drive .v25tools{grid-template-columns:repeat(4,1fr);gap:7px;margin:7px 0}
 body.drive .v25tools .btn{min-height:44px;font-size:14px;padding:0 8px}
 body.drive .tripstate{display:flex;align-items:center;gap:9px;margin:7px 0;padding:9px 12px;border-radius:14px;background:#102033;border:1px solid #ffffff20;font-size:18px;font-weight:900}
 body.drive .tripstate small{font-size:11px;font-weight:600;color:var(--m);margin-left:auto}
@@ -83,11 +83,11 @@ body.drive .choice,body.drive .diversion{margin:7px 0}
   body.drive .drivepanel{grid-template-columns:1.1fr .9fr}
   body.drive #map{height:60vh}
 }
-</style>
+.weatherhere{position:fixed;inset:0;z-index:2000;background:#07111ff7;overflow:auto;padding:18px 14px 36px}.weatherhere-inner{max-width:760px;margin:auto}.weatherhere-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}.weatherhere-close{width:48px;height:48px;border-radius:14px;border:1px solid #ffffff22;background:#13243a;color:white;font-size:24px}.weatherhere-card{background:#101c2d;border:1px solid #ffffff18;border-radius:20px;padding:16px;margin-bottom:12px}.weatherhere-now{font-size:46px;font-weight:900}.weatherhere-grid,.weatherhere-hours{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:12px}.weatherhere-item,.weatherhere-hour{background:#0d1a2c;border-radius:14px;padding:10px;text-align:center}.weatherhere-item small{display:block;color:var(--m)}.weatherhere-radar{height:300px;border-radius:18px;overflow:hidden;margin-top:10px}@media(max-width:700px){.weatherhere-grid,.weatherhere-hours{grid-template-columns:repeat(2,1fr)}body.drive .v25tools{grid-template-columns:repeat(2,1fr)}}</style>
 </head>
 <body>
 <div class="wrap">
-<div class="top"><div class="brand"><div class="logo">🌦️</div><div><h1>Meteo Viaggio</h1><div class="sub">Meteo lungo la strada</div></div></div><div class="pill">V4.0</div></div>
+<div class="top"><div class="brand"><div class="logo">🌦️</div><div><h1>Meteo Viaggio</h1><div class="sub">Meteo lungo la strada</div></div></div><div class="pill">V4.1</div></div>
 
 <section class="hero">
 <div class="form">
@@ -105,6 +105,7 @@ body.drive .choice,body.drive .diversion{margin:7px 0}
 <div id="res" class="hidden">
 <section class="v25tools">
 <button id="radarBtn" class="btn alt">🌧️ Radar ON</button>
+<button id="hereWeatherBtn" class="btn alt">🌦️ Meteo qui</button>
 <button id="driveModeBtn" class="btn alt">🚘 Modalità Carlink</button>
 <button id="waitBtn" class="btn alt">⏱️ Devia o aspetta?</button>
 </section>
@@ -182,10 +183,10 @@ body.drive .choice,body.drive .diversion{margin:7px 0}
 <div class="note"><b>Grandine:</b> stima prudenziale basata su temporali, CAPE e intensità prevista. La web app non sostituisce gli avvisi ufficiali.</div>
 </div>
 </div>
-
+<section id="weatherHere" class="weatherhere hidden"><div class="weatherhere-inner"><div class="weatherhere-top"><div><div class="small">POSIZIONE ATTUALE</div><h2 style="margin:0">🌦️ Meteo qui</h2><div id="whPlace" class="small">Sto localizzando…</div></div><button id="whClose" class="weatherhere-close">✕</button></div><div class="weatherhere-card"><div id="whIcon" style="font-size:48px">🌤️</div><div id="whTemp" class="weatherhere-now">—</div><div id="whDesc" style="font-size:19px;font-weight:800">—</div><div class="weatherhere-grid"><div class="weatherhere-item"><small>Pioggia</small><b id="whRain">—</b></div><div class="weatherhere-item"><small>Raffiche</small><b id="whWind">—</b></div><div class="weatherhere-item"><small>Grandine</small><b id="whHail">—</b></div><div class="weatherhere-item"><small>Zero termico</small><b id="whZero">—</b></div></div></div><div class="weatherhere-card"><b>Prossime ore</b><div id="whHours" class="weatherhere-hours"></div></div><div class="weatherhere-card"><b>🌧️ Radar nella tua zona</b><div id="weatherHereMap" class="weatherhere-radar"></div></div></div></section>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-let here=null,destObj=null,map,routeLine,meMarker,wxMarkers=[],riskLines=[],watch=null,lastSpeech='',busy=false,lastRefresh=0,lastRefreshPos=null,radarLayer=null,radarOn=true,radarTimestamp=null,currentEval=null,lastHeading=null,viaPoint=null,bestDiversion=null;
+let here=null,destObj=null,map,weatherHereMap,weatherHereRadar,routeLine,meMarker,wxMarkers=[],riskLines=[],watch=null,lastSpeech='',busy=false,lastRefresh=0,lastRefreshPos=null,radarLayer=null,radarOn=true,radarTimestamp=null,currentEval=null,lastHeading=null,viaPoint=null,bestDiversion=null;
 const $=x=>document.getElementById(x);
 function st(x){$('status').textContent=x}
 function hav(a,b){const R=6371,r=x=>x*Math.PI/180,d1=r(b.lat-a.lat),d2=r(b.lon-a.lon),q=Math.sin(d1/2)**2+Math.cos(r(a.lat))*Math.cos(r(b.lat))*Math.sin(d2/2)**2;return 2*R*Math.asin(Math.sqrt(q))}
@@ -288,6 +289,26 @@ $('waitBtn').onclick=()=>{if(!currentEval){st('Prima calcola un viaggio.');retur
 function useDiv(){if(!bestDiversion)return;viaPoint=bestDiversion.via;bestDiversion=null;$('diversion').classList.add('hidden');$('driveDiversionBtn').classList.add('hidden');st('Deviazione scelta. Ricalcolo…');calc(true)}
 $('useDiversion').onclick=useDiv;$('driveDiversionBtn').onclick=useDiv;$('dismissDiversion').onclick=()=>{bestDiversion=null;$('diversion').classList.add('hidden');$('driveDiversionBtn').classList.add('hidden')};
 setInterval(()=>{if(radarOn&&map)refreshRadar()},5*60*1000);
+
+async function openWeatherHere(){
+ try{
+  $('weatherHere').classList.remove('hidden');
+  let p=here||await geoNow(); here=p; $('whPlace').textContent='Posizione GPS attuale';
+  let qs=new URLSearchParams({latitude:p.lat,longitude:p.lon,current:'temperature_2m,weather_code,wind_gusts_10m',hourly:'temperature_2m,precipitation_probability,weather_code,wind_gusts_10m,cape,freezing_level_height',timezone:'auto',forecast_days:'2'});
+  let r=await fetch('https://api.open-meteo.com/v1/forecast?'+qs),j=await r.json(),now=Date.now(),ix=0,dd=1e99;
+  j.hourly.time.forEach((t,i)=>{let d=Math.abs(new Date(t).getTime()-now);if(d<dd){dd=d;ix=i}});
+  let w={temp:j.current?.temperature_2m??j.hourly.temperature_2m[ix],code:j.current?.weather_code??j.hourly.weather_code[ix],gust:j.current?.wind_gusts_10m??j.hourly.wind_gusts_10m[ix],rain:j.hourly.precipitation_probability[ix],cape:j.hourly.cape?.[ix]||0,zero:j.hourly.freezing_level_height?.[ix]||null},info=wi(w.code),hr=hail(w);
+  $('whIcon').textContent=info[0];$('whTemp').textContent=Math.round(w.temp)+'°C';$('whDesc').textContent=info[1];$('whRain').textContent=Math.round(w.rain)+'%';$('whWind').textContent=Math.round(w.gust)+' km/h';$('whHail').textContent=hr[0];$('whZero').textContent=w.zero?Math.round(w.zero)+' m':'—';
+  $('whHours').innerHTML='';for(let n=0;n<8;n+=2){let i=Math.min(ix+n,j.hourly.time.length-1),inf=wi(j.hourly.weather_code[i]),hh=hail({code:j.hourly.weather_code[i],cape:j.hourly.cape?.[i]||0,rain:j.hourly.precipitation_probability[i],gust:j.hourly.wind_gusts_10m[i]}),d=document.createElement('div');d.className='weatherhere-hour';d.innerHTML=`${ti(new Date(j.hourly.time[i]))}<br><b>${inf[0]} ${Math.round(j.hourly.temperature_2m[i])}°</b><br>💧${Math.round(j.hourly.precipitation_probability[i])}% · 🧊${hh[0].toLowerCase()}`;$('whHours').appendChild(d)}
+  if(!weatherHereMap){weatherHereMap=L.map('weatherHereMap').setView([p.lat,p.lon],9);L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap'}).addTo(weatherHereMap)}
+  weatherHereMap.setView([p.lat,p.lon],9);L.circleMarker([p.lat,p.lon],{radius:8,color:'#63d69b',fillColor:'#63d69b',fillOpacity:1}).addTo(weatherHereMap);
+  try{let rr=await fetch('https://api.rainviewer.com/public/weather-maps.json'),rj=await rr.json(),f=rj.radar?.past?.at(-1);if(f){if(weatherHereRadar)weatherHereMap.removeLayer(weatherHereRadar);weatherHereRadar=L.tileLayer('https://tilecache.rainviewer.com'+f.path+'/256/{z}/{x}/{y}/2/1_1.png',{opacity:.52,zIndex:350,maxNativeZoom:7,maxZoom:19}).addTo(weatherHereMap)}}catch(e){}
+  setTimeout(()=>weatherHereMap.invalidateSize(),120)
+ }catch(e){$('whPlace').textContent='Posizione o meteo non disponibili.'}
+}
+$('hereWeatherBtn').onclick=openWeatherHere;
+$('whClose').onclick=()=>$('weatherHere').classList.add('hidden');
+
 if('serviceWorker'in navigator)addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
 </script>
 </body>
