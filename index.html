@@ -72,8 +72,8 @@ body.drive .mapwrap{margin-top:10px}
 }
 
 .tripstate{display:none}
-body.drive .tripstate{display:flex;align-items:center;gap:10px;position:sticky;top:10px;z-index:900;margin:6px 0;padding:12px 16px;border-radius:18px;background:#102033e8;border:1px solid #ffffff20;font-size:20px;font-weight:900;backdrop-filter:blur(10px)}
-body.drive .tripstate small{font-size:12px;font-weight:600;color:var(--m);margin-left:auto}
+body.drive .tripstate{display:flex;align-items:center;gap:10px;position:relative;top:auto;z-index:10;margin:8px 0 12px;padding:9px 14px;border-radius:15px;background:#102033e8;border:1px solid #ffffff20;font-size:18px;font-weight:900;backdrop-filter:blur(10px)}
+body.drive .tripstate small{font-size:11px;font-weight:600;color:var(--m);margin-left:auto}
 body.drive .centerbtn{right:10px;top:62px;bottom:auto}
 body.drive .radarlegend{left:12px;bottom:12px;max-width:65%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 body.drive #map{height:58vh}
@@ -111,15 +111,22 @@ body.drive .alertbig.bad .alertico{font-size:34px}
 .arrivalitem .ak{font-size:11px;color:var(--m)}
 .arrivalitem .av{font-size:19px;font-weight:900;margin-top:3px}
 .arrivalnote{margin-top:10px;color:var(--m);font-size:12px;line-height:1.4}
-body.drive .arrivalbox{display:block;margin-top:18px}
+body.drive .arrivalbox{display:block;margin-top:12px;position:relative;z-index:1}
 body.drive .arrivalgrid{grid-template-columns:repeat(4,1fr)}
 body.drive .arrivalbox h3{font-size:17px}
 @media(max-width:700px){.arrivalgrid{grid-template-columns:1fr 1fr}body.drive .arrivalgrid{grid-template-columns:1fr 1fr}}
+
+body.drive .tripstate.risk{
+  padding:14px 16px;
+  font-size:20px;
+  border-radius:18px;
+}
+body.drive .tripstate.risk small{font-size:12px}
 </style>
 </head>
 <body>
 <div class="wrap">
-<div class="top"><div class="brand"><div class="logo">🌦️</div><div><h1>Meteo Viaggio</h1><div class="sub">Meteo lungo la strada</div></div></div><div class="pill">V3.4</div></div>
+<div class="top"><div class="brand"><div class="logo">🌦️</div><div><h1>Meteo Viaggio</h1><div class="sub">Meteo lungo la strada</div></div></div><div class="pill">V3.5</div></div>
 
 <section class="hero">
 <div class="form">
@@ -396,6 +403,7 @@ function updateDrivePanel(km,r,bad,nextKm,nextMin){
     $('driveRiskSub').textContent=`Tra circa ${nextMin} min · grandine ${hr[0]} · raffiche ${Math.round(bad.w.gust)} km/h`;
     $('weatherChange').innerHTML=`Prossimo cambio meteo: <b>${nextKm} km</b>`;
     let severe=severity(bad.w)>=4;
+    $('tripState').classList.add('risk');
     $('tripStateIcon').textContent=severe?'🔴':'🟡';
     $('tripStateText').textContent=severe?'Critico':'Attenzione';
     $('tripStateSub').textContent=`${kind} tra ${nextKm} km`;
@@ -405,6 +413,7 @@ function updateDrivePanel(km,r,bad,nextKm,nextMin){
     let change=currentEval?.items?.find((x,i,a)=>i>0 && wi(x.w.code)[1]!==wi(a[0].w.code)[1]);
     let changeKm=change?Math.round(km*change.p.f):null;
     $('weatherChange').innerHTML=changeKm?`Prossimo cambio meteo: <b>${changeKm} km</b>`:`Meteo stabile lungo i punti controllati`;
+    $('tripState').classList.remove('risk');
     $('tripStateIcon').textContent='🟢';
     $('tripStateText').textContent='Tranquillo';
     $('tripStateSub').textContent=changeKm?`cambio meteo tra ${changeKm} km`:'nessun rischio rilevante';
