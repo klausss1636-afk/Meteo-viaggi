@@ -105,11 +105,29 @@ body.drive .choice,body.drive .diversion{margin:7px 0}
 .weatherhere-hour{font-size:15px;line-height:1.25}
 .weatherhere-hour .hourmeta{display:flex;justify-content:center;align-items:center;gap:5px;white-space:nowrap;font-size:13px;margin-top:3px}
 @media(max-width:430px){.weatherhere-hour{font-size:14px}.weatherhere-hour .hourmeta{font-size:12px;gap:4px}}
+
+/* V6.1 */
+.v61strip{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:9px 0}
+.v61mini{background:#0d1a2c;border:1px solid #ffffff12;border-radius:14px;padding:10px;text-align:center}
+.v61mini .mk{font-size:10px;color:var(--m);text-transform:uppercase;letter-spacing:.04em}
+.v61mini .mv{font-size:17px;font-weight:900;margin-top:3px}
+.routeworst{background:#101c2d;border:1px solid #ffffff18;border-radius:16px;padding:11px 13px;margin:8px 0;box-shadow:inset 4px 0 var(--w)}
+.routeworst.bad{box-shadow:inset 4px 0 var(--bad)}
+.routeworst.ok{box-shadow:inset 4px 0 var(--ok)}
+.routeworst b{display:block;font-size:15px}.routeworst span{font-size:12px;color:var(--m)}
+.alertsbox{border-radius:16px;padding:12px;background:#0d1a2c;border:1px solid #ffffff14}
+.alertsbox.ok{box-shadow:inset 4px 0 var(--ok)}.alertsbox.warn{box-shadow:inset 4px 0 var(--w)}.alertsbox.bad{box-shadow:inset 4px 0 var(--bad)}
+.alertsbox b{display:block;margin-bottom:4px}.alertsbox div{font-size:13px;color:var(--m);line-height:1.45}
+.radarplay{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:8px}
+.radarplay .smallbtn{min-height:36px;border-radius:12px;border:1px solid #ffffff20;background:#13243a;color:#fff;padding:0 12px;font-weight:800}
+body.drive .routeworst{margin:6px 0}
+body.drive .v61strip{grid-template-columns:repeat(3,1fr);margin:6px 0}
+@media(max-width:700px){.v61strip{grid-template-columns:repeat(3,1fr)}.v61mini .mv{font-size:15px}}
 </style>
 </head>
 <body>
 <div class="wrap">
-<div class="top"><div class="brand"><div class="logo">🌦️</div><div><h1>Meteo Viaggio</h1><div class="sub">Meteo lungo la strada</div></div></div><div class="pill">V5.5</div></div>
+<div class="top"><div class="brand"><div class="logo">🌦️</div><div><h1>Meteo Viaggio</h1><div class="sub">Meteo lungo la strada</div></div></div><div class="pill">V6.1</div></div>
 
 <section class="hero">
 <div class="form">
@@ -150,6 +168,7 @@ body.drive .choice,body.drive .diversion{margin:7px 0}
 <button id="driveDiversionBtn" class="btn hidden" style="width:100%;margin-top:8px">🛣️ Deviazione</button>
 </div>
 </section>
+<div id="routeWorst" class="routeworst hidden"><b>🛣️ Punto peggiore del percorso</b><span id="routeWorstText">—</span></div>
 
 <section class="summary">
 <div class="card"><div class="k">Distanza</div><div id="dist" class="v">—</div></div>
@@ -205,10 +224,13 @@ body.drive .choice,body.drive .diversion{margin:7px 0}
 <div class="note"><b>Grandine:</b> stima prudenziale basata su temporali, CAPE e intensità prevista. La web app non sostituisce gli avvisi ufficiali.</div>
 </div>
 </div>
-<section id="weatherHere" class="weatherhere hidden"><div class="weatherhere-inner"><div class="weatherhere-top"><div><div class="small">POSIZIONE ATTUALE</div><h2 style="margin:0">🌦️ Meteo qui</h2><div id="whPlace" class="small">Sto cercando la località…</div></div><button id="whClose" class="weatherhere-close">✕</button></div><div class="weatherhere-card"><div id="whIcon" style="font-size:48px">🌤️</div><div id="whTemp" class="weatherhere-now">—</div><div id="whDesc" style="font-size:19px;font-weight:800">—</div><div class="weatherhere-grid"><div class="weatherhere-item"><small>Pioggia</small><b id="whRain">—</b></div><div class="weatherhere-item"><small>Raffiche</small><b id="whWind">—</b></div><div class="weatherhere-item"><small>Grandine</small><b id="whHail">—</b></div><div class="weatherhere-item"><small>Zero termico</small><b id="whZero">—</b></div></div></div><div class="weatherhere-card"><b>Prossime ore</b><div id="whHours" class="weatherhere-hours"></div></div><div class="weatherhere-card"><b>📅 Prossimi giorni</b><div class="dayswrap"><div id="whDays" class="weatherhere-days"></div><div id="daysHint" class="dayshint">›</div></div></div><div class="weatherhere-card"><b>🌧️ Radar nella tua zona</b><div id="weatherHereMap" class="weatherhere-radar"></div></div></div></section>
+<section id="weatherHere" class="weatherhere hidden"><div class="weatherhere-inner"><div class="weatherhere-top"><div><div class="small">POSIZIONE ATTUALE</div><h2 style="margin:0">🌦️ Meteo qui</h2><div id="whPlace" class="small">Sto cercando la località…</div></div><button id="whClose" class="weatherhere-close">✕</button></div><div class="weatherhere-card"><div id="whIcon" style="font-size:48px">🌤️</div><div id="whTemp" class="weatherhere-now">—</div><div id="whDesc" style="font-size:19px;font-weight:800">—</div><div class="weatherhere-grid"><div class="weatherhere-item"><small>Pioggia</small><b id="whRain">—</b></div><div class="weatherhere-item"><small>Raffiche</small><b id="whWind">—</b></div><div class="weatherhere-item"><small>Grandine</small><b id="whHail">—</b></div><div class="weatherhere-item"><small>Zero termico</small><b id="whZero">—</b></div></div>
+<div class="v61strip"><div class="v61mini"><div class="mk">Percepita</div><div id="whFeels" class="mv">—</div></div><div class="v61mini"><div class="mk">Visibilità</div><div id="whVis" class="mv">—</div></div><div class="v61mini"><div class="mk">Pioggia 90 min</div><div id="whRain90" class="mv">—</div></div></div>
+<div class="v61strip"><div class="v61mini"><div class="mk">Alba</div><div id="whSunrise" class="mv">—</div></div><div class="v61mini"><div class="mk">Tramonto</div><div id="whSunset" class="mv">—</div></div><div class="v61mini"><div class="mk">Aggiornamento</div><div id="whUpdated" class="mv">—</div></div></div>
+</div><div class="weatherhere-card"><b>⚠️ Avvisi meteo</b><div id="whAlerts" class="alertsbox ok"><b>Nessun avviso importante</b><div>Condizioni tranquille nella zona.</div></div></div><div class="weatherhere-card"><b>Prossime ore</b><div id="whHours" class="weatherhere-hours"></div></div><div class="weatherhere-card"><b>📅 Prossimi giorni</b><div class="dayswrap"><div id="whDays" class="weatherhere-days"></div><div id="daysHint" class="dayshint">›</div></div></div><div class="weatherhere-card"><div class="radarplay"><b>🌧️ Radar animato nella tua zona</b><button id="radarAnimBtn" class="smallbtn">⏸ Pausa</button></div><div id="radarAnimTime" class="small">Movimento precipitazioni</div><div id="weatherHereMap" class="weatherhere-radar"></div></div></div></section>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-let here=null,destObj=null,map,weatherHereMap,weatherHereRadar,routeLine,meMarker,wxMarkers=[],riskLines=[],watch=null,lastSpeech='',busy=false,lastRefresh=0,lastRefreshPos=null,radarLayer=null,radarOn=true,radarTimestamp=null,currentEval=null,lastHeading=null,viaPoint=null,bestDiversion=null;
+let here=null,destObj=null,map,weatherHereMap,weatherHereRadar,routeLine,meMarker,wxMarkers=[],riskLines=[],watch=null,lastSpeech='',busy=false,lastRefresh=0,lastRefreshPos=null,radarLayer=null,radarOn=true,radarTimestamp=null,currentEval=null,lastHeading=null,viaPoint=null,bestDiversion=null,lastVoiceWarnKey='',routeRadarFrames=[],routeRadarTimer=null,routeRadarIx=0,weatherRadarFrames=[],weatherRadarTimer=null,weatherRadarIx=0,radarAnimating=true;
 const $=x=>document.getElementById(x);
 function st(x){$('status').textContent=x}
 function hav(a,b){const R=6371,r=x=>x*Math.PI/180,d1=r(b.lat-a.lat),d2=r(b.lon-a.lon),q=Math.sin(d1/2)**2+Math.cos(r(a.lat))*Math.cos(r(b.lat))*Math.sin(d2/2)**2;return 2*R*Math.asin(Math.sqrt(q))}
@@ -231,10 +253,10 @@ async function routeAlternatives(a,b){
 }
 function sample(c,km,max=10){let p=c.map(x=>({lon:x[0],lat:x[1]})),cum=[0];for(let i=1;i<p.length;i++)cum.push(cum[i-1]+hav(p[i-1],p[i]));let tot=cum.at(-1)||1,n=Math.min(max,Math.max(4,Math.ceil(km/55)+1)),out=[];for(let k=0;k<n;k++){let t=tot*k/(n-1),i=1;while(i<cum.length&&cum[i]<t)i++;out.push({...p[Math.min(i,p.length-1)],f:t/tot})}return out}
 async function weather(p,eta){
- let qs=new URLSearchParams({latitude:p.lat,longitude:p.lon,hourly:'temperature_2m,precipitation_probability,precipitation,showers,weather_code,wind_gusts_10m,cape,freezing_level_height',timezone:'auto',forecast_days:'3'});
+ let qs=new URLSearchParams({latitude:p.lat,longitude:p.lon,hourly:'temperature_2m,apparent_temperature,visibility,precipitation_probability,precipitation,showers,weather_code,wind_gusts_10m,cape,freezing_level_height',timezone:'auto',forecast_days:'3'});
  let r=await fetch('https://api.open-meteo.com/v1/forecast?'+qs),j=await r.json(),t=j.hourly.time,target=eta.getTime(),ix=0,dd=1e99;
  for(let i=0;i<t.length;i++){let d=Math.abs(new Date(t[i]).getTime()-target);if(d<dd){dd=d;ix=i}}
- return{temp:j.hourly.temperature_2m[ix],rain:j.hourly.precipitation_probability[ix],precip:j.hourly.precipitation?.[ix]||0,showers:j.hourly.showers?.[ix]||0,code:j.hourly.weather_code[ix],gust:j.hourly.wind_gusts_10m[ix],cape:j.hourly.cape?.[ix]||0,zero:j.hourly.freezing_level_height?.[ix]||null}
+ return{temp:j.hourly.temperature_2m[ix],feels:j.hourly.apparent_temperature?.[ix]??j.hourly.temperature_2m[ix],visibility:j.hourly.visibility?.[ix]??null,rain:j.hourly.precipitation_probability[ix],precip:j.hourly.precipitation?.[ix]||0,showers:j.hourly.showers?.[ix]||0,code:j.hourly.weather_code[ix],gust:j.hourly.wind_gusts_10m[ix],cape:j.hourly.cape?.[ix]||0,zero:j.hourly.freezing_level_height?.[ix]||null}
 }
 function dayIcon(c){
   if([45,48].includes(c))return'<span class="fogicon" aria-label="Nebbia"><i></i><i></i><i></i></span>';
@@ -257,12 +279,75 @@ function hail(w){
   if(th || (w.cape||0)>=800)return['BASSO','warn'];
   return['BASSO','ok'];
 }
-function severity(w){let s=0;if([95,96,99].includes(w.code))s+=4;if(w.rain>=70)s+=2;if(w.gust>=70)s+=3;else if(w.gust>=50)s++;if(hail(w)[0]=='ALTO')s+=4;return s}
+function severity(w){let s=0;if([95,96,99].includes(w.code))s+=4;if(w.rain>=70)s+=2;if(w.gust>=70)s+=3;else if(w.gust>=50)s++;if((w.visibility||99999)<1000)s+=3;else if((w.visibility||99999)<3000)s+=1;if(hail(w)[0]=='ALTO')s+=4;return s}
 function riskLabel(score){return score>=8?'ALTO':score>=3?'MEDIO':'BASSO'}
 function speakNow(msg){if('speechSynthesis'in window){speechSynthesis.cancel();let u=new SpeechSynthesisUtterance(msg);u.lang='it-IT';speechSynthesis.speak(u)}}
+
+function riskKind(w){
+  let hr=hail(w);
+  if(hr[0]=='ALTO')return'Grandine';
+  if([95,96,99].includes(w.code))return'Temporale';
+  if((w.visibility||99999)<1000)return'Nebbia fitta';
+  if(w.gust>=70)return'Vento forte';
+  if(w.rain>=70 || (w.precip||0)>=5)return'Pioggia intensa';
+  return wi(w.code)[1];
+}
+function worstRoutePoint(items,km,r){
+  if(!items?.length)return null;
+  let best=items[0],score=-1;
+  items.forEach(x=>{let s=severity(x.w);if(s>score){score=s;best=x}});
+  return {item:best,score,km:Math.round(km*best.p.f),min:Math.round(r.duration*best.p.f/60),kind:riskKind(best.w)};
+}
+function appAlertsFromWeather(w){
+  let out=[];
+  if([95,96,99].includes(w.code))out.push('⛈️ Temporale possibile');
+  if(hail(w)[0]=='ALTO')out.push('🧊 Rischio grandine alto');
+  else if(hail(w)[0]=='MEDIO')out.push('🧊 Rischio grandine medio');
+  if(w.gust>=70)out.push('💨 Raffiche molto forti');
+  else if(w.gust>=50)out.push('💨 Raffiche sostenute');
+  if((w.visibility||99999)<1000)out.push('🌫️ Visibilità molto ridotta');
+  else if((w.visibility||99999)<3000)out.push('🌫️ Visibilità ridotta');
+  if(w.rain>=70 || (w.precip||0)>=5)out.push('🌧️ Pioggia intensa possibile');
+  return out;
+}
+function stopRouteRadar(){
+  if(routeRadarTimer){clearInterval(routeRadarTimer);routeRadarTimer=null}
+}
+function playRouteRadar(){
+  if(!map||!radarOn||!routeRadarFrames.length)return;
+  stopRouteRadar();
+  const show=()=>{
+    let f=routeRadarFrames[routeRadarIx%routeRadarFrames.length];routeRadarIx++;
+    if(radarLayer)map.removeLayer(radarLayer);
+    radarLayer=L.tileLayer('https://tilecache.rainviewer.com'+f.path+'/256/{z}/{x}/{y}/2/1_1.png',{opacity:.48,zIndex:350,maxNativeZoom:7,maxZoom:19}).addTo(map);
+    $('radarLegend').textContent='🌧️ Radar animato · '+ti(new Date(f.time*1000));
+  };
+  show();routeRadarTimer=setInterval(show,850);
+}
+function stopWeatherRadar(){
+  if(weatherRadarTimer){clearInterval(weatherRadarTimer);weatherRadarTimer=null}
+}
+function playWeatherRadar(){
+  if(!weatherHereMap||!weatherRadarFrames.length||!radarAnimating)return;
+  stopWeatherRadar();
+  const show=()=>{
+    let f=weatherRadarFrames[weatherRadarIx%weatherRadarFrames.length];weatherRadarIx++;
+    if(weatherHereRadar)weatherHereMap.removeLayer(weatherHereRadar);
+    weatherHereRadar=L.tileLayer('https://tilecache.rainviewer.com'+f.path+'/256/{z}/{x}/{y}/2/1_1.png',{opacity:.54,zIndex:350,maxNativeZoom:7,maxZoom:19}).addTo(weatherHereMap);
+    if($('radarAnimTime'))$('radarAnimTime').textContent='Radar '+ti(new Date(f.time*1000));
+  };
+  show();weatherRadarTimer=setInterval(show,800);
+}
+
 async function refreshRadar(){
  if(!map||!radarOn)return;
- try{let r=await fetch('https://api.rainviewer.com/public/weather-maps.json'),j=await r.json(),frames=j.radar?.past||[];if(!frames.length)return;let f=frames.at(-1);if(radarTimestamp===f.time)return;radarTimestamp=f.time;if(radarLayer)map.removeLayer(radarLayer);radarLayer=L.tileLayer('https://tilecache.rainviewer.com'+f.path+'/256/{z}/{x}/{y}/2/1_1.png',{opacity:.48,zIndex:350,maxNativeZoom:7,maxZoom:19}).addTo(map);$('radarLegend').textContent='🌧️ Radar · '+ti(new Date(f.time*1000))}catch(e){$('radarLegend').textContent='🌧️ Radar non disponibile'}
+ try{
+   let r=await fetch('https://api.rainviewer.com/public/weather-maps.json'),j=await r.json(),frames=j.radar?.past||[];
+   if(!frames.length)return;
+   routeRadarFrames=frames.slice(-8);
+   let f=routeRadarFrames.at(-1);radarTimestamp=f.time;
+   playRouteRadar();
+ }catch(e){$('radarLegend').textContent='🌧️ Radar non disponibile'}
 }
 function initMap(){if(map)return;map=L.map('map');L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap'}).addTo(map);refreshRadar()}
 function updateMarker(){if(!map||!here)return;let iconHtml=`<div style="transform:rotate(${lastHeading||0}deg);font-size:28px">➤</div>`,icon=L.divIcon({html:iconHtml,className:'',iconSize:[30,30],iconAnchor:[15,15]});if(meMarker){meMarker.setLatLng([here.lat,here.lon]);meMarker.setIcon(icon)}else meMarker=L.marker([here.lat,here.lon],{icon}).addTo(map).bindPopup('Sei qui')}
@@ -301,6 +386,11 @@ async function calc(auto=false){
   if(!destObj){let n=$('dest').value.trim();if(!n)throw Error('Scrivi una destinazione');destObj=await geocode(n)}
   let r=await route(here,destObj,viaPoint),ev=await evaluateRoute(r,10);currentEval=ev;let km=ev.km,items=ev.items,risk=ev.risk,bad=items.find(x=>severity(x.w)>=3),nextKm=bad?Math.max(0,Math.round(km*bad.p.f)):null,nextMin=bad?Math.max(0,Math.round((r.duration*bad.p.f)/60)):null;
   updateArrivalWeather(r,items);updateDrivePanel(km,r,bad,nextKm,nextMin);
+  let worst=worstRoutePoint(items,km,r),rw=$('routeWorst');
+  if(worst){
+    rw.classList.remove('hidden','ok','bad');rw.classList.add(worst.score>=5?'bad':worst.score>=2?'':'ok');
+    $('routeWorstText').textContent=worst.score>=2?`${worst.kind} tra circa ${worst.km} km (${worst.min} min).`: `Nessun tratto critico: punto più delicato a circa ${worst.km} km.`;
+  }
   $('dist').textContent=Math.round(km)+' km';$('dur').textContent=fd(r.duration);$('risk').textContent=risk;$('next').textContent=bad?nextKm+' km':'Nessuno';
   let aCard=$('nextAlert'),aIcon=$('alertIcon'),aMain=$('alertMain'),aSub=$('alertSub'),aDist=$('alertDist');
   if(bad){let info=wi(bad.w.code),hr=hail(bad.w),sev=severity(bad.w),kind=hr[0]=='ALTO'?'Possibile grandine forte':[95,96,99].includes(bad.w.code)?'Temporale':bad.w.gust>=70?'Vento forte':bad.w.rain>=70?'Pioggia intensa':'Meteo da controllare';aCard.className='alertbig '+(sev>=5?'bad':'warn');aIcon.textContent=hr[0]=='ALTO'?'🧊':info[0];aMain.textContent=kind;aSub.textContent=`Tra circa ${nextMin} min · pioggia ${Math.round(bad.w.rain)}% · raffiche ${Math.round(bad.w.gust)} km/h · grandine ${hr[0]}`;aDist.innerHTML=`${nextKm} km<small>circa ${nextMin} min</small>`}
@@ -309,6 +399,10 @@ async function calc(auto=false){
   let tl=$('timeline');tl.innerHTML='';items.forEach((x,i)=>{let info=wi(x.w.code),hr=hail(x.w),sev=severity(x.w),d=document.createElement('div');d.className='stop '+(sev>=5?'bad':sev>=2?'warn':'');d.innerHTML=`<div class="small">${ti(x.eta)}</div><div><div class="place">${i==0?'Partenza':i==items.length-1?destObj.label:'Percorso '+Math.round(x.p.f*100)+'%'}</div><div class="det">${info[1]} · ${Math.round(x.w.temp)}°C · Pioggia ${Math.round(x.w.rain)}%<br>Raffiche ${Math.round(x.w.gust)} km/h${x.w.zero?` · Zero termico ${Math.round(x.w.zero)} m`:''}</div><span class="chip">🧊 Grandine: ${hr[0]}</span></div><div class="ico">${info[0]}</div>`;tl.appendChild(d)});
   $('res').classList.remove('hidden');drawMap(r,items);refreshRadar();$('upd').textContent='Aggiornato '+ti(new Date());$('mapstate').textContent=watch?'Guida attiva':viaPoint?'Deviazione meteo attiva':'Percorso calcolato';
   let arr=items.at(-1),ai=wi(arr.w.code);lastSpeech=bad?`Viaggio di ${Math.round(km)} chilometri. Attenzione: prossimo fenomeno tra circa ${nextKm} chilometri. All'arrivo ${ai[1].toLowerCase()}, ${Math.round(arr.w.temp)} gradi.`:`Viaggio di ${Math.round(km)} chilometri. Nessun fenomeno importante lungo il percorso. All'arrivo ${ai[1].toLowerCase()}, ${Math.round(arr.w.temp)} gradi.`;
+  if(watch!==null&&worst&&worst.score>=3&&worst.km<=40){
+    let key=`${worst.kind}-${Math.round(worst.km/5)*5}`;
+    if(key!==lastVoiceWarnKey){lastVoiceWarnKey=key;speakNow(`Attenzione. ${worst.kind} previsto tra circa ${worst.km} chilometri, fra circa ${worst.min} minuti.`)}
+  }
   if(!viaPoint&&bad){st('Controllo una deviazione più favorevole…');renderDiversion(await findSaferDiversion(ev),risk)}else renderDiversion(null,risk);
   st(`Percorso verso ${destObj.label} aggiornato.`);lastRefresh=Date.now();lastRefreshPos={...here}
  }catch(e){st('Errore: '+e.message)}finally{busy=false}
@@ -316,7 +410,7 @@ async function calc(auto=false){
 async function toggleLive(){
  if(watch!==null){navigator.geolocation.clearWatch(watch);watch=null;$('live').classList.remove('live');$('live').textContent='🚗 Avvia viaggio';$('mapstate').textContent='Aggiornamento fermato';return}
  if(!destObj){st('Prima calcola un viaggio.');return}
- watch=navigator.geolocation.watchPosition(async p=>{here={lat:p.coords.latitude,lon:p.coords.longitude};if(p.coords.heading!=null&&!isNaN(p.coords.heading))lastHeading=p.coords.heading;updateMarker();let moved=!lastRefreshPos||hav(here,lastRefreshPos)>=5,time=Date.now()-lastRefresh>=10*60*1000;if(moved||time)await calc(true)},()=>st('Posizione non disponibile durante il viaggio.'),{enableHighAccuracy:true,maximumAge:15000,timeout:20000});
+ watch=navigator.geolocation.watchPosition(async p=>{here={lat:p.coords.latitude,lon:p.coords.longitude};if(p.coords.heading!=null&&!isNaN(p.coords.heading))lastHeading=p.coords.heading;updateMarker();let moved=!lastRefreshPos||hav(here,lastRefreshPos)>=5,time=Date.now()-lastRefresh>=5*60*1000;if(moved||time)await calc(true)},()=>st('Posizione non disponibile durante il viaggio.'),{enableHighAccuracy:true,maximumAge:15000,timeout:20000});
  $('live').classList.add('live');$('live').textContent='⏹ Ferma viaggio';$('mapstate').textContent='Aggiornamento in viaggio attivo'
 }
 $('pos').onclick=async()=>{try{st('Cerco la tua posizione…');here=await geoNow();updateMarker();st('Posizione acquisita. Ora inserisci la destinazione.')}catch(e){st('Non riesco ad accedere alla posizione. Controlla i permessi.')}};
@@ -324,7 +418,7 @@ $('calc').onclick=()=>{destObj=null;viaPoint=null;bestDiversion=null;$('diversio
 $('dest').onkeydown=e=>{if(e.key=='Enter')$('calc').click()};$('live').onclick=toggleLive;
 $('speak').onclick=()=>{if(!lastSpeech){st('Prima calcola un viaggio.');return}speakNow(lastSpeech)};
 $('driveModeBtn').onclick=()=>{document.body.classList.toggle('drive');let on=document.body.classList.contains('drive');$('driveModeBtn').textContent=on?'↩️ Vista completa':'🚘 Modalità Carlink';if(currentEval){let km=currentEval.km,r=currentEval.r,items=currentEval.items,bad=items.find(x=>severity(x.w)>=3),nextKm=bad?Math.round(km*bad.p.f):null,nextMin=bad?Math.round((r.duration*bad.p.f)/60):null;updateDrivePanel(km,r,bad,nextKm,nextMin)}setTimeout(()=>{if(map){map.invalidateSize();if(on&&here)map.setView([here.lat,here.lon],13)}},150)};
-$('radarBtn').onclick=()=>{radarOn=!radarOn;$('radarBtn').textContent=radarOn?'🌧️ Radar ON':'🌧️ Radar OFF';$('radarLegend').style.display=radarOn?'block':'none';if(!radarOn&&radarLayer){map.removeLayer(radarLayer);radarLayer=null}if(radarOn)refreshRadar()};
+$('radarBtn').onclick=()=>{radarOn=!radarOn;$('radarBtn').textContent=radarOn?'🌧️ Radar ON':'🌧️ Radar OFF';$('radarLegend').style.display=radarOn?'block':'none';if(!radarOn){stopRouteRadar();if(radarLayer){map.removeLayer(radarLayer);radarLayer=null}}if(radarOn)refreshRadar()};
 $('centerBtn').onclick=()=>{if(map&&here){map.setView([here.lat,here.lon],14);updateMarker()}};
 $('waitBtn').onclick=()=>{if(!currentEval){st('Prima calcola un viaggio.');return}$('choiceBox').classList.remove('hidden');$('choiceText').textContent=currentEval.score<3?'Conviene partire adesso: il rischio meteo è già basso.':'Sto confrontando il percorso con una possibile deviazione; usa la deviazione se viene proposta.'};
 function useDiv(){if(!bestDiversion)return;viaPoint=bestDiversion.via;bestDiversion=null;$('diversion').classList.add('hidden');$('driveDiversionBtn').classList.add('hidden');st('Deviazione scelta. Ricalcolo…');calc(true)}
@@ -365,12 +459,22 @@ async function openWeatherHere(){
  try{
   $('weatherHere').classList.remove('hidden');
   let p=here||await geoNow(); here=p; $('whPlace').textContent='Cerco la località…'; let placeName=await reversePlaceName(p); $('whPlace').textContent=placeName;
-  let qs=new URLSearchParams({latitude:p.lat,longitude:p.lon,current:'temperature_2m,weather_code,wind_gusts_10m',hourly:'temperature_2m,precipitation_probability,precipitation,showers,weather_code,wind_gusts_10m,cape,freezing_level_height',daily:'weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,wind_gusts_10m_max',timezone:'auto',forecast_days:'7'});
+  let qs=new URLSearchParams({latitude:p.lat,longitude:p.lon,current:'temperature_2m,apparent_temperature,weather_code,wind_gusts_10m',hourly:'temperature_2m,apparent_temperature,visibility,precipitation_probability,precipitation,showers,weather_code,wind_gusts_10m,cape,freezing_level_height',daily:'weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,wind_gusts_10m_max,sunrise,sunset',timezone:'auto',forecast_days:'7'});
   let r=await fetch('https://api.open-meteo.com/v1/forecast?'+qs),j=await r.json(),now=Date.now(),ix=0,dd=1e99;
   j.hourly.time.forEach((t,i)=>{let d=Math.abs(new Date(t).getTime()-now);if(d<dd){dd=d;ix=i}});
-  let w={temp:j.current?.temperature_2m??j.hourly.temperature_2m[ix],code:j.current?.weather_code??j.hourly.weather_code[ix],gust:j.current?.wind_gusts_10m??j.hourly.wind_gusts_10m[ix],rain:j.hourly.precipitation_probability[ix],precip:j.hourly.precipitation?.[ix]||0,showers:j.hourly.showers?.[ix]||0,cape:j.hourly.cape?.[ix]||0,zero:j.hourly.freezing_level_height?.[ix]||null},info=wi(w.code),hr=hail(w);
+  let w={temp:j.current?.temperature_2m??j.hourly.temperature_2m[ix],feels:j.current?.apparent_temperature??j.hourly.apparent_temperature?.[ix]??j.hourly.temperature_2m[ix],visibility:j.hourly.visibility?.[ix]??null,code:j.current?.weather_code??j.hourly.weather_code[ix],gust:j.current?.wind_gusts_10m??j.hourly.wind_gusts_10m[ix],rain:j.hourly.precipitation_probability[ix],precip:j.hourly.precipitation?.[ix]||0,showers:j.hourly.showers?.[ix]||0,cape:j.hourly.cape?.[ix]||0,zero:j.hourly.freezing_level_height?.[ix]||null},info=wi(w.code),hr=hail(w);
   $('whIcon').textContent=info[0];$('whTemp').textContent=Math.round(w.temp)+'°C';$('whDesc').textContent=info[1];$('whRain').textContent=Math.round(w.rain)+'%';$('whWind').textContent=Math.round(w.gust)+' km/h';$('whHail').textContent=hr[0];$('whZero').textContent=w.zero?Math.round(w.zero)+' m':'—';
-  $('whHours').innerHTML='';for(let n=0;n<8;n+=2){let i=Math.min(ix+n,j.hourly.time.length-1),inf=wi(j.hourly.weather_code[i]),hh=hail({code:j.hourly.weather_code[i],cape:j.hourly.cape?.[i]||0,rain:j.hourly.precipitation_probability[i],precip:j.hourly.precipitation?.[i]||0,showers:j.hourly.showers?.[i]||0,gust:j.hourly.wind_gusts_10m[i],zero:j.hourly.freezing_level_height?.[i]||null}),d=document.createElement('div');d.className='weatherhere-hour';d.innerHTML=`${ti(new Date(j.hourly.time[i]))}<br><b>${inf[0]} ${Math.round(j.hourly.temperature_2m[i])}°</b><div class="hourmeta"><span>💧 ${Math.round(j.hourly.precipitation_probability[i])}%</span><span>·</span><span>🧊 ${hh[0]}</span></div>`;$('whHours').appendChild(d)}
+  $('whFeels').textContent=Math.round(w.feels)+'°C';
+  $('whVis').textContent=w.visibility?((w.visibility/1000)<10?(w.visibility/1000).toFixed(1):Math.round(w.visibility/1000))+' km':'—';
+  let rain90=0,rainEta=null;for(let k=ix;k<Math.min(ix+3,j.hourly.time.length);k++){let pr=j.hourly.precipitation_probability[k]||0;if(pr>rain90){rain90=pr;rainEta=new Date(j.hourly.time[k])}}
+  $('whRain90').textContent=rain90>=30?`${rain90}% ${rainEta?'· '+ti(rainEta):''}`:'BASSA';
+  $('whSunrise').textContent=j.daily?.sunrise?.[0]?ti(new Date(j.daily.sunrise[0])):'—';
+  $('whSunset').textContent=j.daily?.sunset?.[0]?ti(new Date(j.daily.sunset[0])):'—';
+  $('whUpdated').textContent=ti(new Date());
+  let alerts=appAlertsFromWeather(w),ab=$('whAlerts');ab.className='alertsbox '+(alerts.some(x=>x.includes('alto')||x.includes('molto'))?'bad':alerts.length?'warn':'ok');
+  ab.innerHTML=alerts.length?`<b>${alerts.length} avviso${alerts.length>1?'i':''} da controllare</b><div>${alerts.join('<br>')}</div>`:`<b>✅ Nessun avviso importante</b><div>Condizioni tranquille nella zona. Avvisi elaborati dall’app, non sostituiscono quelli ufficiali.</div>`;
+
+  $('whHours').innerHTML='';for(let n=0;n<8;n+=2){let i=Math.min(ix+n,j.hourly.time.length-1),inf=wi(j.hourly.weather_code[i]),hh=hail({code:j.hourly.weather_code[i],cape:j.hourly.cape?.[i]||0,rain:j.hourly.precipitation_probability[i],precip:j.hourly.precipitation?.[i]||0,showers:j.hourly.showers?.[i]||0,gust:j.hourly.wind_gusts_10m[i],visibility:j.hourly.visibility?.[i]||null,zero:j.hourly.freezing_level_height?.[i]||null}),d=document.createElement('div');d.className='weatherhere-hour';d.innerHTML=`${ti(new Date(j.hourly.time[i]))}<br><b>${inf[0]} ${Math.round(j.hourly.temperature_2m[i])}°</b><div class="hourmeta"><span>💧 ${Math.round(j.hourly.precipitation_probability[i])}%</span><span>·</span><span>🧊 ${hh[0]}</span></div>`;$('whHours').appendChild(d)}
   
   let days=$('whDays');days.innerHTML='';
   if(j.daily?.time?.length){
@@ -386,12 +490,22 @@ async function openWeatherHere(){
 
   if(!weatherHereMap){weatherHereMap=L.map('weatherHereMap').setView([p.lat,p.lon],9);L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap'}).addTo(weatherHereMap)}
   weatherHereMap.setView([p.lat,p.lon],9);L.circleMarker([p.lat,p.lon],{radius:8,color:'#63d69b',fillColor:'#63d69b',fillOpacity:1}).addTo(weatherHereMap);
-  try{let rr=await fetch('https://api.rainviewer.com/public/weather-maps.json'),rj=await rr.json(),f=rj.radar?.past?.at(-1);if(f){if(weatherHereRadar)weatherHereMap.removeLayer(weatherHereRadar);weatherHereRadar=L.tileLayer('https://tilecache.rainviewer.com'+f.path+'/256/{z}/{x}/{y}/2/1_1.png',{opacity:.52,zIndex:350,maxNativeZoom:7,maxZoom:19}).addTo(weatherHereMap)}}catch(e){}
+  try{
+    let rr=await fetch('https://api.rainviewer.com/public/weather-maps.json'),rj=await rr.json();
+    weatherRadarFrames=(rj.radar?.past||[]).slice(-8);weatherRadarIx=0;playWeatherRadar();
+  }catch(e){}
   setTimeout(()=>weatherHereMap.invalidateSize(),120)
  }catch(e){$('whPlace').textContent='Posizione o meteo non disponibili.'}
 }
 $('hereWeatherBtn').onclick=openWeatherHere;
-$('whClose').onclick=()=>$('weatherHere').classList.add('hidden');
+$('whClose').onclick=()=>{$('weatherHere').classList.add('hidden');stopWeatherRadar()};
+
+
+$('radarAnimBtn').onclick=()=>{
+  radarAnimating=!radarAnimating;
+  $('radarAnimBtn').textContent=radarAnimating?'⏸ Pausa':'▶ Avvia';
+  if(radarAnimating)playWeatherRadar();else stopWeatherRadar();
+};
 
 const whDaysEl=$('whDays'),daysHint=$('daysHint');
 function updateDaysHint(){
