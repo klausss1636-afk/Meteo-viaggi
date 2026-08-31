@@ -91,11 +91,16 @@ body.drive .choice,body.drive .diversion{margin:7px 0}
 .weatherhere-day .daytemp{font-weight:900;font-size:16px;white-space:nowrap}
 .weatherhere-day .dayrain{font-size:10px;color:var(--m);margin-top:4px;white-space:nowrap;letter-spacing:-.01em}
 @media(max-width:700px){.weatherhere-days{display:flex;gap:8px;overflow-x:auto}.weatherhere-day{min-width:116px;flex:0 0 116px}}
+
+.fogicon{display:inline-flex;flex-direction:column;gap:4px;width:34px;align-items:center;justify-content:center}
+.fogicon i{display:block;height:4px;border-radius:999px;background:#dfe7f0}
+.fogicon i:nth-child(1){width:26px}.fogicon i:nth-child(2){width:34px}.fogicon i:nth-child(3){width:22px}
+.weatherhere-day .dayico .fogicon{margin:0 auto}
 </style>
 </head>
 <body>
 <div class="wrap">
-<div class="top"><div class="brand"><div class="logo">🌦️</div><div><h1>Meteo Viaggio</h1><div class="sub">Meteo lungo la strada</div></div></div><div class="pill">V4.7</div></div>
+<div class="top"><div class="brand"><div class="logo">🌦️</div><div><h1>Meteo Viaggio</h1><div class="sub">Meteo lungo la strada</div></div></div><div class="pill">V4.8</div></div>
 
 <section class="hero">
 <div class="form">
@@ -222,7 +227,10 @@ async function weather(p,eta){
  for(let i=0;i<t.length;i++){let d=Math.abs(new Date(t[i]).getTime()-target);if(d<dd){dd=d;ix=i}}
  return{temp:j.hourly.temperature_2m[ix],rain:j.hourly.precipitation_probability[ix],code:j.hourly.weather_code[ix],gust:j.hourly.wind_gusts_10m[ix],cape:j.hourly.cape?.[ix]||0,zero:j.hourly.freezing_level_height?.[ix]||null}
 }
-function dayIcon(c){if([45,48].includes(c))return'🌫️';return wi(c)[0]}
+function dayIcon(c){
+  if([45,48].includes(c))return'<span class="fogicon" aria-label="Nebbia"><i></i><i></i><i></i></span>';
+  return wi(c)[0]
+}
 function wi(c){if([95,96,99].includes(c))return['⛈️','Temporale'];if([80,81,82].includes(c))return['🌧️','Rovesci'];if([61,63,65,66,67].includes(c))return['🌧️','Pioggia'];if([71,73,75,77,85,86].includes(c))return['🌨️','Neve'];if([45,48].includes(c))return['🌫️','Nebbia'];if([1,2,3].includes(c))return['⛅','Nuvoloso'];return['☀️','Sereno']}
 function hail(w){let th=[95,96,99].includes(w.code);if(th&&w.cape>=1800)return['ALTO','bad'];if(th&&w.cape>=800)return['MEDIO','warn'];if(th||w.cape>=1200)return['BASSO','warn'];return['basso','ok']}
 function severity(w){let s=0;if([95,96,99].includes(w.code))s+=4;if(w.rain>=70)s+=2;if(w.gust>=70)s+=3;else if(w.gust>=50)s++;if(hail(w)[0]=='ALTO')s+=4;return s}
