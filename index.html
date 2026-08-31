@@ -37,11 +37,11 @@ h1{margin:0;font-size:24px}.sub,.status,.small{color:var(--m)}.sub{font-size:13p
 </head>
 <body>
 <div class="wrap">
-<div class="top"><div class="brand"><div class="logo">🌦️</div><div><h1>Meteo Viaggio</h1><div class="sub">Meteo lungo la strada</div></div></div><div class="pill">V2</div></div>
+<div class="top"><div class="brand"><div class="logo">🌦️</div><div><h1>Meteo Viaggio</h1><div class="sub">Meteo lungo la strada</div></div></div><div class="pill">V2.1</div></div>
 
 <section class="hero">
 <div class="form">
-<input id="dest" class="inp" placeholder="Dove vuoi andare? Es. Milano">
+<input id="dest" class="inp" placeholder="Città, via, quartiere o luogo">
 <button id="calc" class="btn">Calcola viaggio</button>
 </div>
 <div class="actions">
@@ -89,7 +89,23 @@ function hav(a,b){const R=6371,r=x=>x*Math.PI/180,d1=r(b.lat-a.lat),d2=r(b.lon-a
 function fd(s){let H=Math.floor(s/3600),M=Math.round(s%3600/60);return H?H+' h '+M+' min':M+' min'}
 function ti(d){return d.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'})}
 function geoNow(){return new Promise((ok,no)=>navigator.geolocation.getCurrentPosition(p=>ok({lat:p.coords.latitude,lon:p.coords.longitude}),no,{enableHighAccuracy:true,timeout:15000,maximumAge:15000}))}
-async function geocode(n){let r=await fetch('https://geocoding-api.open-meteo.com/v1/search?name='+encodeURIComponent(n)+'&count=1&language=it&format=json'),j=await r.json();if(!j.results?.length)throw Error('Destinazione non trovata');let x=j.results[0];return{lat:x.latitude,lon:x.longitude,label:[x.name,x.admin1,x.country].filter(Boolean).join(', ')}}
+async function geocode(n){
+  try{
+    let r=await fetch('https://nominatim.openstreetmap.org/search?format=jsonv2&limit=5&countrycodes=it&accept-language=it&q='+encodeURIComponent(n));
+    if(r.ok){
+      let j=await r.json();
+      if(j?.length){
+        let x=j[0];
+        return {lat:+x.lat,lon:+x.lon,label:x.display_name};
+      }
+    }
+  }catch(e){}
+  let r=await fetch('https://geocoding-api.open-meteo.com/v1/search?name='+encodeURIComponent(n)+'&count=5&language=it&format=json');
+  let j=await r.json();
+  if(!j.results?.length)throw Error('Destinazione non trovata. Prova con via, città o CAP.');
+  let x=j.results[0];
+  return {lat:x.latitude,lon:x.longitude,label:[x.name,x.admin1,x.country].filter(Boolean).join(', ')};
+}
 async function route(a,b){let r=await fetch(`https://router.project-osrm.org/route/v1/driving/${a.lon},${a.lat};${b.lon},${b.lat}?overview=full&geometries=geojson`),j=await r.json();if(j.code!='Ok'||!j.routes?.length)throw Error('Percorso non trovato');return j.routes[0]}
 function sample(c,km){let p=c.map(x=>({lon:x[0],lat:x[1]})),cum=[0];for(let i=1;i<p.length;i++)cum.push(cum[i-1]+hav(p[i-1],p[i]));let tot=cum.at(-1)||1,n=Math.min(10,Math.max(4,Math.ceil(km/55)+1)),out=[];for(let k=0;k<n;k++){let t=tot*k/(n-1),i=1;while(i<cum.length&&cum[i]<t)i++;out.push({...p[Math.min(i,p.length-1)],f:t/tot})}return out}
 async function weather(p,eta){let qs=new URLSearchParams({latitude:p.lat,longitude:p.lon,hourly:'temperature_2m,precipitation_probability,weather_code,wind_gusts_10m,cape,freezing_level_height',timezone:'auto',forecast_days:'3'}),r=await fetch('https://api.open-meteo.com/v1/forecast?'+qs),j=await r.json(),t=j.hourly.time,target=eta.getTime(),ix=0,dd=1e99;for(let i=0;i<t.length;i++){let d=Math.abs(new Date(t[i]).getTime()-target);if(d<dd){dd=d;ix=i}}return{temp:j.hourly.temperature_2m[ix],rain:j.hourly.precipitation_probability[ix],code:j.hourly.weather_code[ix],gust:j.hourly.wind_gusts_10m[ix],cape:j.hourly.cape?.[ix]||0,zero:j.hourly.freezing_level_height?.[ix]||null}}
