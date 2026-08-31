@@ -103,11 +103,23 @@ body.drive .alertbig.warn .alertdist,
 body.drive .alertbig.bad .alertdist{display:block}
 body.drive .alertbig.warn .alertico,
 body.drive .alertbig.bad .alertico{font-size:34px}
+
+.arrivalbox{background:linear-gradient(135deg,#10263b,#13243a);border:1px solid #ffffff18;border-radius:20px;padding:15px;margin:14px 0}
+.arrivalbox h3{margin:0 0 10px;font-size:18px}
+.arrivalgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.arrivalitem{background:#0d1a2c;border:1px solid #ffffff12;border-radius:14px;padding:10px}
+.arrivalitem .ak{font-size:11px;color:var(--m)}
+.arrivalitem .av{font-size:19px;font-weight:900;margin-top:3px}
+.arrivalnote{margin-top:10px;color:var(--m);font-size:12px;line-height:1.4}
+body.drive .arrivalbox{display:block}
+body.drive .arrivalgrid{grid-template-columns:repeat(4,1fr)}
+body.drive .arrivalbox h3{font-size:17px}
+@media(max-width:700px){.arrivalgrid{grid-template-columns:1fr 1fr}body.drive .arrivalgrid{grid-template-columns:1fr 1fr}}
 </style>
 </head>
 <body>
 <div class="wrap">
-<div class="top"><div class="brand"><div class="logo">🌦️</div><div><h1>Meteo Viaggio</h1><div class="sub">Meteo lungo la strada</div></div></div><div class="pill">V3.2</div></div>
+<div class="top"><div class="brand"><div class="logo">🌦️</div><div><h1>Meteo Viaggio</h1><div class="sub">Meteo lungo la strada</div></div></div><div class="pill">V3.3</div></div>
 
 <section class="hero">
 <div class="form">
@@ -162,6 +174,17 @@ body.drive .alertbig.bad .alertico{font-size:34px}
   <div id="alertSub" class="alertsub">Il percorso risulta tranquillo nei punti controllati.</div>
 </div>
 <div id="alertDist" class="alertdist">—<small>distanza</small></div>
+</section>
+
+<section id="arrivalBox" class="arrivalbox">
+<h3>🏁 Meteo all'arrivo</h3>
+<div class="arrivalgrid">
+  <div class="arrivalitem"><div class="ak">Ora arrivo</div><div id="arrTime" class="av">—</div></div>
+  <div class="arrivalitem"><div class="ak">Temperatura</div><div id="arrTemp" class="av">—</div></div>
+  <div class="arrivalitem"><div class="ak">Pioggia</div><div id="arrRain" class="av">—</div></div>
+  <div class="arrivalitem"><div class="ak">Vento</div><div id="arrWind" class="av">—</div></div>
+</div>
+<div id="arrNote" class="arrivalnote">Calcolo il meteo previsto esattamente all'orario di arrivo.</div>
 </section>
 
 <section id="diversion" class="diversion hidden">
@@ -346,6 +369,20 @@ function renderDiversion(d,mainRisk){
   }
 }
 
+
+function updateArrivalWeather(r,items){
+  if(!items?.length)return;
+  let a=items[items.length-1],info=wi(a.w.code),hr=hail(a.w),eta=new Date(Date.now()+r.duration*1000);
+  $('arrTime').textContent=ti(eta);
+  $('arrTemp').textContent=`${Math.round(a.w.temp)}°C`;
+  $('arrRain').textContent=`${Math.round(a.w.rain)}%`;
+  $('arrWind').textContent=`${Math.round(a.w.gust)} km/h`;
+  let parts=[info[1]];
+  if([95,96,99].includes(a.w.code))parts.push('temporale possibile');
+  if(hr[0]=='MEDIO'||hr[0]=='ALTO')parts.push(`grandine ${hr[0].toLowerCase()}`);
+  if(a.w.zero)parts.push(`zero termico ${Math.round(a.w.zero)} m`);
+  $('arrNote').textContent=parts.join(' · ');
+}
 function updateDrivePanel(km,r,bad,nextKm,nextMin){
   let eta=new Date(Date.now()+r.duration*1000);
   $('driveEta').textContent=ti(eta);
@@ -384,6 +421,7 @@ if(!destObj){let n=$('dest').value.trim();if(!n)throw Error('Scrivi una destinaz
 let r=await route(here,destObj,viaPoint),mainEval=await evaluateRoute(r,10);currentEval=mainEval;refreshRadar();let km=mainEval.km,items=mainEval.items,total=mainEval.score,risk=mainEval.risk;
 let bad=items.find(x=>severity(x.w)>=3),nextKm=bad?Math.max(0,Math.round(km*bad.p.f)):null,nextMin=bad?Math.max(0,Math.round((r.duration*bad.p.f)/60)):null,next=bad?nextKm+' km':'Nessuno';
 lastRouteKm=km;lastRouteSec=r.duration;
+updateArrivalWeather(r,items);
 updateDrivePanel(km,r,bad,nextKm,nextMin);
 $('dist').textContent=Math.round(km)+' km';$('dur').textContent=fd(r.duration);$('risk').textContent=risk;$('next').textContent=next;
 let aCard=$('nextAlert'),aIcon=$('alertIcon'),aMain=$('alertMain'),aSub=$('alertSub'),aDist=$('alertDist');
@@ -402,7 +440,8 @@ $('bd').textContent=bad?`Possibili fenomeni rilevanti tra circa ${next}. Control
 let tl=$('timeline');tl.innerHTML='';
 items.forEach((x,i)=>{let info=wi(x.w.code),hr=hail(x.w),sev=severity(x.w),snow=x.w.zero?Math.max(0,Math.round(x.w.zero-300)):null,d=document.createElement('div');d.className='stop '+(sev>=5?'bad':sev>=2?'warn':'');d.innerHTML=`<div class="small">${ti(x.eta)}</div><div><div class="place">${i==0?'Partenza':i==items.length-1?destObj.label:'Percorso '+Math.round(x.p.f*100)+'%'}</div><div class="det">${info[1]} · ${Math.round(x.w.temp)}°C · Pioggia ${Math.round(x.w.rain)}%<br>Raffiche ${Math.round(x.w.gust)} km/h · CAPE ${Math.round(x.w.cape)} J/kg${x.w.zero?`<br>Zero termico ${Math.round(x.w.zero)} m · Quota neve ~${snow} m`:''}</div><span class="chip">🧊 Grandine: ${hr[0]}</span></div><div class="ico">${info[0]}</div>`;tl.appendChild(d)});
 $('res').classList.remove('hidden');drawMap(r,items);$('upd').textContent='Aggiornato '+ti(new Date());$('mapstate').textContent=watch?(lastHeading!=null?'Guida attiva · direzione di marcia':'Aggiornamento in viaggio attivo'):viaPoint?'Deviazione meteo attiva':'Percorso calcolato';
-lastSpeech=bad?`Viaggio di ${Math.round(km)} chilometri. Attenzione: il prossimo fenomeno importante è tra circa ${nextKm} chilometri, cioè circa ${nextMin} minuti. Controlla temporali, vento forte e grandine.`:`Viaggio di ${Math.round(km)} chilometri. Al momento non risultano fenomeni importanti lungo il percorso.`;
+let arr=items[items.length-1],arrInfo=wi(arr.w.code),arrHr=hail(arr.w);
+lastSpeech=bad?`Viaggio di ${Math.round(km)} chilometri. Attenzione: il prossimo fenomeno importante è tra circa ${nextKm} chilometri, cioè circa ${nextMin} minuti. All'arrivo sono previsti ${arrInfo[1].toLowerCase()}, ${Math.round(arr.w.temp)} gradi, pioggia ${Math.round(arr.w.rain)} per cento e raffiche fino a ${Math.round(arr.w.gust)} chilometri orari.`:`Viaggio di ${Math.round(km)} chilometri. Al momento non risultano fenomeni importanti lungo il percorso. All'arrivo sono previsti ${arrInfo[1].toLowerCase()}, ${Math.round(arr.w.temp)} gradi, pioggia ${Math.round(arr.w.rain)} per cento e raffiche fino a ${Math.round(arr.w.gust)} chilometri orari.`;
 if(watch!==null&&bad&&nextKm<=30){
   let hr=hail(bad.w),key=`${Math.round(nextKm/5)*5}-${bad.w.code}-${hr[0]}`;
   if(key!==lastWarnKey){lastWarnKey=key;let msg=hr[0]=='ALTO'?`Attenzione. Possibile grandine forte tra circa ${nextKm} chilometri, cioè circa ${nextMin} minuti.`:[95,96,99].includes(bad.w.code)?`Attenzione. Temporale tra circa ${nextKm} chilometri, cioè circa ${nextMin} minuti.`:bad.w.gust>=70?`Attenzione. Vento forte tra circa ${nextKm} chilometri, cioè circa ${nextMin} minuti.`:`Attenzione. Meteo avverso tra circa ${nextKm} chilometri, cioè circa ${nextMin} minuti.`;speakNow(msg)}
