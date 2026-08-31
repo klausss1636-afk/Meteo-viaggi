@@ -42,7 +42,7 @@ h1{margin:0;font-size:24px}.sub,.status,.small{color:var(--m)}.sub{font-size:13p
 </head>
 <body>
 <div class="wrap">
-<div class="top"><div class="brand"><div class="logo">🌦️</div><div><h1>Meteo Viaggio</h1><div class="sub">Meteo lungo la strada</div></div></div><div class="pill">V2.2</div></div>
+<div class="top"><div class="brand"><div class="logo">🌦️</div><div><h1>Meteo Viaggio</h1><div class="sub">Meteo lungo la strada</div></div></div><div class="pill">V2.3</div></div>
 
 <section class="hero">
 <div class="form">
@@ -180,12 +180,12 @@ if(watch!==null && bad && nextKm<=30){
     lastWarnKey=key;
     speechSynthesis.cancel();
     let msg=hr[0]=='ALTO'
-      ? `Attenzione. Possibile grandine forte tra circa ${nextKm} chilometri.`
+      ? `Attenzione. Possibile grandine forte tra circa ${nextKm} chilometri, cioè circa ${nextMin} minuti.`
       : [95,96,99].includes(bad.w.code)
-      ? `Attenzione. Temporale tra circa ${nextKm} chilometri.`
+      ? `Attenzione. Temporale tra circa ${nextKm} chilometri, cioè circa ${nextMin} minuti.`
       : bad.w.gust>=70
-      ? `Attenzione. Vento forte tra circa ${nextKm} chilometri.`
-      : `Attenzione. Meteo avverso tra circa ${nextKm} chilometri.`;
+      ? `Attenzione. Vento forte tra circa ${nextKm} chilometri, cioè circa ${nextMin} minuti.`
+      : `Attenzione. Meteo avverso tra circa ${nextKm} chilometri, cioè circa ${nextMin} minuti.`;
     let u=new SpeechSynthesisUtterance(msg);u.lang='it-IT';speechSynthesis.speak(u);
   }
 }
