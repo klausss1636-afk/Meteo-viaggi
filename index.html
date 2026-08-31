@@ -125,11 +125,29 @@ body.drive .tripstate.risk{
   border-radius:18px;
 }
 body.drive .tripstate.risk small{font-size:12px}
+
+.arrivalstrip{display:none}
+body.drive .arrivalstrip{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:10px 14px;
+  margin:10px 0 12px;
+  border-radius:16px;
+  background:#102033;
+  border:1px solid #ffffff18;
+  font-weight:800;
+  overflow-x:auto;
+  white-space:nowrap;
+}
+body.drive .arrivalstrip .item{font-size:16px}
+body.drive .arrivalstrip .sep{color:#6f8198}
+body.drive .arrivalbox{display:none}
 </style>
 </head>
 <body>
 <div class="wrap">
-<div class="top"><div class="brand"><div class="logo">🌦️</div><div><h1>Meteo Viaggio</h1><div class="sub">Meteo lungo la strada</div></div></div><div class="pill">V3.6</div></div>
+<div class="top"><div class="brand"><div class="logo">🌦️</div><div><h1>Meteo Viaggio</h1><div class="sub">Meteo lungo la strada</div></div></div><div class="pill">V3.7</div></div>
 
 <section class="hero">
 <div class="form">
@@ -184,6 +202,15 @@ body.drive .tripstate.risk small{font-size:12px}
   <div id="alertSub" class="alertsub">Il percorso risulta tranquillo nei punti controllati.</div>
 </div>
 <div id="alertDist" class="alertdist">—<small>distanza</small></div>
+</section>
+
+<section id="arrivalStrip" class="arrivalstrip">
+  <span class="item">🏁 <span id="arrStripTime">—</span></span><span class="sep">·</span>
+  <span class="item">🌡️ <span id="arrStripTemp">—</span></span><span class="sep">·</span>
+  <span class="item">🌤️ <span id="arrStripCond">—</span></span><span class="sep">·</span>
+  <span class="item">💧 <span id="arrStripRain">—</span></span><span class="sep">·</span>
+  <span class="item">💨 <span id="arrStripWind">—</span></span><span class="sep">·</span>
+  <span class="item">🧊 <span id="arrStripHail">—</span></span>
 </section>
 
 <section id="arrivalBox" class="arrivalbox">
@@ -389,6 +416,12 @@ function updateArrivalWeather(r,items){
   $('arrRain').textContent=`${Math.round(a.w.rain)}%`;
   $('arrWind').textContent=`${Math.round(a.w.gust)} km/h`;
   $('arrHail').textContent=hr[0];
+  $('arrStripTime').textContent=ti(eta);
+  $('arrStripTemp').textContent=`${Math.round(a.w.temp)}°`;
+  $('arrStripCond').textContent=info[1];
+  $('arrStripRain').textContent=`${Math.round(a.w.rain)}%`;
+  $('arrStripWind').textContent=`${Math.round(a.w.gust)} km/h`;
+  $('arrStripHail').textContent=hr[0].toLowerCase();
   let parts=[info[1]];
   if([95,96,99].includes(a.w.code))parts.push('temporale possibile');
   if(hr[0]=='MEDIO'||hr[0]=='ALTO')parts.push(`rischio grandine ${hr[0].toLowerCase()}`);
