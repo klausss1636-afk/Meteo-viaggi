@@ -45,7 +45,7 @@ h1{margin:0;font-size:24px}.sub,.status,.small{color:var(--m)}.sub{font-size:13p
 .toolcard b{display:block;margin-bottom:4px}.toolcard span{font-size:12px;color:var(--m)}
 .choice{background:#0d1a2c;border:1px solid #ffffff18;border-radius:18px;padding:14px;margin:14px 0}
 .choice h3{margin:0 0 7px}.choice p{margin:0;color:var(--m);line-height:1.45}
-.radarlegend{position:absolute;z-index:500;bottom:12px;left:12px;background:#07111fdd;border:1px solid #ffffff22;border-radius:12px;padding:8px 10px;font-size:11px;color:#dce7f5}
+.radarlegend{position:absolute;z-index:500;bottom:12px;left:12px;background:#07111faa;border:1px solid #ffffff22;border-radius:10px;padding:6px 8px;font-size:10px;color:#dce7f5;backdrop-filter:blur(6px)}
 .mapwrap{position:relative}
 body.drive .hero,body.drive .timeline,body.drive h2:last-of-type,body.drive .note,body.drive .banner{display:none}
 body.drive .wrap{max-width:none;padding:8px}
@@ -84,7 +84,7 @@ body.drive #map{height:58vh}
 </head>
 <body>
 <div class="wrap">
-<div class="top"><div class="brand"><div class="logo">🌦️</div><div><h1>Meteo Viaggio</h1><div class="sub">Meteo lungo la strada</div></div></div><div class="pill">V2.8</div></div>
+<div class="top"><div class="brand"><div class="logo">🌦️</div><div><h1>Meteo Viaggio</h1><div class="sub">Meteo lungo la strada</div></div></div><div class="pill">V2.9</div></div>
 
 <section class="hero">
 <div class="form">
@@ -174,7 +174,7 @@ La web app non sostituisce il navigatore né gli avvisi ufficiali sulla viabilit
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
 let here=null,destObj=null,map,routeLine,meMarker,wxMarkers=[],watch=null,lastSpeech='',busy=false,lastRefresh=0,lastRefreshPos=null,lastWarnKey='',lastRouteKm=0,lastRouteSec=0;
-let viaPoint=null,bestDiversion=null,lastDiversionKey='',radarLayer=null,radarOn=true,radarTimestamp=null,currentEval=null;
+let viaPoint=null,bestDiversion=null,lastDiversionKey='',radarLayer=null,radarOn=true,radarTimestamp=null,currentEval=null,lastHeading=null;
 const $=x=>document.getElementById(x);
 function st(x){$('status').textContent=x}
 function hav(a,b){const R=6371,r=x=>x*Math.PI/180,d1=r(b.lat-a.lat),d2=r(b.lon-a.lon),q=Math.sin(d1/2)**2+Math.cos(r(a.lat))*Math.cos(r(b.lat))*Math.sin(d2/2)**2;return 2*R*Math.asin(Math.sqrt(q))}
@@ -230,7 +230,20 @@ async function refreshRadar(){
   }catch(e){$('radarLegend').textContent='🌧️ Radar temporaneamente non disponibile'}
 }
 function initMap(){if(map)return;map=L.map('map');L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap'}).addTo(map);refreshRadar()}
-function updateMarker(){if(!map||!here)return;if(meMarker)meMarker.setLatLng([here.lat,here.lon]);else meMarker=L.marker([here.lat,here.lon]).addTo(map).bindPopup('Sei qui')}
+function headingPoint(pos,heading,distanceKm=0.8){
+  if(heading==null||isNaN(heading))return pos;
+  const R=6371,br=heading*Math.PI/180,d=distanceKm/R,lat1=pos.lat*Math.PI/180,lon1=pos.lon*Math.PI/180;
+  const lat2=Math.asin(Math.sin(lat1)*Math.cos(d)+Math.cos(lat1)*Math.sin(d)*Math.cos(br));
+  const lon2=lon1+Math.atan2(Math.sin(br)*Math.sin(d)*Math.cos(lat1),Math.cos(d)-Math.sin(lat1)*Math.sin(lat2));
+  return {lat:lat2*180/Math.PI,lon:lon2*180/Math.PI}
+}
+function updateMarker(){
+  if(!map||!here)return;
+  let iconHtml=`<div style="transform:rotate(${lastHeading||0}deg);font-size:28px;filter:drop-shadow(0 2px 4px #0008)">➤</div>`;
+  let icon=L.divIcon({html:iconHtml,className:'',iconSize:[30,30],iconAnchor:[15,15]});
+  if(meMarker){meMarker.setLatLng([here.lat,here.lon]);meMarker.setIcon(icon)}
+  else meMarker=L.marker([here.lat,here.lon],{icon}).addTo(map).bindPopup('Sei qui');
+}
 function drawMap(r,items){initMap();if(routeLine)map.removeLayer(routeLine);wxMarkers.forEach(m=>map.removeLayer(m));wxMarkers=[];let latlng=r.geometry.coordinates.map(x=>[x[1],x[0]]);routeLine=L.polyline(latlng,{color:'#55c2ff',weight:6,opacity:.85}).addTo(map);items.forEach(x=>{let hr=hail(x.w),col=hr[1]=='bad'?'#ff6b6b':hr[1]=='warn'?'#ffd166':'#63d69b',m=L.circleMarker([x.p.lat,x.p.lon],{radius:8,color:col,fillColor:col,fillOpacity:.9}).addTo(map).bindPopup(`${wi(x.w.code)[1]} · ${Math.round(x.w.temp)}°C<br>Pioggia ${Math.round(x.w.rain)}%<br><b>Grandine ${hr[0]}</b>`);wxMarkers.push(m)});map.fitBounds(routeLine.getBounds(),{padding:[25,25]});updateMarker();setTimeout(()=>map.invalidateSize(),100)}
 async function evaluateRoute(r,maxPoints=6){
   let km=r.distance/1000,pts=sample(r.geometry.coordinates,km,maxPoints),now=new Date(),items=[];
@@ -320,7 +333,7 @@ let b=$('banner');b.className='banner '+(risk=='ALTO'?'bad':risk=='MEDIO'?'warn'
 $('bd').textContent=bad?`Possibili fenomeni rilevanti tra circa ${next}. Controlla temporali, vento e grandine nei punti sotto.`:'Non risultano fenomeni importanti nei punti controllati lungo il percorso.';
 let tl=$('timeline');tl.innerHTML='';
 items.forEach((x,i)=>{let info=wi(x.w.code),hr=hail(x.w),sev=severity(x.w),snow=x.w.zero?Math.max(0,Math.round(x.w.zero-300)):null,d=document.createElement('div');d.className='stop '+(sev>=5?'bad':sev>=2?'warn':'');d.innerHTML=`<div class="small">${ti(x.eta)}</div><div><div class="place">${i==0?'Partenza':i==items.length-1?destObj.label:'Percorso '+Math.round(x.p.f*100)+'%'}</div><div class="det">${info[1]} · ${Math.round(x.w.temp)}°C · Pioggia ${Math.round(x.w.rain)}%<br>Raffiche ${Math.round(x.w.gust)} km/h · CAPE ${Math.round(x.w.cape)} J/kg${x.w.zero?`<br>Zero termico ${Math.round(x.w.zero)} m · Quota neve ~${snow} m`:''}</div><span class="chip">🧊 Grandine: ${hr[0]}</span></div><div class="ico">${info[0]}</div>`;tl.appendChild(d)});
-$('res').classList.remove('hidden');drawMap(r,items);$('upd').textContent='Aggiornato '+ti(new Date());$('mapstate').textContent=watch?'Aggiornamento in viaggio attivo':viaPoint?'Deviazione meteo attiva':'Percorso calcolato';
+$('res').classList.remove('hidden');drawMap(r,items);$('upd').textContent='Aggiornato '+ti(new Date());$('mapstate').textContent=watch?(lastHeading!=null?'Guida attiva · direzione di marcia':'Aggiornamento in viaggio attivo'):viaPoint?'Deviazione meteo attiva':'Percorso calcolato';
 lastSpeech=bad?`Viaggio di ${Math.round(km)} chilometri. Attenzione: il prossimo fenomeno importante è tra circa ${nextKm} chilometri, cioè circa ${nextMin} minuti. Controlla temporali, vento forte e grandine.`:`Viaggio di ${Math.round(km)} chilometri. Al momento non risultano fenomeni importanti lungo il percorso.`;
 if(watch!==null&&bad&&nextKm<=30){
   let hr=hail(bad.w),key=`${Math.round(nextKm/5)*5}-${bad.w.code}-${hr[0]}`;
@@ -335,7 +348,7 @@ st(`Percorso verso ${destObj.label} aggiornato con il meteo all'orario di passag
 async function toggleLive(){
 if(watch!==null){navigator.geolocation.clearWatch(watch);watch=null;$('live').classList.remove('live');$('live').textContent='🚗 Avvia viaggio';$('mapstate').textContent='Aggiornamento fermato';return}
 if(!destObj){st('Prima calcola un viaggio.');return}
-watch=navigator.geolocation.watchPosition(async p=>{here={lat:p.coords.latitude,lon:p.coords.longitude};updateMarker();autoCenterDrive();let moved=!lastRefreshPos||hav(here,lastRefreshPos)>=5,time=Date.now()-lastRefresh>=10*60*1000;if(moved||time)await calc(true)},()=>st('Posizione non disponibile durante il viaggio.'),{enableHighAccuracy:true,maximumAge:15000,timeout:20000});
+watch=navigator.geolocation.watchPosition(async p=>{here={lat:p.coords.latitude,lon:p.coords.longitude};if(p.coords.heading!=null&&!isNaN(p.coords.heading))lastHeading=p.coords.heading;updateMarker();autoCenterDrive();let moved=!lastRefreshPos||hav(here,lastRefreshPos)>=5,time=Date.now()-lastRefresh>=10*60*1000;if(moved||time)await calc(true)},()=>st('Posizione non disponibile durante il viaggio.'),{enableHighAccuracy:true,maximumAge:15000,timeout:20000});
 $('live').classList.add('live');$('live').textContent='⏹ Ferma viaggio';$('mapstate').textContent='Aggiornamento in viaggio attivo';st('Viaggio avviato: aggiorno il meteo quando ti sposti o dopo alcuni minuti.')}
 $('pos').onclick=async()=>{try{st('Cerco la tua posizione…');here=await geoNow();updateMarker();st('Posizione acquisita. Ora inserisci la destinazione.')}catch(e){st('Non riesco ad accedere alla posizione. Controlla i permessi.')}};
 $('calc').onclick=()=>{destObj=null;viaPoint=null;bestDiversion=null;$('diversion').classList.add('hidden');calc(false)};
@@ -383,9 +396,10 @@ setInterval(()=>{if(radarOn&&map)refreshRadar()},5*60*1000);
 let lastAutoCenter=0;
 function autoCenterDrive(){
   if(!document.body.classList.contains('drive')||!map||!here)return;
-  let now=Date.now(); if(now-lastAutoCenter<8000)return;
+  let now=Date.now(); if(now-lastAutoCenter<5000)return;
   lastAutoCenter=now;
-  map.setView([here.lat,here.lon],13,{animate:true});
+  let center=headingPoint(here,lastHeading,0.9);
+  map.setView([center.lat,center.lon],14,{animate:true});
 }
 $('centerBtn').onclick=()=>{
   if(!map||!here){st('Posizione non disponibile.');return}
