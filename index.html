@@ -105,7 +105,7 @@ body.drive .choice,body.drive .diversion{margin:7px 0}
 </head>
 <body>
 <div class="wrap">
-<div class="top"><div class="brand"><div class="logo">🌦️</div><div><h1>Meteo Viaggio</h1><div class="sub">Meteo lungo la strada</div></div></div><div class="pill">V5.2</div></div>
+<div class="top"><div class="brand"><div class="logo">🌦️</div><div><h1>Meteo Viaggio</h1><div class="sub">Meteo lungo la strada</div></div></div><div class="pill">V5.3</div></div>
 
 <section class="hero">
 <div class="form">
@@ -227,17 +227,32 @@ async function routeAlternatives(a,b){
 }
 function sample(c,km,max=10){let p=c.map(x=>({lon:x[0],lat:x[1]})),cum=[0];for(let i=1;i<p.length;i++)cum.push(cum[i-1]+hav(p[i-1],p[i]));let tot=cum.at(-1)||1,n=Math.min(max,Math.max(4,Math.ceil(km/55)+1)),out=[];for(let k=0;k<n;k++){let t=tot*k/(n-1),i=1;while(i<cum.length&&cum[i]<t)i++;out.push({...p[Math.min(i,p.length-1)],f:t/tot})}return out}
 async function weather(p,eta){
- let qs=new URLSearchParams({latitude:p.lat,longitude:p.lon,hourly:'temperature_2m,precipitation_probability,weather_code,wind_gusts_10m,cape,freezing_level_height',timezone:'auto',forecast_days:'3'});
+ let qs=new URLSearchParams({latitude:p.lat,longitude:p.lon,hourly:'temperature_2m,precipitation_probability,precipitation,showers,weather_code,wind_gusts_10m,cape,freezing_level_height',timezone:'auto',forecast_days:'3'});
  let r=await fetch('https://api.open-meteo.com/v1/forecast?'+qs),j=await r.json(),t=j.hourly.time,target=eta.getTime(),ix=0,dd=1e99;
  for(let i=0;i<t.length;i++){let d=Math.abs(new Date(t[i]).getTime()-target);if(d<dd){dd=d;ix=i}}
- return{temp:j.hourly.temperature_2m[ix],rain:j.hourly.precipitation_probability[ix],code:j.hourly.weather_code[ix],gust:j.hourly.wind_gusts_10m[ix],cape:j.hourly.cape?.[ix]||0,zero:j.hourly.freezing_level_height?.[ix]||null}
+ return{temp:j.hourly.temperature_2m[ix],rain:j.hourly.precipitation_probability[ix],precip:j.hourly.precipitation?.[ix]||0,showers:j.hourly.showers?.[ix]||0,code:j.hourly.weather_code[ix],gust:j.hourly.wind_gusts_10m[ix],cape:j.hourly.cape?.[ix]||0,zero:j.hourly.freezing_level_height?.[ix]||null}
 }
 function dayIcon(c){
   if([45,48].includes(c))return'<span class="fogicon" aria-label="Nebbia"><i></i><i></i><i></i></span>';
   return wi(c)[0]
 }
 function wi(c){if([95,96,99].includes(c))return['⛈️','Temporale'];if([80,81,82].includes(c))return['🌧️','Rovesci'];if([61,63,65,66,67].includes(c))return['🌧️','Pioggia'];if([71,73,75,77,85,86].includes(c))return['🌨️','Neve'];if([45,48].includes(c))return['🌫️','Nebbia'];if([1,2,3].includes(c))return['⛅','Nuvoloso'];return['☀️','Sereno']}
-function hail(w){let th=[95,96,99].includes(w.code);if(th&&w.cape>=1800)return['ALTO','bad'];if(th&&w.cape>=800)return['MEDIO','warn'];if(th||w.cape>=1200)return['BASSO','warn'];return['basso','ok']}
+function hail(w){
+  const th=[95,96,99].includes(w.code);
+  let s=0;
+  if((w.cape||0)>=500)s++;
+  if((w.cape||0)>=1000)s++;
+  if((w.cape||0)>=1800)s++;
+  if((w.showers||0)>=0.5 || (w.precip||0)>=2)s++;
+  if((w.showers||0)>=2 || (w.precip||0)>=5)s++;
+  if(th)s+=2;
+  if([96,99].includes(w.code))s+=2;
+  if((w.zero||9999)<=3500)s++;
+  if(s>=6)return['ALTO','bad'];
+  if(s>=3)return['MEDIO','warn'];
+  if(th || (w.cape||0)>=800)return['BASSO','warn'];
+  return['basso','ok'];
+}
 function severity(w){let s=0;if([95,96,99].includes(w.code))s+=4;if(w.rain>=70)s+=2;if(w.gust>=70)s+=3;else if(w.gust>=50)s++;if(hail(w)[0]=='ALTO')s+=4;return s}
 function riskLabel(score){return score>=8?'ALTO':score>=3?'MEDIO':'BASSO'}
 function speakNow(msg){if('speechSynthesis'in window){speechSynthesis.cancel();let u=new SpeechSynthesisUtterance(msg);u.lang='it-IT';speechSynthesis.speak(u)}}
@@ -346,12 +361,12 @@ async function openWeatherHere(){
  try{
   $('weatherHere').classList.remove('hidden');
   let p=here||await geoNow(); here=p; $('whPlace').textContent='Cerco la località…'; let placeName=await reversePlaceName(p); $('whPlace').textContent=placeName;
-  let qs=new URLSearchParams({latitude:p.lat,longitude:p.lon,current:'temperature_2m,weather_code,wind_gusts_10m',hourly:'temperature_2m,precipitation_probability,weather_code,wind_gusts_10m,cape,freezing_level_height',daily:'weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,wind_gusts_10m_max',timezone:'auto',forecast_days:'7'});
+  let qs=new URLSearchParams({latitude:p.lat,longitude:p.lon,current:'temperature_2m,weather_code,wind_gusts_10m',hourly:'temperature_2m,precipitation_probability,precipitation,showers,weather_code,wind_gusts_10m,cape,freezing_level_height',daily:'weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,wind_gusts_10m_max',timezone:'auto',forecast_days:'7'});
   let r=await fetch('https://api.open-meteo.com/v1/forecast?'+qs),j=await r.json(),now=Date.now(),ix=0,dd=1e99;
   j.hourly.time.forEach((t,i)=>{let d=Math.abs(new Date(t).getTime()-now);if(d<dd){dd=d;ix=i}});
-  let w={temp:j.current?.temperature_2m??j.hourly.temperature_2m[ix],code:j.current?.weather_code??j.hourly.weather_code[ix],gust:j.current?.wind_gusts_10m??j.hourly.wind_gusts_10m[ix],rain:j.hourly.precipitation_probability[ix],cape:j.hourly.cape?.[ix]||0,zero:j.hourly.freezing_level_height?.[ix]||null},info=wi(w.code),hr=hail(w);
+  let w={temp:j.current?.temperature_2m??j.hourly.temperature_2m[ix],code:j.current?.weather_code??j.hourly.weather_code[ix],gust:j.current?.wind_gusts_10m??j.hourly.wind_gusts_10m[ix],rain:j.hourly.precipitation_probability[ix],precip:j.hourly.precipitation?.[ix]||0,showers:j.hourly.showers?.[ix]||0,cape:j.hourly.cape?.[ix]||0,zero:j.hourly.freezing_level_height?.[ix]||null},info=wi(w.code),hr=hail(w);
   $('whIcon').textContent=info[0];$('whTemp').textContent=Math.round(w.temp)+'°C';$('whDesc').textContent=info[1];$('whRain').textContent=Math.round(w.rain)+'%';$('whWind').textContent=Math.round(w.gust)+' km/h';$('whHail').textContent=hr[0];$('whZero').textContent=w.zero?Math.round(w.zero)+' m':'—';
-  $('whHours').innerHTML='';for(let n=0;n<8;n+=2){let i=Math.min(ix+n,j.hourly.time.length-1),inf=wi(j.hourly.weather_code[i]),hh=hail({code:j.hourly.weather_code[i],cape:j.hourly.cape?.[i]||0,rain:j.hourly.precipitation_probability[i],gust:j.hourly.wind_gusts_10m[i]}),d=document.createElement('div');d.className='weatherhere-hour';d.innerHTML=`${ti(new Date(j.hourly.time[i]))}<br><b>${inf[0]} ${Math.round(j.hourly.temperature_2m[i])}°</b><br>💧${Math.round(j.hourly.precipitation_probability[i])}% · 🧊${hh[0].toLowerCase()}`;$('whHours').appendChild(d)}
+  $('whHours').innerHTML='';for(let n=0;n<8;n+=2){let i=Math.min(ix+n,j.hourly.time.length-1),inf=wi(j.hourly.weather_code[i]),hh=hail({code:j.hourly.weather_code[i],cape:j.hourly.cape?.[i]||0,rain:j.hourly.precipitation_probability[i],precip:j.hourly.precipitation?.[i]||0,showers:j.hourly.showers?.[i]||0,gust:j.hourly.wind_gusts_10m[i],zero:j.hourly.freezing_level_height?.[i]||null}),d=document.createElement('div');d.className='weatherhere-hour';d.innerHTML=`${ti(new Date(j.hourly.time[i]))}<br><b>${inf[0]} ${Math.round(j.hourly.temperature_2m[i])}°</b><br>💧${Math.round(j.hourly.precipitation_probability[i])}% · 🧊${hh[0].toLowerCase()}`;$('whHours').appendChild(d)}
   
   let days=$('whDays');days.innerHTML='';
   if(j.daily?.time?.length){
