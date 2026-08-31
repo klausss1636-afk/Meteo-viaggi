@@ -123,11 +123,25 @@ body.drive .choice,body.drive .diversion{margin:7px 0}
 body.drive .routeworst{margin:6px 0}
 body.drive .v61strip{grid-template-columns:repeat(3,1fr);margin:6px 0}
 @media(max-width:700px){.v61strip{grid-template-columns:repeat(3,1fr)}.v61mini .mv{font-size:15px}}
+
+.radar-scale{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:9px}
+.radar-scale .rs{display:flex;align-items:center;justify-content:center;gap:5px;font-size:11px;color:var(--m);white-space:nowrap}
+.radar-scale .sw{width:18px;height:6px;border-radius:999px;display:inline-block}
+.radar-scale .weak{background:linear-gradient(90deg,#46b3ff,#48d98a)}
+.radar-scale .moderate{background:linear-gradient(90deg,#48d98a,#ffd34d)}
+.radar-scale .strong{background:linear-gradient(90deg,#ffb23e,#ff5a4f)}
+.radar-scale .extreme{background:linear-gradient(90deg,#ff4d6d,#b34dff)}
+@media(max-width:430px){.radar-scale{grid-template-columns:repeat(2,1fr)}}
+
+.v61strip.four{grid-template-columns:repeat(4,1fr)}
+.altline{margin-top:6px;font-size:12px;color:var(--m)}
+.altline b{color:#fff}
+@media(max-width:700px){.v61strip.four{grid-template-columns:repeat(2,1fr)}}
 </style>
 </head>
 <body>
 <div class="wrap">
-<div class="top"><div class="brand"><div class="logo">🌦️</div><div><h1>Meteo Viaggio</h1><div class="sub">Meteo lungo la strada</div></div></div><div class="pill">V6.2</div></div>
+<div class="top"><div class="brand"><div class="logo">🌦️</div><div><h1>Meteo Viaggio</h1><div class="sub">Meteo lungo la strada</div></div></div><div class="pill">V6.4</div></div>
 
 <section class="hero">
 <div class="form">
@@ -164,7 +178,7 @@ body.drive .v61strip{grid-template-columns:repeat(3,1fr);margin:6px 0}
 <div class="drivebox">
 <div class="k">ARRIVO / DISTANZA</div>
 <div id="driveEta" class="big">—</div>
-<div id="driveKm" class="muted">—</div>
+<div id="driveKm" class="muted">—</div><div id="driveAlt" class="altline">⛰️ Quota: —</div>
 <button id="driveDiversionBtn" class="btn hidden" style="width:100%;margin-top:8px">🛣️ Deviazione</button>
 </div>
 </section>
@@ -225,23 +239,65 @@ body.drive .v61strip{grid-template-columns:repeat(3,1fr);margin:6px 0}
 </div>
 </div>
 <section id="weatherHere" class="weatherhere hidden"><div class="weatherhere-inner"><div class="weatherhere-top"><div><div class="small">POSIZIONE ATTUALE</div><h2 style="margin:0">🌦️ Meteo qui</h2><div id="whPlace" class="small">Sto cercando la località…</div></div><button id="whClose" class="weatherhere-close">✕</button></div><div class="weatherhere-card"><div id="whIcon" style="font-size:48px">🌤️</div><div id="whTemp" class="weatherhere-now">—</div><div id="whDesc" style="font-size:19px;font-weight:800">—</div><div class="weatherhere-grid"><div class="weatherhere-item"><small>Pioggia</small><b id="whRain">—</b></div><div class="weatherhere-item"><small>Raffiche</small><b id="whWind">—</b></div><div class="weatherhere-item"><small>Grandine</small><b id="whHail">—</b></div><div class="weatherhere-item"><small>Zero termico</small><b id="whZero">—</b></div></div>
-<div class="v61strip"><div class="v61mini"><div class="mk">Percepita</div><div id="whFeels" class="mv">—</div></div><div class="v61mini"><div class="mk">Visibilità</div><div id="whVis" class="mv">—</div></div><div class="v61mini"><div class="mk">Pioggia 90 min</div><div id="whRain90" class="mv">—</div></div></div>
+<div class="v61strip four"><div class="v61mini"><div class="mk">Percepita</div><div id="whFeels" class="mv">—</div></div><div class="v61mini"><div class="mk">Visibilità</div><div id="whVis" class="mv">—</div></div><div class="v61mini"><div class="mk">Pioggia 90 min</div><div id="whRain90" class="mv">—</div></div><div class="v61mini"><div class="mk">Altitudine</div><div id="whAlt" class="mv">—</div></div></div>
 <div class="v61strip"><div class="v61mini"><div class="mk">Alba</div><div id="whSunrise" class="mv">—</div></div><div class="v61mini"><div class="mk">Tramonto</div><div id="whSunset" class="mv">—</div></div><div class="v61mini"><div class="mk">Aggiornamento</div><div id="whUpdated" class="mv">—</div></div></div>
-</div><div class="weatherhere-card"><b id="whAlertsTitle">✅ Avvisi meteo</b><div id="whAlerts" class="alertsbox ok"><b>Nessun avviso importante</b><div>Condizioni tranquille nella zona.</div></div></div><div class="weatherhere-card"><b>Prossime ore</b><div id="whHours" class="weatherhere-hours"></div></div><div class="weatherhere-card"><b>📅 Prossimi giorni</b><div class="dayswrap"><div id="whDays" class="weatherhere-days"></div><div id="daysHint" class="dayshint">›</div></div></div><div class="weatherhere-card"><div class="radarplay"><b>🌧️ Radar animato nella tua zona</b><button id="radarAnimBtn" class="smallbtn">⏸ Pausa</button></div><div id="radarAnimTime" class="small">Movimento precipitazioni</div><div id="weatherHereMap" class="weatherhere-radar"></div></div></div></section>
+</div><div class="weatherhere-card"><b id="whAlertsTitle">✅ Avvisi meteo</b><div id="whAlerts" class="alertsbox ok"><b>Nessun avviso importante</b><div>Condizioni tranquille nella zona.</div></div></div><div class="weatherhere-card"><b>Prossime ore</b><div id="whHours" class="weatherhere-hours"></div></div><div class="weatherhere-card"><b>📅 Prossimi giorni</b><div class="dayswrap"><div id="whDays" class="weatherhere-days"></div><div id="daysHint" class="dayshint">›</div></div></div><div class="weatherhere-card"><div class="radarplay"><b>🌧️ Radar animato nella tua zona</b><button id="radarAnimBtn" class="smallbtn">⏸ Pausa</button></div><div id="radarAnimTime" class="small">Movimento precipitazioni</div><div id="weatherHereMap" class="weatherhere-radar"></div>
+<div class="radar-scale">
+  <div class="rs"><span class="sw weak"></span>Debole</div>
+  <div class="rs"><span class="sw moderate"></span>Moderata</div>
+  <div class="rs"><span class="sw strong"></span>Forte</div>
+  <div class="rs"><span class="sw extreme"></span>Molto forte</div>
+</div>
+</div></div></section>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-let here=null,destObj=null,map,weatherHereMap,weatherHereRadar,routeLine,meMarker,wxMarkers=[],riskLines=[],watch=null,lastSpeech='',busy=false,lastRefresh=0,lastRefreshPos=null,radarLayer=null,radarOn=true,radarTimestamp=null,currentEval=null,lastHeading=null,viaPoint=null,bestDiversion=null,lastVoiceWarnKey='',routeRadarFrames=[],routeRadarTimer=null,routeRadarIx=0,weatherRadarFrames=[],weatherRadarTimer=null,weatherRadarIx=0,radarAnimating=true;
+let here=null,destObj=null,map,weatherHereMap,weatherHereRadar,routeLine,meMarker,wxMarkers=[],riskLines=[],watch=null,lastSpeech='',busy=false,lastRefresh=0,lastRefreshPos=null,radarLayer=null,radarOn=true,radarTimestamp=null,currentEval=null,lastHeading=null,viaPoint=null,bestDiversion=null,lastVoiceWarnKey='',routeRadarFrames=[],routeRadarTimer=null,routeRadarIx=0,weatherRadarFrames=[],weatherRadarTimer=null,weatherRadarIx=0,radarAnimating=true,currentAltitude=null,routeMaxAltitude=null;
 const $=x=>document.getElementById(x);
 function st(x){$('status').textContent=x}
 function hav(a,b){const R=6371,r=x=>x*Math.PI/180,d1=r(b.lat-a.lat),d2=r(b.lon-a.lon),q=Math.sin(d1/2)**2+Math.cos(r(a.lat))*Math.cos(r(b.lat))*Math.sin(d2/2)**2;return 2*R*Math.asin(Math.sqrt(q))}
 function fd(s){let H=Math.floor(s/3600),M=Math.round(s%3600/60);return H?H+' h '+M+' min':M+' min'}
 function ti(d){return d.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'})}
-function geoNow(){return new Promise((ok,no)=>navigator.geolocation.getCurrentPosition(p=>ok({lat:p.coords.latitude,lon:p.coords.longitude}),no,{enableHighAccuracy:true,timeout:15000,maximumAge:15000}))}
+function geoNow(){return new Promise((ok,no)=>navigator.geolocation.getCurrentPosition(p=>ok({lat:p.coords.latitude,lon:p.coords.longitude,alt:Number.isFinite(p.coords.altitude)?p.coords.altitude:null,altAcc:Number.isFinite(p.coords.altitudeAccuracy)?p.coords.altitudeAccuracy:null}),no,{enableHighAccuracy:true,timeout:15000,maximumAge:15000}))}
 async function geocode(n){
  try{let r=await fetch('https://nominatim.openstreetmap.org/search?format=jsonv2&limit=5&countrycodes=it&accept-language=it&q='+encodeURIComponent(n));if(r.ok){let j=await r.json();if(j?.length){let x=j[0];return{lat:+x.lat,lon:+x.lon,label:x.display_name}}}}catch(e){}
  let r=await fetch('https://geocoding-api.open-meteo.com/v1/search?name='+encodeURIComponent(n)+'&count=5&language=it&format=json'),j=await r.json();
  if(!j.results?.length)throw Error('Destinazione non trovata.');let x=j.results[0];return{lat:x.latitude,lon:x.longitude,label:[x.name,x.admin1,x.country].filter(Boolean).join(', ')}
 }
+
+async function terrainElevation(points){
+  try{
+    let pts=Array.isArray(points)?points:[points];
+    if(!pts.length)return[];
+    let lat=pts.map(p=>p.lat).join(','),lon=pts.map(p=>p.lon).join(',');
+    let r=await fetch(`https://api.open-meteo.com/v1/elevation?latitude=${lat}&longitude=${lon}`);
+    if(!r.ok)throw Error('elevation');
+    let j=await r.json(),e=j.elevation;
+    return Array.isArray(e)?e:[e];
+  }catch(e){return[]}
+}
+async function resolveAltitude(p){
+  if(Number.isFinite(p?.alt)){
+    currentAltitude=Math.round(p.alt);
+    return currentAltitude;
+  }
+  let e=await terrainElevation(p);
+  currentAltitude=Number.isFinite(e?.[0])?Math.round(e[0]):null;
+  return currentAltitude;
+}
+async function maxRouteElevation(coords){
+  try{
+    if(!coords?.length)return null;
+    let n=Math.min(20,coords.length),pts=[];
+    for(let i=0;i<n;i++){
+      let x=coords[Math.round(i*(coords.length-1)/(n-1))];
+      pts.push({lat:x[1],lon:x[0]});
+    }
+    let e=await terrainElevation(pts),vals=e.filter(Number.isFinite);
+    routeMaxAltitude=vals.length?Math.round(Math.max(...vals)):null;
+    return routeMaxAltitude;
+  }catch(e){return null}
+}
+
 async function route(a,b,via=null){
  let coords=via?`${a.lon},${a.lat};${via.lon},${via.lat};${b.lon},${b.lat}`:`${a.lon},${a.lat};${b.lon},${b.lat}`;
  let r=await fetch(`https://router.project-osrm.org/route/v1/driving/${coords}?overview=full&geometries=geojson&alternatives=false`),j=await r.json();
@@ -384,12 +440,14 @@ async function calc(auto=false){
  try{
   busy=true;st(auto?'Aggiorno percorso e meteo…':'Calcolo percorso e meteo…');
   if(!destObj){let n=$('dest').value.trim();if(!n)throw Error('Scrivi una destinazione');destObj=await geocode(n)}
-  let r=await route(here,destObj,viaPoint),ev=await evaluateRoute(r,10);currentEval=ev;let km=ev.km,items=ev.items,risk=ev.risk,bad=items.find(x=>severity(x.w)>=3),nextKm=bad?Math.max(0,Math.round(km*bad.p.f)):null,nextMin=bad?Math.max(0,Math.round((r.duration*bad.p.f)/60)):null;
+  let r=await route(here,destObj,viaPoint),ev=await evaluateRoute(r,10);currentEval=ev;
+  let altNow=await resolveAltitude(here),maxAlt=await maxRouteElevation(r.geometry.coordinates);let km=ev.km,items=ev.items,risk=ev.risk,bad=items.find(x=>severity(x.w)>=3),nextKm=bad?Math.max(0,Math.round(km*bad.p.f)):null,nextMin=bad?Math.max(0,Math.round((r.duration*bad.p.f)/60)):null;
   updateArrivalWeather(r,items);updateDrivePanel(km,r,bad,nextKm,nextMin);
+  $('driveAlt').innerHTML=`⛰️ Quota: <b>${altNow!=null?altNow+' m':'—'}</b>${maxAlt!=null?` · max percorso <b>${maxAlt} m</b>`:''}`;
   let worst=worstRoutePoint(items,km,r),rw=$('routeWorst');
   if(worst){
     rw.classList.remove('hidden','ok','bad');rw.classList.add(worst.score>=5?'bad':worst.score>=2?'':'ok');
-    $('routeWorstText').textContent=worst.score>=2?`${worst.kind} tra circa ${worst.km} km (${worst.min} min).`: `Nessun tratto critico: punto più delicato a circa ${worst.km} km.`;
+    $('routeWorstText').textContent=(worst.score>=2?`${worst.kind} tra circa ${worst.km} km (${worst.min} min).`:`Nessun tratto critico: punto più delicato a circa ${worst.km} km.`)+(maxAlt!=null?` Quota massima percorso: ${maxAlt} m.`:'');
   }
   $('dist').textContent=Math.round(km)+' km';$('dur').textContent=fd(r.duration);$('risk').textContent=risk;$('next').textContent=bad?nextKm+' km':'Nessuno';
   let aCard=$('nextAlert'),aIcon=$('alertIcon'),aMain=$('alertMain'),aSub=$('alertSub'),aDist=$('alertDist');
@@ -410,7 +468,7 @@ async function calc(auto=false){
 async function toggleLive(){
  if(watch!==null){navigator.geolocation.clearWatch(watch);watch=null;$('live').classList.remove('live');$('live').textContent='🚗 Avvia viaggio';$('mapstate').textContent='Aggiornamento fermato';return}
  if(!destObj){st('Prima calcola un viaggio.');return}
- watch=navigator.geolocation.watchPosition(async p=>{here={lat:p.coords.latitude,lon:p.coords.longitude};if(p.coords.heading!=null&&!isNaN(p.coords.heading))lastHeading=p.coords.heading;updateMarker();let moved=!lastRefreshPos||hav(here,lastRefreshPos)>=5,time=Date.now()-lastRefresh>=5*60*1000;if(moved||time)await calc(true)},()=>st('Posizione non disponibile durante il viaggio.'),{enableHighAccuracy:true,maximumAge:15000,timeout:20000});
+ watch=navigator.geolocation.watchPosition(async p=>{here={lat:p.coords.latitude,lon:p.coords.longitude,alt:Number.isFinite(p.coords.altitude)?p.coords.altitude:null,altAcc:Number.isFinite(p.coords.altitudeAccuracy)?p.coords.altitudeAccuracy:null};if(p.coords.heading!=null&&!isNaN(p.coords.heading))lastHeading=p.coords.heading;updateMarker();let moved=!lastRefreshPos||hav(here,lastRefreshPos)>=5,time=Date.now()-lastRefresh>=5*60*1000;if(moved||time)await calc(true)},()=>st('Posizione non disponibile durante il viaggio.'),{enableHighAccuracy:true,maximumAge:15000,timeout:20000});
  $('live').classList.add('live');$('live').textContent='⏹ Ferma viaggio';$('mapstate').textContent='Aggiornamento in viaggio attivo'
 }
 $('pos').onclick=async()=>{try{st('Cerco la tua posizione…');here=await geoNow();updateMarker();st('Posizione acquisita. Ora inserisci la destinazione.')}catch(e){st('Non riesco ad accedere alla posizione. Controlla i permessi.')}};
@@ -471,6 +529,7 @@ async function openWeatherHere(){
   $('whSunrise').textContent=j.daily?.sunrise?.[0]?ti(new Date(j.daily.sunrise[0])):'—';
   $('whSunset').textContent=j.daily?.sunset?.[0]?ti(new Date(j.daily.sunset[0])):'—';
   $('whUpdated').textContent=ti(new Date());
+  let alt=await resolveAltitude(p);$('whAlt').textContent=alt!=null?alt+' m':'—';
   let alerts=appAlertsFromWeather(w),ab=$('whAlerts'),at=$('whAlertsTitle');
   let serious=alerts.some(x=>x.includes('alto')||x.includes('molto'));
   ab.className='alertsbox '+(serious?'bad':alerts.length?'warn':'ok');
