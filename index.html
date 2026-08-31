@@ -70,11 +70,21 @@ body.drive .mapwrap{margin-top:10px}
   body.drive .drivepanel{grid-template-columns:1fr}
   body.drive .drivebox .big{font-size:30px}
 }
+
+.tripstate{display:none}
+body.drive .tripstate{display:flex;align-items:center;gap:10px;position:sticky;top:6px;z-index:900;margin:6px 0;padding:12px 16px;border-radius:18px;background:#102033ee;border:1px solid #ffffff20;font-size:20px;font-weight:900;backdrop-filter:blur(10px)}
+body.drive .tripstate small{font-size:12px;font-weight:600;color:var(--m);margin-left:auto}
+body.drive .centerbtn{right:14px;bottom:66px}
+body.drive .radarlegend{left:12px;bottom:12px;max-width:65%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+body.drive #map{height:58vh}
+.weatherchange{margin-top:8px;font-size:13px;color:var(--m)}
+.weatherchange b{color:#fff;font-size:18px}
+@media(max-width:700px){body.drive #map{height:54vh}.tripstate{font-size:18px}}
 </style>
 </head>
 <body>
 <div class="wrap">
-<div class="top"><div class="brand"><div class="logo">🌦️</div><div><h1>Meteo Viaggio</h1><div class="sub">Meteo lungo la strada</div></div></div><div class="pill">V2.6</div></div>
+<div class="top"><div class="brand"><div class="logo">🌦️</div><div><h1>Meteo Viaggio</h1><div class="sub">Meteo lungo la strada</div></div></div><div class="pill">V2.7</div></div>
 
 <section class="hero">
 <div class="form">
@@ -99,11 +109,13 @@ body.drive .mapwrap{margin-top:10px}
   <h3>⏱️ Confronto viaggio</h3>
   <p id="choiceText">Sto confrontando partire ora, aspettare e deviare.</p>
 </section>
+<div id="tripState" class="tripstate"><span id="tripStateIcon">🟢</span><span id="tripStateText">Tranquillo</span><small id="tripStateSub">meteo viaggio</small></div>
 <section class="drivepanel">
   <div class="drivebox">
     <div class="k">PROSSIMO RISCHIO</div>
     <div id="driveRiskMain" class="big">Nessuno</div>
     <div id="driveRiskSub" class="muted">Percorso tranquillo</div>
+<div id="weatherChange" class="weatherchange">Prossimo cambio meteo: <b>—</b></div>
   </div>
   <div class="drivebox">
     <div class="k">ARRIVO / DISTANZA</div>
@@ -260,9 +272,20 @@ function updateDrivePanel(km,r,bad,nextKm,nextMin){
     let kind=hr[0]=='ALTO'?'Grandine forte':[95,96,99].includes(bad.w.code)?'Temporale':bad.w.gust>=70?'Vento forte':bad.w.rain>=70?'Pioggia intensa':info[1];
     $('driveRiskMain').textContent=`${kind} · ${nextKm} km`;
     $('driveRiskSub').textContent=`Tra circa ${nextMin} min · grandine ${hr[0]} · raffiche ${Math.round(bad.w.gust)} km/h`;
+    $('weatherChange').innerHTML=`Prossimo cambio meteo: <b>${nextKm} km</b>`;
+    let severe=severity(bad.w)>=4;
+    $('tripStateIcon').textContent=severe?'🔴':'🟡';
+    $('tripStateText').textContent=severe?'Critico':'Attenzione';
+    $('tripStateSub').textContent=`${kind} tra ${nextKm} km`;
   }else{
     $('driveRiskMain').textContent='Nessuno';
     $('driveRiskSub').textContent='Percorso tranquillo nei punti controllati';
+    let change=currentEval?.items?.find((x,i,a)=>i>0 && wi(x.w.code)[1]!==wi(a[0].w.code)[1]);
+    let changeKm=change?Math.round(km*change.p.f):null;
+    $('weatherChange').innerHTML=changeKm?`Prossimo cambio meteo: <b>${changeKm} km</b>`:`Meteo stabile lungo i punti controllati`;
+    $('tripStateIcon').textContent='🟢';
+    $('tripStateText').textContent='Tranquillo';
+    $('tripStateSub').textContent=changeKm?`cambio meteo tra ${changeKm} km`:'nessun rischio rilevante';
   }
   $('driveDiversionBtn').classList.toggle('hidden', !bestDiversion);
 }
@@ -306,7 +329,7 @@ st(`Percorso verso ${destObj.label} aggiornato con il meteo all'orario di passag
 async function toggleLive(){
 if(watch!==null){navigator.geolocation.clearWatch(watch);watch=null;$('live').classList.remove('live');$('live').textContent='🚗 Avvia viaggio';$('mapstate').textContent='Aggiornamento fermato';return}
 if(!destObj){st('Prima calcola un viaggio.');return}
-watch=navigator.geolocation.watchPosition(async p=>{here={lat:p.coords.latitude,lon:p.coords.longitude};updateMarker();let moved=!lastRefreshPos||hav(here,lastRefreshPos)>=5,time=Date.now()-lastRefresh>=10*60*1000;if(moved||time)await calc(true)},()=>st('Posizione non disponibile durante il viaggio.'),{enableHighAccuracy:true,maximumAge:15000,timeout:20000});
+watch=navigator.geolocation.watchPosition(async p=>{here={lat:p.coords.latitude,lon:p.coords.longitude};updateMarker();autoCenterDrive();let moved=!lastRefreshPos||hav(here,lastRefreshPos)>=5,time=Date.now()-lastRefresh>=10*60*1000;if(moved||time)await calc(true)},()=>st('Posizione non disponibile durante il viaggio.'),{enableHighAccuracy:true,maximumAge:15000,timeout:20000});
 $('live').classList.add('live');$('live').textContent='⏹ Ferma viaggio';$('mapstate').textContent='Aggiornamento in viaggio attivo';st('Viaggio avviato: aggiorno il meteo quando ti sposti o dopo alcuni minuti.')}
 $('pos').onclick=async()=>{try{st('Cerco la tua posizione…');here=await geoNow();updateMarker();st('Posizione acquisita. Ora inserisci la destinazione.')}catch(e){st('Non riesco ad accedere alla posizione. Controlla i permessi.')}};
 $('calc').onclick=()=>{destObj=null;viaPoint=null;bestDiversion=null;$('diversion').classList.add('hidden');calc(false)};
@@ -339,7 +362,7 @@ $('driveModeBtn').onclick=()=>{
   document.body.classList.toggle('drive');
   let on=document.body.classList.contains('drive');
   $('driveModeBtn').textContent=on?'↩️ Vista completa':'🚘 Modalità Carlink';
-  setTimeout(()=>{if(map)map.invalidateSize()},150);
+  setTimeout(()=>{if(map){map.invalidateSize();if(on&&here)map.setView([here.lat,here.lon],13,{animate:true})}},150);
 };
 $('radarBtn').onclick=()=>{
   radarOn=!radarOn;
@@ -350,6 +373,14 @@ $('radarBtn').onclick=()=>{
 };
 setInterval(()=>{if(radarOn&&map)refreshRadar()},5*60*1000);
 
+
+let lastAutoCenter=0;
+function autoCenterDrive(){
+  if(!document.body.classList.contains('drive')||!map||!here)return;
+  let now=Date.now(); if(now-lastAutoCenter<8000)return;
+  lastAutoCenter=now;
+  map.setView([here.lat,here.lon],13,{animate:true});
+}
 $('centerBtn').onclick=()=>{
   if(!map||!here){st('Posizione non disponibile.');return}
   map.setView([here.lat,here.lon],14,{animate:true});
