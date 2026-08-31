@@ -39,11 +39,27 @@ h1{margin:0;font-size:24px}.sub,.status,.small{color:var(--m)}.sub{font-size:13p
 .dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--ok);margin-right:6px}
 .leaflet-popup-content-wrapper,.leaflet-popup-tip{background:#101c2d;color:white}
 @media(max-width:700px){.summary{grid-template-columns:1fr 1fr}.form{grid-template-columns:1fr}#map{height:290px}.alertbig{grid-template-columns:auto 1fr}.alertdist{grid-column:2;text-align:left}.diversion .row{flex-direction:column}}
+
+.v25tools{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:14px 0}
+.toolcard{background:var(--c);border:1px solid #ffffff14;border-radius:18px;padding:13px}
+.toolcard b{display:block;margin-bottom:4px}.toolcard span{font-size:12px;color:var(--m)}
+.choice{background:#0d1a2c;border:1px solid #ffffff18;border-radius:18px;padding:14px;margin:14px 0}
+.choice h3{margin:0 0 7px}.choice p{margin:0;color:var(--m);line-height:1.45}
+.radarlegend{position:absolute;z-index:500;bottom:12px;left:12px;background:#07111fdd;border:1px solid #ffffff22;border-radius:12px;padding:8px 10px;font-size:11px;color:#dce7f5}
+.mapwrap{position:relative}
+body.drive .hero,body.drive .timeline,body.drive h2:last-of-type,body.drive .note,body.drive .banner{display:none}
+body.drive .wrap{max-width:none;padding:8px}
+body.drive .top{padding:4px 6px}
+body.drive .summary{grid-template-columns:repeat(4,1fr)}
+body.drive #map{height:52vh}
+body.drive .alertbig{position:sticky;top:6px;z-index:850}
+body.drive .v25tools{grid-template-columns:1fr 1fr 1fr}
+@media(max-width:700px){.v25tools{grid-template-columns:1fr}.toolcard{text-align:center}body.drive .summary{grid-template-columns:1fr 1fr}body.drive #map{height:48vh}}
 </style>
 </head>
 <body>
 <div class="wrap">
-<div class="top"><div class="brand"><div class="logo">🌦️</div><div><h1>Meteo Viaggio</h1><div class="sub">Meteo lungo la strada</div></div></div><div class="pill">V2.4</div></div>
+<div class="top"><div class="brand"><div class="logo">🌦️</div><div><h1>Meteo Viaggio</h1><div class="sub">Meteo lungo la strada</div></div></div><div class="pill">V2.5</div></div>
 
 <section class="hero">
 <div class="form">
@@ -59,6 +75,15 @@ h1{margin:0;font-size:24px}.sub,.status,.small{color:var(--m)}.sub{font-size:13p
 </section>
 
 <div id="res" class="hidden">
+<section class="v25tools">
+  <button id="radarBtn" class="btn alt">🌧️ Radar ON</button>
+  <button id="driveModeBtn" class="btn alt">🚘 Modalità Carlink</button>
+  <button id="waitBtn" class="btn alt">⏱️ Devia o aspetta?</button>
+</section>
+<section id="choiceBox" class="choice hidden">
+  <h3>⏱️ Confronto viaggio</h3>
+  <p id="choiceText">Sto confrontando partire ora, aspettare e deviare.</p>
+</section>
 <section class="summary">
 <div class="card"><div class="k">Distanza</div><div id="dist" class="v">—</div></div>
 <div class="card"><div class="k">Durata</div><div id="dur" class="v">—</div></div>
@@ -92,7 +117,7 @@ h1{margin:0;font-size:24px}.sub,.status,.small{color:var(--m)}.sub{font-size:13p
 <h2>Mappa del viaggio</h2>
 <div class="mapwrap">
 <div class="mapbar"><span><span class="dot"></span><span id="mapstate">Percorso calcolato</span></span><span id="upd">—</span></div>
-<div id="map"></div>
+<div id="map"></div><div id="radarLegend" class="radarlegend">🌧️ Radar precipitazioni · aggiornamento recente</div>
 </div>
 
 <h2>Meteo lungo il percorso</h2>
@@ -109,7 +134,7 @@ La web app non sostituisce il navigatore né gli avvisi ufficiali sulla viabilit
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
 let here=null,destObj=null,map,routeLine,meMarker,wxMarkers=[],watch=null,lastSpeech='',busy=false,lastRefresh=0,lastRefreshPos=null,lastWarnKey='',lastRouteKm=0,lastRouteSec=0;
-let viaPoint=null,bestDiversion=null,lastDiversionKey='';
+let viaPoint=null,bestDiversion=null,lastDiversionKey='',radarLayer=null,radarOn=true,radarTimestamp=null,currentEval=null;
 const $=x=>document.getElementById(x);
 function st(x){$('status').textContent=x}
 function hav(a,b){const R=6371,r=x=>x*Math.PI/180,d1=r(b.lat-a.lat),d2=r(b.lon-a.lon),q=Math.sin(d1/2)**2+Math.cos(r(a.lat))*Math.cos(r(b.lat))*Math.sin(d2/2)**2;return 2*R*Math.asin(Math.sqrt(q))}
@@ -145,7 +170,20 @@ function hail(w){let th=[95,96,99].includes(w.code);if(th&&w.cape>=1800)return['
 function severity(w){let s=0;if([95,96,99].includes(w.code))s+=4;if(w.rain>=70)s+=2;if(w.gust>=70)s+=3;else if(w.gust>=50)s++;if(hail(w)[0]=='ALTO')s+=4;return s}
 function riskLabel(score){return score>=8?'ALTO':score>=3?'MEDIO':'BASSO'}
 function speakNow(msg){if('speechSynthesis'in window){speechSynthesis.cancel();let u=new SpeechSynthesisUtterance(msg);u.lang='it-IT';speechSynthesis.speak(u)}}
-function initMap(){if(map)return;map=L.map('map');L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap'}).addTo(map)}
+async function refreshRadar(){
+  if(!map||!radarOn)return;
+  try{
+    let r=await fetch('https://api.rainviewer.com/public/weather-maps.json'),j=await r.json();
+    let frames=j.radar?.past||[]; if(!frames.length)return;
+    let f=frames[frames.length-1];
+    if(radarTimestamp===f.time)return;
+    radarTimestamp=f.time;
+    if(radarLayer)map.removeLayer(radarLayer);
+    radarLayer=L.tileLayer('https://tilecache.rainviewer.com'+f.path+'/256/{z}/{x}/{y}/2/1_1.png',{opacity:.48,zIndex:350,attribution:'Radar © RainViewer'}).addTo(map);
+    $('radarLegend').textContent='🌧️ Radar precipitazioni · '+ti(new Date(f.time*1000));
+  }catch(e){$('radarLegend').textContent='🌧️ Radar temporaneamente non disponibile'}
+}
+function initMap(){if(map)return;map=L.map('map');L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap'}).addTo(map);refreshRadar()}
 function updateMarker(){if(!map||!here)return;if(meMarker)meMarker.setLatLng([here.lat,here.lon]);else meMarker=L.marker([here.lat,here.lon]).addTo(map).bindPopup('Sei qui')}
 function drawMap(r,items){initMap();if(routeLine)map.removeLayer(routeLine);wxMarkers.forEach(m=>map.removeLayer(m));wxMarkers=[];let latlng=r.geometry.coordinates.map(x=>[x[1],x[0]]);routeLine=L.polyline(latlng,{color:'#55c2ff',weight:6,opacity:.85}).addTo(map);items.forEach(x=>{let hr=hail(x.w),col=hr[1]=='bad'?'#ff6b6b':hr[1]=='warn'?'#ffd166':'#63d69b',m=L.circleMarker([x.p.lat,x.p.lon],{radius:8,color:col,fillColor:col,fillOpacity:.9}).addTo(map).bindPopup(`${wi(x.w.code)[1]} · ${Math.round(x.w.temp)}°C<br>Pioggia ${Math.round(x.w.rain)}%<br><b>Grandine ${hr[0]}</b>`);wxMarkers.push(m)});map.fitBounds(routeLine.getBounds(),{padding:[25,25]});updateMarker();setTimeout(()=>map.invalidateSize(),100)}
 async function evaluateRoute(r,maxPoints=6){
@@ -189,7 +227,7 @@ if(busy)return;if(!here){st('Prima premi “Usa la mia posizione”.');return}
 try{
 busy=true;st(auto?'Aggiorno percorso e meteo…':'Calcolo percorso e meteo…');
 if(!destObj){let n=$('dest').value.trim();if(!n)throw Error('Scrivi una destinazione');destObj=await geocode(n)}
-let r=await route(here,destObj,viaPoint),mainEval=await evaluateRoute(r,10),km=mainEval.km,items=mainEval.items,total=mainEval.score,risk=mainEval.risk;
+let r=await route(here,destObj,viaPoint),mainEval=await evaluateRoute(r,10);currentEval=mainEval;refreshRadar();let km=mainEval.km,items=mainEval.items,total=mainEval.score,risk=mainEval.risk;
 let bad=items.find(x=>severity(x.w)>=3),nextKm=bad?Math.max(0,Math.round(km*bad.p.f)):null,nextMin=bad?Math.max(0,Math.round((r.duration*bad.p.f)/60)):null,next=bad?nextKm+' km':'Nessuno';
 lastRouteKm=km;lastRouteSec=r.duration;
 $('dist').textContent=Math.round(km)+' km';$('dur').textContent=fd(r.duration);$('risk').textContent=risk;$('next').textContent=next;
@@ -231,6 +269,41 @@ $('dest').onkeydown=e=>{if(e.key=='Enter')$('calc').click()};$('live').onclick=t
 $('speak').onclick=()=>{if(!lastSpeech){st('Prima calcola un viaggio.');return}speakNow(lastSpeech)};
 $('useDiversion').onclick=()=>{if(!bestDiversion)return;viaPoint=bestDiversion.via;bestDiversion=null;$('diversion').classList.add('hidden');st('Deviazione scelta. Ricalcolo il viaggio…');speakNow('Deviazione meteo selezionata. Ricalcolo il percorso.');calc(true)};
 $('dismissDiversion').onclick=()=>{$('diversion').classList.add('hidden');bestDiversion=null;st('Continuo sul percorso attuale.')};
+
+async function evaluateDepartureDelay(minutes){
+  if(!here||!destObj)return null;
+  let r=await route(here,destObj,viaPoint),km=r.distance/1000,pts=sample(r.geometry.coordinates,km,7),now=new Date(Date.now()+minutes*60000),items=[];
+  for(let p of pts){let eta=new Date(now.getTime()+r.duration*1000*p.f),w=await weather(p,eta);items.push({p,eta,w})}
+  let score=items.reduce((a,x)=>a+severity(x.w),0);
+  return{minutes,score,risk:riskLabel(score)};
+}
+async function compareWait(){
+  if(!currentEval){st('Prima calcola un viaggio.');return}
+  let box=$('choiceBox'),txt=$('choiceText');box.classList.remove('hidden');txt.textContent='Confronto partenza adesso, +30 min e +60 min…';
+  try{
+    let a={minutes:0,score:currentEval.score,risk:currentEval.risk};
+    let b=await evaluateDepartureDelay(30),c=await evaluateDepartureDelay(60),opts=[a,b,c].filter(Boolean).sort((x,y)=>x.score-y.score||x.minutes-y.minutes),best=opts[0];
+    let msg=best.minutes===0?'Conviene partire adesso: aspettare non migliora abbastanza il meteo.':`Meglio aspettare circa ${best.minutes} minuti: rischio stimato ${a.risk} → ${best.risk}.`;
+    if(bestDiversion&&bestDiversion.ev.score<best.score)msg=`Meglio deviare: l'alternativa riduce il rischio a ${bestDiversion.ev.risk} con circa ${Math.max(0,bestDiversion.extraMin)} minuti in più.`;
+    txt.textContent=msg;
+    if(watch!==null)speakNow(msg);
+  }catch(e){txt.textContent='Non riesco a confrontare gli orari in questo momento.'}
+}
+$('waitBtn').onclick=compareWait;
+$('driveModeBtn').onclick=()=>{
+  document.body.classList.toggle('drive');
+  let on=document.body.classList.contains('drive');
+  $('driveModeBtn').textContent=on?'↩️ Vista completa':'🚘 Modalità Carlink';
+  setTimeout(()=>{if(map)map.invalidateSize()},150);
+};
+$('radarBtn').onclick=()=>{
+  radarOn=!radarOn;
+  $('radarBtn').textContent=radarOn?'🌧️ Radar ON':'🌧️ Radar OFF';
+  $('radarLegend').style.display=radarOn?'block':'none';
+  if(!radarOn&&radarLayer){map.removeLayer(radarLayer);radarLayer=null}
+  if(radarOn)refreshRadar();
+};
+setInterval(()=>{if(radarOn&&map)refreshRadar()},5*60*1000);
 if('serviceWorker'in navigator)addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
 </script>
 </body></html>
