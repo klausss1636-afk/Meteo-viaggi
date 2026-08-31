@@ -56,7 +56,7 @@ body.drive .alertbig{position:sticky;top:6px;z-index:850}
 body.drive .v25tools{grid-template-columns:1fr 1fr 1fr}
 @media(max-width:700px){.v25tools{grid-template-columns:1fr}.toolcard{text-align:center}body.drive .summary{grid-template-columns:1fr 1fr}body.drive #map{height:48vh}}
 
-.centerbtn{position:absolute;right:12px;bottom:12px;z-index:700;width:54px;height:54px;border-radius:50%;border:1px solid #ffffff33;background:#0b1729ee;color:#fff;font-size:24px;display:grid;place-items:center;box-shadow:0 6px 18px #0008}
+.centerbtn{position:absolute;right:14px;bottom:18px;z-index:700;width:54px;height:54px;border-radius:50%;border:1px solid #ffffff33;background:#0b1729ee;color:#fff;font-size:24px;display:grid;place-items:center;box-shadow:0 6px 18px #0008}
 .drivepanel{display:none}
 body.drive .drivepanel{display:grid;grid-template-columns:1.2fr .8fr;gap:12px;margin:10px 0}
 body.drive .drivebox{background:#101c2d;border:1px solid #ffffff18;border-radius:22px;padding:16px}
@@ -74,7 +74,7 @@ body.drive .mapwrap{margin-top:10px}
 .tripstate{display:none}
 body.drive .tripstate{display:flex;align-items:center;gap:10px;position:sticky;top:6px;z-index:900;margin:6px 0;padding:12px 16px;border-radius:18px;background:#102033ee;border:1px solid #ffffff20;font-size:20px;font-weight:900;backdrop-filter:blur(10px)}
 body.drive .tripstate small{font-size:12px;font-weight:600;color:var(--m);margin-left:auto}
-body.drive .centerbtn{right:14px;bottom:66px}
+body.drive .centerbtn{right:14px;bottom:78px}
 body.drive .radarlegend{left:12px;bottom:12px;max-width:65%;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 body.drive #map{height:58vh}
 .weatherchange{margin-top:8px;font-size:13px;color:var(--m)}
@@ -84,7 +84,7 @@ body.drive #map{height:58vh}
 </head>
 <body>
 <div class="wrap">
-<div class="top"><div class="brand"><div class="logo">🌦️</div><div><h1>Meteo Viaggio</h1><div class="sub">Meteo lungo la strada</div></div></div><div class="pill">V2.7</div></div>
+<div class="top"><div class="brand"><div class="logo">🌦️</div><div><h1>Meteo Viaggio</h1><div class="sub">Meteo lungo la strada</div></div></div><div class="pill">V2.8</div></div>
 
 <section class="hero">
 <div class="form">
@@ -219,8 +219,14 @@ async function refreshRadar(){
     if(radarTimestamp===f.time)return;
     radarTimestamp=f.time;
     if(radarLayer)map.removeLayer(radarLayer);
-    radarLayer=L.tileLayer('https://tilecache.rainviewer.com'+f.path+'/256/{z}/{x}/{y}/2/1_1.png',{opacity:.48,zIndex:350,attribution:'Radar © RainViewer'}).addTo(map);
-    $('radarLegend').textContent='🌧️ Radar precipitazioni · '+ti(new Date(f.time*1000));
+    radarLayer=L.tileLayer('https://tilecache.rainviewer.com'+f.path+'/256/{z}/{x}/{y}/2/1_1.png',{
+      opacity:.48,
+      zIndex:350,
+      attribution:'Radar © RainViewer',
+      maxNativeZoom:7,
+      maxZoom:19
+    }).addTo(map);
+    $('radarLegend').textContent='🌧️ Radar precipitazioni · '+ti(new Date(f.time*1000))+' · zoom adattato';
   }catch(e){$('radarLegend').textContent='🌧️ Radar temporaneamente non disponibile'}
 }
 function initMap(){if(map)return;map=L.map('map');L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap'}).addTo(map);refreshRadar()}
