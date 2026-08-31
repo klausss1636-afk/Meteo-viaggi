@@ -1,393 +1,129 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="it">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-  <meta name="theme-color" content="#0b1220" />
-  <meta name="apple-mobile-web-app-capable" content="yes" />
-  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="apple-mobile-web-app-title" content="Meteo Viaggio" />
-  <link rel="manifest" href="manifest.webmanifest" />
-  <title>Meteo Viaggio</title>
-  <style>
-    :root{
-      --bg:#07111f; --card:#101c2d; --card2:#14243a; --text:#f6f8fb;
-      --muted:#9fb0c5; --accent:#55c2ff; --ok:#63d69b; --warn:#ffd166; --bad:#ff6b6b;
-      --border:rgba(255,255,255,.08);
-    }
-    *{box-sizing:border-box}
-    body{
-      margin:0; font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
-      background:linear-gradient(180deg,#07111f,#0b1729 45%,#08111e);
-      color:var(--text); min-height:100vh;
-    }
-    .wrap{max-width:980px;margin:auto;padding:18px 14px 40px}
-    .top{
-      display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:14px
-    }
-    .brand{display:flex;align-items:center;gap:12px}
-    .logo{
-      width:48px;height:48px;border-radius:14px;
-      background:linear-gradient(135deg,#55c2ff,#6a7cff);
-      display:grid;place-items:center;font-size:26px;box-shadow:0 10px 30px rgba(85,194,255,.2)
-    }
-    h1{font-size:24px;margin:0}
-    .subtitle{font-size:13px;color:var(--muted)}
-    .pill{
-      border:1px solid var(--border);background:rgba(255,255,255,.04);padding:8px 10px;
-      border-radius:999px;color:var(--muted);font-size:12px
-    }
-    .hero{
-      background:linear-gradient(135deg,rgba(85,194,255,.13),rgba(106,124,255,.08));
-      border:1px solid var(--border);border-radius:22px;padding:16px;margin-bottom:14px;
-      box-shadow:0 12px 35px rgba(0,0,0,.18)
-    }
-    .route-form{display:grid;grid-template-columns:1fr auto;gap:10px}
-    .input{
-      width:100%;border:none;outline:none;border-radius:14px;padding:15px 14px;
-      background:#0d1a2c;color:#fff;font-size:16px;border:1px solid var(--border)
-    }
-    .btn{
-      border:none;border-radius:14px;padding:0 18px;font-weight:700;font-size:15px;
-      background:linear-gradient(135deg,#55c2ff,#6a7cff);color:white;cursor:pointer;
-      min-height:50px
-    }
-    .btn.secondary{background:#13243a;color:#dfe9f4;border:1px solid var(--border)}
-    .actions{display:flex;gap:10px;margin-top:10px;flex-wrap:wrap}
-    .actions .btn{flex:1;min-width:180px}
-    .status{margin-top:12px;color:var(--muted);font-size:13px;min-height:18px}
-    .summary{
-      display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px
-    }
-    .metric{
-      background:var(--card);border:1px solid var(--border);border-radius:18px;padding:14px
-    }
-    .metric .k{font-size:12px;color:var(--muted)}
-    .metric .v{font-size:22px;font-weight:800;margin-top:4px}
-    .banner{
-      border-radius:18px;padding:15px;margin-bottom:14px;border:1px solid var(--border);
-      background:var(--card)
-    }
-    .banner.ok{box-shadow:inset 4px 0 0 var(--ok)}
-    .banner.warn{box-shadow:inset 4px 0 0 var(--warn)}
-    .banner.bad{box-shadow:inset 4px 0 0 var(--bad)}
-    .banner h3{margin:0 0 5px;font-size:16px}
-    .banner p{margin:0;color:var(--muted);line-height:1.4}
-    .timeline{display:grid;gap:10px}
-    .stop{
-      background:var(--card);border:1px solid var(--border);border-radius:18px;padding:14px;
-      display:grid;grid-template-columns:90px 1fr auto;gap:12px;align-items:center
-    }
-    .time{font-size:14px;color:var(--muted)}
-    .place{font-weight:800;font-size:15px}
-    .details{font-size:13px;color:var(--muted);margin-top:5px;line-height:1.45}
-    .weatherIcon{font-size:30px}
-    .risk{
-      display:inline-block;margin-top:7px;padding:5px 8px;border-radius:999px;font-size:11px;
-      background:rgba(255,255,255,.06);border:1px solid var(--border)
-    }
-    .section-title{font-size:18px;margin:18px 2px 10px}
-    .note{
-      margin-top:14px;padding:12px;border-radius:14px;background:#0d1a2c;color:var(--muted);
-      font-size:12px;line-height:1.45;border:1px solid var(--border)
-    }
-    .hidden{display:none}
-    .spinner{display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,.25);
-      border-top-color:white;border-radius:50%;animation:spin .8s linear infinite;vertical-align:-2px;margin-right:7px}
-    @keyframes spin{to{transform:rotate(360deg)}}
-    @media(max-width:700px){
-      .summary{grid-template-columns:repeat(2,1fr)}
-      .route-form{grid-template-columns:1fr}
-      .stop{grid-template-columns:72px 1fr auto}
-      h1{font-size:21px}
-    }
-  </style>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#07111f">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<title>Meteo Viaggio</title>
+<style>
+:root{--b:#07111f;--c:#101c2d;--m:#9fb0c5;--t:#fff;--ok:#63d69b;--w:#ffd166;--bad:#ff6b6b}
+*{box-sizing:border-box}
+body{margin:0;background:linear-gradient(#07111f,#0b1729);color:var(--t);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif}
+.wrap{max-width:980px;margin:auto;padding:18px 14px 40px}
+.top{display:flex;justify-content:space-between;align-items:center}.brand{display:flex;gap:12px;align-items:center}
+.logo{width:50px;height:50px;border-radius:15px;background:#4b91ff;display:grid;place-items:center;font-size:28px}
+h1{margin:0;font-size:24px}.sub,.status,.small{color:var(--m)}.sub{font-size:13px}.pill,.chip{border:1px solid #ffffff18;border-radius:999px;padding:7px 10px}
+.hero,.card,.banner,.stop{background:var(--c);border:1px solid #ffffff14;border-radius:20px}.hero{padding:16px;margin:16px 0}
+.form{display:grid;grid-template-columns:1fr auto;gap:10px}.inp,.btn{min-height:52px;border-radius:15px;font-size:16px}
+.inp{background:#0d1a2c;color:#fff;border:1px solid #ffffff18;padding:0 14px;outline:0}
+.btn{border:0;padding:0 17px;background:linear-gradient(135deg,#55c2ff,#6a7cff);color:#fff;font-weight:800}
+.btn.alt{background:#13243a;border:1px solid #ffffff18}.btn.live{outline:2px solid var(--ok);background:#183825}
+.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:10px}.actions .btn{flex:1;min-width:160px}.status{margin-top:12px;font-size:13px}
+.summary{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}.card{padding:14px}.k{font-size:12px;color:var(--m)}.v{font-size:21px;font-weight:900;margin-top:4px}
+.banner{padding:15px;margin:14px 0}.banner.ok{box-shadow:inset 4px 0 var(--ok)}.banner.warn{box-shadow:inset 4px 0 var(--w)}.banner.bad{box-shadow:inset 4px 0 var(--bad)}
+.banner h3{margin:0 0 5px}.banner p{margin:0;color:var(--m)}h2{font-size:18px}
+.mapwrap{overflow:hidden;border-radius:20px;border:1px solid #ffffff14;background:var(--c)}.mapbar{padding:11px 13px;color:var(--m);font-size:12px;display:flex;justify-content:space-between}
+#map{height:330px}.timeline{display:grid;gap:10px}.stop{padding:14px;display:grid;grid-template-columns:68px 1fr auto;gap:10px;align-items:center}
+.stop.warn{box-shadow:inset 4px 0 var(--w)}.stop.bad{box-shadow:inset 4px 0 var(--bad)}.place{font-weight:800}.det{font-size:13px;color:var(--m);line-height:1.5;margin-top:4px}
+.ico{font-size:29px}.chip{display:inline-block;font-size:11px;margin:6px 4px 0 0}.hidden{display:none}
+.note{font-size:12px;color:var(--m);padding:12px;margin-top:12px;border-radius:14px;background:#0d1a2c}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--ok);margin-right:6px}
+.leaflet-popup-content-wrapper,.leaflet-popup-tip{background:#101c2d;color:white}
+@media(max-width:700px){.summary{grid-template-columns:1fr 1fr}.form{grid-template-columns:1fr}#map{height:290px}}
+</style>
 </head>
 <body>
 <div class="wrap">
-  <div class="top">
-    <div class="brand">
-      <div class="logo">🌦️</div>
-      <div>
-        <h1>Meteo Viaggio</h1>
-        <div class="subtitle">Il meteo lungo la strada, non solo all'arrivo</div>
-      </div>
-    </div>
-    <div class="pill">WEB APP</div>
-  </div>
+<div class="top"><div class="brand"><div class="logo">🌦️</div><div><h1>Meteo Viaggio</h1><div class="sub">Meteo lungo la strada</div></div></div><div class="pill">V2</div></div>
 
-  <section class="hero">
-    <div class="route-form">
-      <input id="destination" class="input" placeholder="Dove vuoi andare? Es. Milano" />
-      <button class="btn" id="goBtn">Calcola viaggio</button>
-    </div>
-    <div class="actions">
-      <button class="btn secondary" id="locBtn">📍 Usa la mia posizione</button>
-      <button class="btn secondary" id="speakBtn">🔊 Come sarà il viaggio?</button>
-    </div>
-    <div id="status" class="status">Premi “Usa la mia posizione”, poi inserisci la destinazione.</div>
-  </section>
+<section class="hero">
+<div class="form">
+<input id="dest" class="inp" placeholder="Dove vuoi andare? Es. Milano">
+<button id="calc" class="btn">Calcola viaggio</button>
+</div>
+<div class="actions">
+<button id="pos" class="btn alt">📍 Usa la mia posizione</button>
+<button id="live" class="btn alt">🚗 Avvia viaggio</button>
+<button id="speak" class="btn alt">🔊 Come sarà il viaggio?</button>
+</div>
+<div id="status" class="status">Acquisisci la posizione e inserisci la destinazione.</div>
+</section>
 
-  <div id="results" class="hidden">
-    <section class="summary">
-      <div class="metric"><div class="k">Distanza</div><div class="v" id="distance">—</div></div>
-      <div class="metric"><div class="k">Durata</div><div class="v" id="duration">—</div></div>
-      <div class="metric"><div class="k">Punti meteo</div><div class="v" id="points">—</div></div>
-      <div class="metric"><div class="k">Rischio viaggio</div><div class="v" id="risk">—</div></div>
-    </section>
+<div id="res" class="hidden">
+<section class="summary">
+<div class="card"><div class="k">Distanza</div><div id="dist" class="v">—</div></div>
+<div class="card"><div class="k">Durata</div><div id="dur" class="v">—</div></div>
+<div class="card"><div class="k">Prossimo rischio</div><div id="next" class="v">—</div></div>
+<div class="card"><div class="k">Rischio viaggio</div><div id="risk" class="v">—</div></div>
+</section>
 
-    <section id="banner" class="banner ok">
-      <h3 id="bannerTitle">Viaggio tranquillo</h3>
-      <p id="bannerText">Nessun fenomeno importante rilevato lungo il percorso.</p>
-    </section>
+<section id="banner" class="banner ok">
+<h3 id="bt">Viaggio tranquillo</h3><p id="bd">Nessun fenomeno importante rilevato.</p>
+</section>
 
-    <h2 class="section-title">Meteo lungo il percorso</h2>
-    <div id="timeline" class="timeline"></div>
-
-    <div class="note">
-      <b>Grandine:</b> questa prima versione non usa un radar grandine dedicato. Mostra un
-      <b>rischio stimato</b> quando sono previsti temporali e forte instabilità atmosferica.
-      È un'indicazione prudenziale, non una previsione certa di grandine.
-    </div>
-  </div>
+<h2>Mappa del viaggio</h2>
+<div class="mapwrap">
+<div class="mapbar"><span><span class="dot"></span><span id="mapstate">Percorso calcolato</span></span><span id="upd">—</span></div>
+<div id="map"></div>
 </div>
 
+<h2>Meteo lungo il percorso</h2>
+<div id="timeline" class="timeline"></div>
+
+<div class="note">
+<b>Grandine:</b> il livello è una stima prudenziale basata su temporali, CAPE e intensità prevista.
+Non sostituisce un radar grandine dedicato. Durante il viaggio la web app si aggiorna soprattutto quando resta aperta in primo piano.
+</div>
+</div>
+</div>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-let currentPos = null;
-let lastTripSpeech = "";
-
-const $ = id => document.getElementById(id);
-const statusEl = $("status");
-
-function setStatus(msg, loading=false){
-  statusEl.innerHTML = loading ? `<span class="spinner"></span>${msg}` : msg;
-}
-
-$("locBtn").addEventListener("click", () => {
-  if(!navigator.geolocation){
-    setStatus("Questo dispositivo non supporta la geolocalizzazione.");
-    return;
-  }
-  setStatus("Cerco la tua posizione…", true);
-  navigator.geolocation.getCurrentPosition(
-    pos => {
-      currentPos = {lat: pos.coords.latitude, lon: pos.coords.longitude};
-      setStatus(`Posizione acquisita. Ora scrivi la destinazione.`);
-    },
-    err => setStatus("Non riesco ad accedere alla posizione. Controlla i permessi del browser."),
-    {enableHighAccuracy:true, timeout:15000, maximumAge:30000}
-  );
-});
-
-$("goBtn").addEventListener("click", calculateTrip);
-$("destination").addEventListener("keydown", e => { if(e.key==="Enter") calculateTrip(); });
-
-$("speakBtn").addEventListener("click", () => {
-  if(!lastTripSpeech){
-    setStatus("Prima calcola un viaggio.");
-    return;
-  }
-  if("speechSynthesis" in window){
-    speechSynthesis.cancel();
-    const u = new SpeechSynthesisUtterance(lastTripSpeech);
-    u.lang = "it-IT";
-    u.rate = 0.95;
-    speechSynthesis.speak(u);
-  } else {
-    setStatus("La lettura vocale non è supportata da questo browser.");
-  }
-});
-
-async function geocodePlace(name){
-  const url = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(name)}&count=1&language=it&format=json`;
-  const r = await fetch(url);
-  if(!r.ok) throw new Error("Geocodifica non disponibile");
-  const j = await r.json();
-  if(!j.results?.length) throw new Error("Destinazione non trovata");
-  const x = j.results[0];
-  return {lat:x.latitude, lon:x.longitude, label:[x.name,x.admin1,x.country].filter(Boolean).join(", ")};
-}
-
-async function getRoute(start, end){
-  const url = `https://router.project-osrm.org/route/v1/driving/${start.lon},${start.lat};${end.lon},${end.lat}?overview=full&geometries=geojson`;
-  const r = await fetch(url);
-  if(!r.ok) throw new Error("Servizio percorso non disponibile");
-  const j = await r.json();
-  if(j.code!=="Ok" || !j.routes?.length) throw new Error("Percorso non trovato");
-  return j.routes[0];
-}
-
-function haversine(a,b){
-  const R=6371, toRad=x=>x*Math.PI/180;
-  const dLat=toRad(b.lat-a.lat), dLon=toRad(b.lon-a.lon);
-  const s=Math.sin(dLat/2)**2+Math.cos(toRad(a.lat))*Math.cos(toRad(b.lat))*Math.sin(dLon/2)**2;
-  return 2*R*Math.asin(Math.sqrt(s));
-}
-
-function sampleRoute(coords, totalKm, maxPoints=8){
-  const targetCount = Math.min(maxPoints, Math.max(3, Math.ceil(totalKm/70)+1));
-  const pts = coords.map(c => ({lon:c[0],lat:c[1]}));
-  const cum=[0];
-  for(let i=1;i<pts.length;i++) cum.push(cum[i-1]+haversine(pts[i-1],pts[i]));
-  const total=cum[cum.length-1] || 1;
-  const out=[];
-  for(let n=0;n<targetCount;n++){
-    const t=total*n/(targetCount-1);
-    let i=1;
-    while(i<cum.length && cum[i]<t) i++;
-    const idx=Math.min(i, pts.length-1);
-    out.push({...pts[idx], fraction:t/total});
-  }
-  return out;
-}
-
-async function getWeather(point, etaDate){
-  const params = new URLSearchParams({
-    latitude: point.lat, longitude: point.lon,
-    hourly: "temperature_2m,precipitation_probability,weather_code,wind_gusts_10m,cape",
-    timezone: "auto", forecast_days: "3"
-  });
-  const r = await fetch(`https://api.open-meteo.com/v1/forecast?${params}`);
-  if(!r.ok) throw new Error("Meteo non disponibile");
-  const j = await r.json();
-  const times = j.hourly.time;
-  const target = etaDate.getTime();
-  let best=0, diff=Infinity;
-  for(let i=0;i<times.length;i++){
-    const d=Math.abs(new Date(times[i]).getTime()-target);
-    if(d<diff){diff=d;best=i;}
-  }
-  return {
-    temp:j.hourly.temperature_2m[best],
-    rain:j.hourly.precipitation_probability[best],
-    code:j.hourly.weather_code[best],
-    gust:j.hourly.wind_gusts_10m[best],
-    cape:j.hourly.cape?.[best] ?? 0,
-    timezone:j.timezone
-  };
-}
-
-function weatherInfo(code){
-  if([95,96,99].includes(code)) return {icon:"⛈️", label:"Temporale"};
-  if([80,81,82].includes(code)) return {icon:"🌧️", label:"Rovesci"};
-  if([61,63,65,66,67].includes(code)) return {icon:"🌧️", label:"Pioggia"};
-  if([71,73,75,77,85,86].includes(code)) return {icon:"🌨️", label:"Neve"};
-  if([45,48].includes(code)) return {icon:"🌫️", label:"Nebbia"};
-  if([1,2,3].includes(code)) return {icon:"⛅", label:"Nuvoloso"};
-  return {icon:"☀️", label:"Sereno"};
-}
-
-function hailRisk(w){
-  const thunder=[95,96,99].includes(w.code);
-  if(thunder && w.cape>=1800) return {level:"ALTO", cls:"bad"};
-  if(thunder && w.cape>=800) return {level:"MEDIO", cls:"warn"};
-  if(thunder || w.cape>=1200) return {level:"BASSO", cls:"warn"};
-  return {level:"basso", cls:"ok"};
-}
-
-function overallRisk(items){
-  let score=0;
-  for(const x of items){
-    if([95,96,99].includes(x.w.code)) score+=4;
-    if(x.w.rain>=70) score+=2;
-    if(x.w.gust>=70) score+=3; else if(x.w.gust>=50) score+=1;
-    if(hailRisk(x.w).level==="ALTO") score+=4;
-  }
-  if(score>=8) return {label:"ALTO", cls:"bad", title:"Attenzione lungo il viaggio"};
-  if(score>=3) return {label:"MEDIO", cls:"warn", title:"Qualche tratto da controllare"};
-  return {label:"BASSO", cls:"ok", title:"Viaggio abbastanza tranquillo"};
-}
-
-function fmtDuration(sec){
-  const h=Math.floor(sec/3600), m=Math.round((sec%3600)/60);
-  return h ? `${h} h ${m} min` : `${m} min`;
-}
-
-async function calculateTrip(){
-  try{
-    if(!currentPos){
-      setStatus("Prima premi “Usa la mia posizione”.");
-      return;
-    }
-    const destName=$("destination").value.trim();
-    if(!destName){
-      setStatus("Scrivi una destinazione.");
-      return;
-    }
-    setStatus("Calcolo percorso e meteo lungo il viaggio…", true);
-
-    const dest=await geocodePlace(destName);
-    const route=await getRoute(currentPos,dest);
-    const km=route.distance/1000;
-    const sampled=sampleRoute(route.geometry.coordinates,km,8);
-    const startTime=new Date();
-    const items=[];
-
-    for(let i=0;i<sampled.length;i++){
-      const p=sampled[i];
-      const eta=new Date(startTime.getTime()+route.duration*1000*p.fraction);
-      const w=await getWeather(p,eta);
-      items.push({p,eta,w});
-    }
-
-    $("distance").textContent=`${Math.round(km)} km`;
-    $("duration").textContent=fmtDuration(route.duration);
-    $("points").textContent=items.length;
-
-    const risk=overallRisk(items);
-    $("risk").textContent=risk.label;
-    const banner=$("banner");
-    banner.className=`banner ${risk.cls}`;
-    $("bannerTitle").textContent=risk.title;
-
-    const severe=items.filter(x => [95,96,99].includes(x.w.code) || x.w.gust>=70 || hailRisk(x.w).level==="ALTO");
-    $("bannerText").textContent = severe.length
-      ? "Sono presenti condizioni potenzialmente impegnative in uno o più tratti. Controlla la sequenza qui sotto."
-      : "Non risultano fenomeni importanti nei punti controllati lungo il percorso.";
-
-    const tl=$("timeline");
-    tl.innerHTML="";
-    items.forEach((x,idx)=>{
-      const info=weatherInfo(x.w.code);
-      const hail=hailRisk(x.w);
-      const pct=Math.round(x.p.fraction*100);
-      const label = idx===0 ? "Partenza" : idx===items.length-1 ? dest.label : `Percorso ${pct}%`;
-      const card=document.createElement("div");
-      card.className="stop";
-      card.innerHTML=`
-        <div class="time">${x.eta.toLocaleTimeString("it-IT",{hour:"2-digit",minute:"2-digit"})}</div>
-        <div>
-          <div class="place">${label}</div>
-          <div class="details">
-            ${info.label} · ${Math.round(x.w.temp)}°C · Pioggia ${Math.round(x.w.rain)}%<br>
-            Raffiche ${Math.round(x.w.gust)} km/h · CAPE ${Math.round(x.w.cape)} J/kg
-          </div>
-          <span class="risk">Grandine stimata: ${hail.level}</span>
-        </div>
-        <div class="weatherIcon">${info.icon}</div>
-      `;
-      tl.appendChild(card);
-    });
-
-    const dangerous = items
-      .map((x,i)=>({x,i, hail:hailRisk(x.w), info:weatherInfo(x.w.code)}))
-      .filter(z=>z.hail.level==="ALTO" || [95,96,99].includes(z.x.w.code) || z.x.w.gust>=70);
-
-    lastTripSpeech = dangerous.length
-      ? `Viaggio di circa ${Math.round(km)} chilometri, durata ${fmtDuration(route.duration)}. Ho rilevato ${dangerous.length} tratti da controllare per temporali, vento forte o possibile grandine. Guarda gli avvisi sullo schermo prima di partire.`
-      : `Viaggio di circa ${Math.round(km)} chilometri, durata ${fmtDuration(route.duration)}. Al momento non risultano fenomeni meteo importanti nei punti controllati lungo il percorso.`;
-
-    $("results").classList.remove("hidden");
-    setStatus(`Percorso verso ${dest.label} aggiornato con il meteo previsto all'orario di passaggio.`);
-  }catch(e){
-    console.error(e);
-    setStatus(`Errore: ${e.message}. Riprova tra poco.`);
-  }
-}
-
-if("serviceWorker" in navigator){
-  window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(()=>{}));
-}
+let here=null,destObj=null,map,routeLine,meMarker,wxMarkers=[],watch=null,lastSpeech='',busy=false,lastRefresh=0,lastRefreshPos=null;
+const $=x=>document.getElementById(x);
+function st(x){$('status').textContent=x}
+function hav(a,b){const R=6371,r=x=>x*Math.PI/180,d1=r(b.lat-a.lat),d2=r(b.lon-a.lon),q=Math.sin(d1/2)**2+Math.cos(r(a.lat))*Math.cos(r(b.lat))*Math.sin(d2/2)**2;return 2*R*Math.asin(Math.sqrt(q))}
+function fd(s){let H=Math.floor(s/3600),M=Math.round(s%3600/60);return H?H+' h '+M+' min':M+' min'}
+function ti(d){return d.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'})}
+function geoNow(){return new Promise((ok,no)=>navigator.geolocation.getCurrentPosition(p=>ok({lat:p.coords.latitude,lon:p.coords.longitude}),no,{enableHighAccuracy:true,timeout:15000,maximumAge:15000}))}
+async function geocode(n){let r=await fetch('https://geocoding-api.open-meteo.com/v1/search?name='+encodeURIComponent(n)+'&count=1&language=it&format=json'),j=await r.json();if(!j.results?.length)throw Error('Destinazione non trovata');let x=j.results[0];return{lat:x.latitude,lon:x.longitude,label:[x.name,x.admin1,x.country].filter(Boolean).join(', ')}}
+async function route(a,b){let r=await fetch(`https://router.project-osrm.org/route/v1/driving/${a.lon},${a.lat};${b.lon},${b.lat}?overview=full&geometries=geojson`),j=await r.json();if(j.code!='Ok'||!j.routes?.length)throw Error('Percorso non trovato');return j.routes[0]}
+function sample(c,km){let p=c.map(x=>({lon:x[0],lat:x[1]})),cum=[0];for(let i=1;i<p.length;i++)cum.push(cum[i-1]+hav(p[i-1],p[i]));let tot=cum.at(-1)||1,n=Math.min(10,Math.max(4,Math.ceil(km/55)+1)),out=[];for(let k=0;k<n;k++){let t=tot*k/(n-1),i=1;while(i<cum.length&&cum[i]<t)i++;out.push({...p[Math.min(i,p.length-1)],f:t/tot})}return out}
+async function weather(p,eta){let qs=new URLSearchParams({latitude:p.lat,longitude:p.lon,hourly:'temperature_2m,precipitation_probability,weather_code,wind_gusts_10m,cape,freezing_level_height',timezone:'auto',forecast_days:'3'}),r=await fetch('https://api.open-meteo.com/v1/forecast?'+qs),j=await r.json(),t=j.hourly.time,target=eta.getTime(),ix=0,dd=1e99;for(let i=0;i<t.length;i++){let d=Math.abs(new Date(t[i]).getTime()-target);if(d<dd){dd=d;ix=i}}return{temp:j.hourly.temperature_2m[ix],rain:j.hourly.precipitation_probability[ix],code:j.hourly.weather_code[ix],gust:j.hourly.wind_gusts_10m[ix],cape:j.hourly.cape?.[ix]||0,zero:j.hourly.freezing_level_height?.[ix]||null}}
+function wi(c){if([95,96,99].includes(c))return['⛈️','Temporale'];if([80,81,82].includes(c))return['🌧️','Rovesci'];if([61,63,65,66,67].includes(c))return['🌧️','Pioggia'];if([71,73,75,77,85,86].includes(c))return['🌨️','Neve'];if([45,48].includes(c))return['🌫️','Nebbia'];if([1,2,3].includes(c))return['⛅','Nuvoloso'];return['☀️','Sereno']}
+function hail(w){let th=[95,96,99].includes(w.code);if(th&&w.cape>=1800)return['ALTO','bad'];if(th&&w.cape>=800)return['MEDIO','warn'];if(th||w.cape>=1200)return['BASSO','warn'];return['basso','ok']}
+function severity(w){let s=0;if([95,96,99].includes(w.code))s+=4;if(w.rain>=70)s+=2;if(w.gust>=70)s+=3;else if(w.gust>=50)s++;if(hail(w)[0]=='ALTO')s+=4;return s}
+function initMap(){if(map)return;map=L.map('map');L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap'}).addTo(map)}
+function updateMarker(){if(!map||!here)return;if(meMarker)meMarker.setLatLng([here.lat,here.lon]);else meMarker=L.marker([here.lat,here.lon]).addTo(map).bindPopup('Sei qui')}
+function drawMap(r,items){initMap();if(routeLine)map.removeLayer(routeLine);wxMarkers.forEach(m=>map.removeLayer(m));wxMarkers=[];let latlng=r.geometry.coordinates.map(x=>[x[1],x[0]]);routeLine=L.polyline(latlng,{color:'#55c2ff',weight:6,opacity:.85}).addTo(map);items.forEach(x=>{let hr=hail(x.w),col=hr[1]=='bad'?'#ff6b6b':hr[1]=='warn'?'#ffd166':'#63d69b',m=L.circleMarker([x.p.lat,x.p.lon],{radius:8,color:col,fillColor:col,fillOpacity:.9}).addTo(map).bindPopup(`${wi(x.w.code)[1]} · ${Math.round(x.w.temp)}°C<br>Pioggia ${Math.round(x.w.rain)}%<br><b>Grandine ${hr[0]}</b>`);wxMarkers.push(m)});map.fitBounds(routeLine.getBounds(),{padding:[25,25]});updateMarker();setTimeout(()=>map.invalidateSize(),100)}
+async function calc(auto=false){
+if(busy)return;if(!here){st('Prima premi “Usa la mia posizione”.');return}
+try{
+busy=true;st(auto?'Aggiorno percorso e meteo…':'Calcolo percorso e meteo…');
+if(!destObj){let n=$('dest').value.trim();if(!n)throw Error('Scrivi una destinazione');destObj=await geocode(n)}
+let r=await route(here,destObj),km=r.distance/1000,pts=sample(r.geometry.coordinates,km),now=new Date(),items=[];
+for(let p of pts){let eta=new Date(now.getTime()+r.duration*1000*p.f),w=await weather(p,eta);items.push({p,eta,w})}
+let total=items.reduce((a,x)=>a+severity(x.w),0),risk=total>=8?'ALTO':total>=3?'MEDIO':'BASSO',bad=items.find(x=>severity(x.w)>=3),next=bad?Math.max(0,Math.round(km*bad.p.f))+' km':'Nessuno';
+$('dist').textContent=Math.round(km)+' km';$('dur').textContent=fd(r.duration);$('risk').textContent=risk;$('next').textContent=next;
+let b=$('banner');b.className='banner '+(risk=='ALTO'?'bad':risk=='MEDIO'?'warn':'ok');$('bt').textContent=risk=='ALTO'?'Attenzione lungo il viaggio':risk=='MEDIO'?'Qualche tratto da controllare':'Viaggio abbastanza tranquillo';
+$('bd').textContent=bad?`Possibili fenomeni rilevanti tra circa ${next}. Controlla temporali, vento e grandine nei punti sotto.`:'Non risultano fenomeni importanti nei punti controllati lungo il percorso.';
+let tl=$('timeline');tl.innerHTML='';
+items.forEach((x,i)=>{let info=wi(x.w.code),hr=hail(x.w),sev=severity(x.w),snow=x.w.zero?Math.max(0,Math.round(x.w.zero-300)):null,d=document.createElement('div');d.className='stop '+(sev>=5?'bad':sev>=2?'warn':'');d.innerHTML=`<div class="small">${ti(x.eta)}</div><div><div class="place">${i==0?'Partenza':i==items.length-1?destObj.label:'Percorso '+Math.round(x.p.f*100)+'%'}</div><div class="det">${info[1]} · ${Math.round(x.w.temp)}°C · Pioggia ${Math.round(x.w.rain)}%<br>Raffiche ${Math.round(x.w.gust)} km/h · CAPE ${Math.round(x.w.cape)} J/kg${x.w.zero?`<br>Zero termico ${Math.round(x.w.zero)} m · Quota neve ~${snow} m`:''}</div><span class="chip">🧊 Grandine: ${hr[0]}</span></div><div class="ico">${info[0]}</div>`;tl.appendChild(d)});
+$('res').classList.remove('hidden');drawMap(r,items);$('upd').textContent='Aggiornato '+ti(new Date());$('mapstate').textContent=watch?'Aggiornamento in viaggio attivo':'Percorso calcolato';
+lastSpeech=bad?`Viaggio di ${Math.round(km)} chilometri. Attenzione: condizioni da controllare tra circa ${next}, con possibile temporale, vento forte o grandine.`:`Viaggio di ${Math.round(km)} chilometri. Al momento non risultano fenomeni importanti lungo il percorso.`;
+st(`Percorso verso ${destObj.label} aggiornato con il meteo all'orario di passaggio.`);lastRefresh=Date.now();lastRefreshPos={...here}
+}catch(e){st('Errore: '+e.message)}finally{busy=false}}
+async function toggleLive(){
+if(watch!==null){navigator.geolocation.clearWatch(watch);watch=null;$('live').classList.remove('live');$('live').textContent='🚗 Avvia viaggio';$('mapstate').textContent='Aggiornamento fermato';return}
+if(!destObj){st('Prima calcola un viaggio.');return}
+watch=navigator.geolocation.watchPosition(async p=>{here={lat:p.coords.latitude,lon:p.coords.longitude};updateMarker();let moved=!lastRefreshPos||hav(here,lastRefreshPos)>=5,time=Date.now()-lastRefresh>=10*60*1000;if(moved||time)await calc(true)},()=>st('Posizione non disponibile durante il viaggio.'),{enableHighAccuracy:true,maximumAge:15000,timeout:20000});
+$('live').classList.add('live');$('live').textContent='⏹ Ferma viaggio';$('mapstate').textContent='Aggiornamento in viaggio attivo';st('Viaggio avviato: aggiorno il meteo quando ti sposti o dopo alcuni minuti.')}
+$('pos').onclick=async()=>{try{st('Cerco la tua posizione…');here=await geoNow();updateMarker();st('Posizione acquisita. Ora inserisci la destinazione.')}catch(e){st('Non riesco ad accedere alla posizione. Controlla i permessi.')}};
+$('calc').onclick=()=>{destObj=null;calc(false)};$('dest').onkeydown=e=>{if(e.key=='Enter')$('calc').click()};$('live').onclick=toggleLive;
+$('speak').onclick=()=>{if(!lastSpeech){st('Prima calcola un viaggio.');return}if('speechSynthesis'in window){speechSynthesis.cancel();let u=new SpeechSynthesisUtterance(lastSpeech);u.lang='it-IT';speechSynthesis.speak(u)}};
+if('serviceWorker'in navigator)addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
 </script>
-</body>
-</html>
+</body></html>
