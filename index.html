@@ -96,11 +96,16 @@ body.drive .choice,body.drive .diversion{margin:7px 0}
 .fogicon i{display:block;height:4px;border-radius:999px;background:#dfe7f0}
 .fogicon i:nth-child(1){width:26px}.fogicon i:nth-child(2){width:34px}.fogicon i:nth-child(3){width:22px}
 .weatherhere-day .dayico .fogicon{margin:0 auto}
+
+.dayswrap{position:relative}
+.dayshint{position:absolute;right:6px;top:50%;transform:translateY(-50%);width:34px;height:44px;border-radius:999px;background:#07111fcc;border:1px solid #ffffff22;color:#fff;display:grid;place-items:center;font-size:28px;font-weight:700;z-index:5;pointer-events:none;box-shadow:0 4px 14px #0006}
+.dayshint.left{left:6px;right:auto}
+@media(min-width:701px){.dayshint{display:none}}
 </style>
 </head>
 <body>
 <div class="wrap">
-<div class="top"><div class="brand"><div class="logo">🌦️</div><div><h1>Meteo Viaggio</h1><div class="sub">Meteo lungo la strada</div></div></div><div class="pill">V4.8</div></div>
+<div class="top"><div class="brand"><div class="logo">🌦️</div><div><h1>Meteo Viaggio</h1><div class="sub">Meteo lungo la strada</div></div></div><div class="pill">V4.9</div></div>
 
 <section class="hero">
 <div class="form">
@@ -196,7 +201,7 @@ body.drive .choice,body.drive .diversion{margin:7px 0}
 <div class="note"><b>Grandine:</b> stima prudenziale basata su temporali, CAPE e intensità prevista. La web app non sostituisce gli avvisi ufficiali.</div>
 </div>
 </div>
-<section id="weatherHere" class="weatherhere hidden"><div class="weatherhere-inner"><div class="weatherhere-top"><div><div class="small">POSIZIONE ATTUALE</div><h2 style="margin:0">🌦️ Meteo qui</h2><div id="whPlace" class="small">Sto cercando la località…</div></div><button id="whClose" class="weatherhere-close">✕</button></div><div class="weatherhere-card"><div id="whIcon" style="font-size:48px">🌤️</div><div id="whTemp" class="weatherhere-now">—</div><div id="whDesc" style="font-size:19px;font-weight:800">—</div><div class="weatherhere-grid"><div class="weatherhere-item"><small>Pioggia</small><b id="whRain">—</b></div><div class="weatherhere-item"><small>Raffiche</small><b id="whWind">—</b></div><div class="weatherhere-item"><small>Grandine</small><b id="whHail">—</b></div><div class="weatherhere-item"><small>Zero termico</small><b id="whZero">—</b></div></div></div><div class="weatherhere-card"><b>Prossime ore</b><div id="whHours" class="weatherhere-hours"></div></div><div class="weatherhere-card"><b>📅 Prossimi giorni</b><div id="whDays" class="weatherhere-days"></div></div><div class="weatherhere-card"><b>🌧️ Radar nella tua zona</b><div id="weatherHereMap" class="weatherhere-radar"></div></div></div></section>
+<section id="weatherHere" class="weatherhere hidden"><div class="weatherhere-inner"><div class="weatherhere-top"><div><div class="small">POSIZIONE ATTUALE</div><h2 style="margin:0">🌦️ Meteo qui</h2><div id="whPlace" class="small">Sto cercando la località…</div></div><button id="whClose" class="weatherhere-close">✕</button></div><div class="weatherhere-card"><div id="whIcon" style="font-size:48px">🌤️</div><div id="whTemp" class="weatherhere-now">—</div><div id="whDesc" style="font-size:19px;font-weight:800">—</div><div class="weatherhere-grid"><div class="weatherhere-item"><small>Pioggia</small><b id="whRain">—</b></div><div class="weatherhere-item"><small>Raffiche</small><b id="whWind">—</b></div><div class="weatherhere-item"><small>Grandine</small><b id="whHail">—</b></div><div class="weatherhere-item"><small>Zero termico</small><b id="whZero">—</b></div></div></div><div class="weatherhere-card"><b>Prossime ore</b><div id="whHours" class="weatherhere-hours"></div></div><div class="weatherhere-card"><b>📅 Prossimi giorni</b><div class="dayswrap"><div id="whDays" class="weatherhere-days"></div><div id="daysHint" class="dayshint">›</div></div></div><div class="weatherhere-card"><b>🌧️ Radar nella tua zona</b><div id="weatherHereMap" class="weatherhere-radar"></div></div></div></section>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
 let here=null,destObj=null,map,weatherHereMap,weatherHereRadar,routeLine,meMarker,wxMarkers=[],riskLines=[],watch=null,lastSpeech='',busy=false,lastRefresh=0,lastRefreshPos=null,radarLayer=null,radarOn=true,radarTimestamp=null,currentEval=null,lastHeading=null,viaPoint=null,bestDiversion=null;
@@ -357,6 +362,7 @@ async function openWeatherHere(){
       el.innerHTML=`<div class="dayname">${i===0?'Oggi':names[dte.getDay()]}</div><div class="dayico">${dico}</div><div class="daytemp">${Math.round(j.daily.temperature_2m_max[i])}° / ${Math.round(j.daily.temperature_2m_min[i])}°</div><div class="dayrain">💧 ${Math.round(j.daily.precipitation_probability_max[i]||0)}% · 💨 ${Math.round(j.daily.wind_gusts_10m_max[i]||0)} km/h</div>`;
       days.appendChild(el);
     }
+    setTimeout(updateDaysHint,50);
   }
 
   if(!weatherHereMap){weatherHereMap=L.map('weatherHereMap').setView([p.lat,p.lon],9);L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap'}).addTo(weatherHereMap)}
@@ -367,6 +373,19 @@ async function openWeatherHere(){
 }
 $('hereWeatherBtn').onclick=openWeatherHere;
 $('whClose').onclick=()=>$('weatherHere').classList.add('hidden');
+
+const whDaysEl=$('whDays'),daysHint=$('daysHint');
+function updateDaysHint(){
+  if(!whDaysEl||!daysHint)return;
+  let max=whDaysEl.scrollWidth-whDaysEl.clientWidth;
+  if(max<=4){daysHint.style.display='none';return}
+  daysHint.style.display='';
+  if(whDaysEl.scrollLeft>max-8){daysHint.textContent='‹';daysHint.classList.add('left')}
+  else{daysHint.textContent='›';daysHint.classList.remove('left')}
+}
+whDaysEl?.addEventListener('scroll',updateDaysHint,{passive:true});
+window.addEventListener('resize',updateDaysHint);
+
 
 if('serviceWorker'in navigator)addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
 </script>
