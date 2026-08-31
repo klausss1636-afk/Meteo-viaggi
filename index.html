@@ -95,7 +95,7 @@ body.drive .choice,body.drive .diversion{margin:7px 0}
 </head>
 <body>
 <div class="wrap">
-<div class="top"><div class="brand"><div class="logo">🌦️</div><div><h1>Meteo Viaggio</h1><div class="sub">Meteo lungo la strada</div></div></div><div class="pill">V4.4</div></div>
+<div class="top"><div class="brand"><div class="logo">🌦️</div><div><h1>Meteo Viaggio</h1><div class="sub">Meteo lungo la strada</div></div></div><div class="pill">V4.5</div></div>
 
 <section class="hero">
 <div class="form">
@@ -307,11 +307,21 @@ async function reversePlaceName(p){
     let place=a.city||a.town||a.village||a.municipality||a.suburb||a.hamlet||'Posizione attuale';
     let prov=a.province||a.county||a.state_district||'';
     let sigla='';
-    if(prov){
-      let m=prov.match(/\b([A-Z]{2})\b/);
+    if(a.ISO3166_2_lvl6) sigla=a.ISO3166_2_lvl6.split('-').pop();
+    if(!sigla && a.ISO3166_2_lvl7) sigla=a.ISO3166_2_lvl7.split('-').pop();
+    if(!sigla && prov){
+      let m=prov.match(/\(([A-Z]{2})\)/);
       if(m) sigla=m[1];
     }
-    if(!sigla && a.ISO3166_2_lvl6) sigla=a.ISO3166_2_lvl6.split('-').pop();
+    if(!sigla){
+      const mapProv={
+        'Pistoia':'PT','Firenze':'FI','Prato':'PO','Lucca':'LU','Pisa':'PI','Livorno':'LI',
+        'Massa-Carrara':'MS','Arezzo':'AR','Siena':'SI','Grosseto':'GR','Milano':'MI',
+        'Monza e della Brianza':'MB','Como':'CO','Lecco':'LC','Varese':'VA','Bergamo':'BG',
+        'Brescia':'BS','Pavia':'PV','Lodi':'LO','Cremona':'CR','Mantova':'MN'
+      };
+      sigla=mapProv[prov]||'';
+    }
     return sigla?`${place} (${sigla})`:place;
   }catch(e){
     return 'Posizione attuale';
