@@ -89,13 +89,13 @@ body.drive .choice,body.drive .diversion{margin:7px 0}
 .weatherhere-day .dayname{font-size:12px;color:var(--m);text-transform:uppercase;font-weight:800}
 .weatherhere-day .dayico{font-size:27px;margin:4px 0}
 .weatherhere-day .daytemp{font-weight:900;font-size:16px;white-space:nowrap}
-.weatherhere-day .dayrain{font-size:11px;color:var(--m);margin-top:4px;white-space:nowrap}
-@media(max-width:700px){.weatherhere-days{display:flex;gap:8px;overflow-x:auto}.weatherhere-day{min-width:104px;flex:0 0 104px}}
+.weatherhere-day .dayrain{font-size:10px;color:var(--m);margin-top:4px;white-space:nowrap;letter-spacing:-.01em}
+@media(max-width:700px){.weatherhere-days{display:flex;gap:8px;overflow-x:auto}.weatherhere-day{min-width:116px;flex:0 0 116px}}
 </style>
 </head>
 <body>
 <div class="wrap">
-<div class="top"><div class="brand"><div class="logo">🌦️</div><div><h1>Meteo Viaggio</h1><div class="sub">Meteo lungo la strada</div></div></div><div class="pill">V4.6</div></div>
+<div class="top"><div class="brand"><div class="logo">🌦️</div><div><h1>Meteo Viaggio</h1><div class="sub">Meteo lungo la strada</div></div></div><div class="pill">V4.7</div></div>
 
 <section class="hero">
 <div class="form">
@@ -222,6 +222,7 @@ async function weather(p,eta){
  for(let i=0;i<t.length;i++){let d=Math.abs(new Date(t[i]).getTime()-target);if(d<dd){dd=d;ix=i}}
  return{temp:j.hourly.temperature_2m[ix],rain:j.hourly.precipitation_probability[ix],code:j.hourly.weather_code[ix],gust:j.hourly.wind_gusts_10m[ix],cape:j.hourly.cape?.[ix]||0,zero:j.hourly.freezing_level_height?.[ix]||null}
 }
+function dayIcon(c){if([45,48].includes(c))return'🌫️';return wi(c)[0]}
 function wi(c){if([95,96,99].includes(c))return['⛈️','Temporale'];if([80,81,82].includes(c))return['🌧️','Rovesci'];if([61,63,65,66,67].includes(c))return['🌧️','Pioggia'];if([71,73,75,77,85,86].includes(c))return['🌨️','Neve'];if([45,48].includes(c))return['🌫️','Nebbia'];if([1,2,3].includes(c))return['⛅','Nuvoloso'];return['☀️','Sereno']}
 function hail(w){let th=[95,96,99].includes(w.code);if(th&&w.cape>=1800)return['ALTO','bad'];if(th&&w.cape>=800)return['MEDIO','warn'];if(th||w.cape>=1200)return['BASSO','warn'];return['basso','ok']}
 function severity(w){let s=0;if([95,96,99].includes(w.code))s+=4;if(w.rain>=70)s+=2;if(w.gust>=70)s+=3;else if(w.gust>=50)s++;if(hail(w)[0]=='ALTO')s+=4;return s}
@@ -343,9 +344,9 @@ async function openWeatherHere(){
   if(j.daily?.time?.length){
     const names=['dom','lun','mar','mer','gio','ven','sab'];
     for(let i=0;i<Math.min(7,j.daily.time.length);i++){
-      let dte=new Date(j.daily.time[i]+'T12:00:00'), inf=wi(j.daily.weather_code[i]), el=document.createElement('div');
+      let dte=new Date(j.daily.time[i]+'T12:00:00'), inf=wi(j.daily.weather_code[i]), dico=dayIcon(j.daily.weather_code[i]), el=document.createElement('div');
       el.className='weatherhere-day';
-      el.innerHTML=`<div class="dayname">${i===0?'Oggi':names[dte.getDay()]}</div><div class="dayico">${inf[0]}</div><div class="daytemp">${Math.round(j.daily.temperature_2m_max[i])}° / ${Math.round(j.daily.temperature_2m_min[i])}°</div><div class="dayrain">💧 ${Math.round(j.daily.precipitation_probability_max[i]||0)}% · 💨 ${Math.round(j.daily.wind_gusts_10m_max[i]||0)} km/h</div>`;
+      el.innerHTML=`<div class="dayname">${i===0?'Oggi':names[dte.getDay()]}</div><div class="dayico">${dico}</div><div class="daytemp">${Math.round(j.daily.temperature_2m_max[i])}° / ${Math.round(j.daily.temperature_2m_min[i])}°</div><div class="dayrain">💧 ${Math.round(j.daily.precipitation_probability_max[i]||0)}% · 💨 ${Math.round(j.daily.wind_gusts_10m_max[i]||0)} km/h</div>`;
       days.appendChild(el);
     }
   }
