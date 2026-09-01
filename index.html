@@ -165,6 +165,272 @@ body.nightAuto .mapwrap,body.nightAuto .wcard{box-shadow:0 0 0 1px #ffffff08}
  .safetygrid,.pretripgrid{grid-template-columns:repeat(2,1fr)}
 }
 
+
+/* V13.3 NAV - solo grafica, motore invariato */
+:root{
+  --navGlass:#07111ff0;
+  --navPanel:#0b1729f2;
+  --navBlue:#2b8cff;
+  --navLine:#55c2ff;
+}
+
+body.drive{
+  background:#050b13;
+}
+
+body.drive .wrap{
+  padding:6px 8px 12px;
+  background:#050b13;
+}
+
+body.drive .nextturn{
+  display:grid!important;
+  position:sticky;
+  top:4px;
+  z-index:1400;
+  grid-template-columns:64px 1fr auto;
+  gap:12px;
+  align-items:center;
+  padding:12px 14px;
+  margin:0 0 7px;
+  border-radius:20px;
+  background:linear-gradient(145deg,#0b2038f7,#081522f7);
+  border:1px solid #55c2ff70;
+  box-shadow:0 10px 30px #0009,inset 5px 0 #55c2ff;
+}
+
+body.drive .turnico{
+  width:58px;height:58px;
+  display:grid;place-items:center;
+  font-size:42px;
+  border-radius:16px;
+  background:#11263f;
+  border:1px solid #ffffff18;
+}
+
+body.drive .turnmain{
+  font-size:22px;
+  line-height:1.05;
+  font-weight:1000;
+}
+
+body.drive .turnsub{
+  font-size:13px;
+  margin-top:5px;
+}
+
+body.drive .turndist{
+  font-size:27px;
+  font-weight:1000;
+  min-width:72px;
+}
+
+body.drive .arrival{
+  position:sticky;
+  top:91px;
+  z-index:1320;
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:5px;
+  padding:8px 9px;
+  margin:0 0 7px;
+  border-radius:16px;
+  background:#07111fed;
+  border:1px solid #ffffff20;
+  box-shadow:0 7px 22px #0008;
+  backdrop-filter:blur(10px);
+}
+
+body.drive .arrival span{
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:3px;
+  min-height:28px;
+}
+
+body.drive .cockpitline{
+  display:grid!important;
+  grid-template-columns:repeat(3,1fr);
+  gap:7px;
+  margin:0 0 7px;
+}
+
+body.drive .cockpititem{
+  background:linear-gradient(145deg,#0c1b2f,#091522);
+  border:1px solid #ffffff16;
+  border-radius:15px;
+  padding:8px 7px;
+  text-align:center;
+  box-shadow:0 5px 16px #0005;
+}
+
+body.drive .cockpititem small{
+  display:block;
+  color:#9fb0c5;
+  font-size:10px;
+  text-transform:uppercase;
+  letter-spacing:.04em;
+}
+
+body.drive .cockpititem b{
+  display:block;
+  margin-top:3px;
+  font-size:18px;
+  line-height:1.05;
+}
+
+body.drive .mapwrap{
+  margin:0;
+  border-radius:24px;
+  overflow:hidden;
+  border:1px solid #ffffff24;
+  background:#0a1420;
+  box-shadow:0 12px 34px #000a;
+}
+
+body.drive #map{
+  height:70vh;
+  min-height:520px;
+}
+
+body.drive .mapbar{
+  display:none;
+}
+
+body.drive .navbadge{
+  top:14px;
+  left:50%;
+  transform:translateX(-50%);
+  background:#07111ff2;
+  border:1px solid #63d69ba0;
+  padding:8px 13px;
+  font-size:12px;
+  box-shadow:0 5px 18px #0008;
+}
+
+body.drive .centerbtn{
+  top:16px;
+  right:12px;
+  width:48px;
+  height:48px;
+  font-size:21px;
+  background:#07111ff0;
+}
+
+body.drive .hudbtn{
+  right:12px;
+  bottom:80px;
+  width:50px;
+  height:50px;
+  background:#07111ff0;
+}
+
+body.drive .risklegend{
+  top:auto;
+  left:12px;
+  bottom:82px;
+  border-radius:10px;
+  padding:6px 8px;
+  background:#07111fdd;
+}
+
+body.drive #radarLegend{
+  left:12px;
+  bottom:52px;
+  border-radius:10px;
+  padding:6px 8px;
+  background:#07111fdd;
+}
+
+body.drive .drivequick{
+  display:grid!important;
+  grid-template-columns:repeat(3,1fr);
+  gap:7px;
+  left:0;
+  right:0;
+  bottom:0;
+  padding:18px 10px 9px;
+  background:linear-gradient(transparent,#050b13ee 40%);
+}
+
+body.drive .drivequick .btn{
+  min-height:48px;
+  border-radius:14px;
+  background:#0a1727ee;
+  border:1px solid #ffffff2a;
+  box-shadow:0 4px 14px #0007;
+}
+
+body.drive .navarrow{
+  width:74px!important;
+  height:74px!important;
+  border-radius:50%!important;
+  border:4px solid white!important;
+  background:linear-gradient(145deg,#3197ff,#1268d8)!important;
+  color:white!important;
+  font-size:47px!important;
+  box-shadow:
+    0 0 0 8px #2c91ff25,
+    0 10px 26px #000b!important;
+  transform-origin:center!important;
+}
+
+body.drive .navarrow::after{
+  content:'';
+  position:absolute;
+  width:10px;
+  height:10px;
+  border-radius:50%;
+  background:#ffffff;
+  bottom:10px;
+  left:50%;
+  transform:translateX(-50%);
+  opacity:.9;
+}
+
+body.drive .smartpanel,
+body.drive .safetygrid,
+body.drive .pretrip,
+body.drive .highwaybar,
+body.drive #routeChoices,
+body.drive #aheadBar,
+body.drive #hailAlert{
+  display:none!important;
+}
+
+/* Mantiene il meteo principale leggibile fuori dalla modalità viaggio */
+.navigator-tip{
+  display:none;
+}
+
+@media(max-width:720px){
+  body.drive .nextturn{
+    grid-template-columns:56px 1fr auto;
+    padding:10px 11px;
+  }
+  body.drive .turnico{
+    width:52px;height:52px;font-size:36px;
+  }
+  body.drive .turnmain{font-size:19px}
+  body.drive .turndist{font-size:22px;min-width:62px}
+  body.drive .arrival{
+    top:82px;
+    grid-template-columns:repeat(4,1fr);
+    font-size:10px;
+  }
+  body.drive #map{
+    height:68vh;
+    min-height:500px;
+  }
+  body.drive .cockpititem b{font-size:16px}
+  body.drive .navarrow{
+    width:70px!important;
+    height:70px!important;
+    font-size:44px!important;
+  }
+}
+
 </style>
 
 <script>
@@ -189,7 +455,7 @@ body.nightAuto .mapwrap,body.nightAuto .wcard{box-shadow:0 0 0 1px #ffffff08}
 <div class="wrap">
   <div class="top">
     <div class="brand"><div class="logo">🌦️</div><div><h1>Meteo Viaggio</h1><div class="sub">Meteo lungo la strada</div></div></div>
-    <div class="ver">V13.2 RECOVERY</div>
+    <div class="ver">V13.3 NAV</div>
   </div>
 
   <section class="hero">
@@ -322,6 +588,11 @@ body.nightAuto .mapwrap,body.nightAuto .wcard{box-shadow:0 0 0 1px #ffffff08}
       <span>🌡️ Percepita <span id="arrFeels">—</span></span>
     </div>
 
+    <div class="cockpitline">
+      <div class="cockpititem"><small>Velocità</small><b id="cockpitSpeed">—</b></div>
+      <div class="cockpititem"><small>Sicurezza</small><b id="cockpitScore">—</b></div>
+      <div class="cockpititem"><small>Meteo</small><b id="cockpitWeather">—</b></div>
+    </div>
     <h2>Mappa del viaggio</h2>
     <div class="mapwrap">
       <div class="mapbar"><span id="mapstate">Percorso calcolato</span><span id="updated">—</span></div>
@@ -1186,6 +1457,17 @@ function updateHighwayInfo(items){
   const snow=items?.find(x=>[71,73,75,77,85,86].includes(x.w.code));
   $('snowAhead').textContent=snow?'Possibile':'No';
 }
+function updateCockpit(){
+  if(!$('cockpitSpeed'))return;
+  $('cockpitSpeed').textContent=Math.round(currentSpeedKmh||0)+' km/h';
+  $('cockpitScore').textContent=currentItems?.length?journeySafety(currentItems)+'/100':'—';
+  if(currentItems?.length){
+    const prog=nearestRouteProgress(here||currentItems[0].p).f;
+    const ahead=currentItems.find(x=>x.p.f>=Math.min(1,prog+.08))||currentItems.at(-1);
+    const inf=wi(ahead.w.code,ahead.w.isDay);
+    $('cockpitWeather').textContent=inf[0]+' '+Math.round(ahead.w.temp)+'°';
+  }else $('cockpitWeather').textContent='—';
+}
 function updateHUD(){
   const n=nextManeuver(),inf=n?turnInfo(n.step):{icon:'⬆️',txt:'Prosegui',sub:'Percorso'};
   $('hudTurnIcon').textContent=inf.icon;$('hudTurnMain').textContent=inf.txt;$('hudTurnSub').textContent=inf.sub;
@@ -1294,7 +1576,7 @@ function render(r,ev){
   updateRoadSafety(items);
   updatePreTrip(r,items);
   updateNextTurn();
-  updateHUD();
+  updateHUD();updateCockpit();
   $('res').classList.remove('hidden');
   $('updated').textContent='Aggiornato '+timeTxt(new Date());
   $('mapstate').textContent=watchId!==null?'Guida GPS · meteo in tempo reale':'Percorso calcolato';
@@ -1381,7 +1663,7 @@ async function startLive(){
       if(Number.isFinite(p.coords.heading))lastHeading=p.coords.heading;
       else if(here&&hav(here,nuovo)>.006)lastHeading=bearing(here,nuovo);
       here=nuovo;
-      updateMarker();updateHUD();updateHighwayInfo(currentItems);
+      updateMarker();updateHUD();updateCockpit();updateHighwayInfo(currentItems);
 
       const off=nearestRouteProgress(here).dist;
       if(currentRoute&&off>0.15&&Date.now()-lastOffRouteRecalc>15000&&!busy){
