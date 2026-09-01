@@ -137,11 +137,34 @@ body.drive .v61strip{grid-template-columns:repeat(3,1fr);margin:6px 0}
 .altline{margin-top:6px;font-size:12px;color:var(--m)}
 .altline b{color:#fff}
 @media(max-width:700px){.v61strip.four{grid-template-columns:repeat(2,1fr)}}
+
+/* V6.8 - Carlink più leggibile */
+body.drive .v25tools{grid-template-columns:repeat(3,1fr);gap:7px}
+body.drive .drivepanel{grid-template-columns:1.18fr .82fr;gap:8px}
+body.drive .drivebox{padding:11px 12px}
+body.drive .routeworst.ok{display:none!important}
+body.drive .routeworst{padding:9px 12px}
+body.drive .routeworst b{font-size:13px}
+body.drive .routeworst span{font-size:11px}
+body.drive .arrivalstrip{grid-template-columns:repeat(6,minmax(0,1fr));padding:8px 7px}
+body.drive .altline{font-size:11px;line-height:1.35}
+body.drive #map{height:65vh;min-height:350px}
+body.drive .mapbar{padding:9px 11px}
+body.drive .centerbtn{width:48px;height:48px;font-size:21px}
+@media(max-width:700px){
+  body.drive .v25tools{grid-template-columns:repeat(3,1fr)}
+  body.drive .v25tools .btn{font-size:12px;min-height:40px;padding:0 5px}
+  body.drive .drivepanel{grid-template-columns:1.08fr .92fr}
+  body.drive .drivebox .big{font-size:22px}
+  body.drive .arrivalstrip{grid-template-columns:repeat(3,1fr);row-gap:7px}
+  body.drive .arrivalstrip .item{font-size:12px}
+  body.drive #map{height:62vh;min-height:340px}
+}
 </style>
 </head>
 <body>
 <div class="wrap">
-<div class="top"><div class="brand"><div class="logo">🌦️</div><div><h1>Meteo Viaggio</h1><div class="sub">Meteo lungo la strada</div></div></div><div class="pill">V6.7</div></div>
+<div class="top"><div class="brand"><div class="logo">🌦️</div><div><h1>Meteo Viaggio</h1><div class="sub">Meteo lungo la strada</div></div></div><div class="pill">V6.8</div></div>
 
 <section class="hero">
 <div class="form">
@@ -430,7 +453,7 @@ function updateArrivalWeather(r,items){
 function updateDrivePanel(km,r,bad,nextKm,nextMin){
  $('driveEta').textContent=ti(new Date(Date.now()+r.duration*1000));$('driveKm').textContent=`${Math.round(km)} km · ${fd(r.duration)}`;
  if(bad){let hr=hail(bad.w),info=wi(bad.w.code),kind=hr[0]=='ALTO'?'Grandine forte':[95,96,99].includes(bad.w.code)?'Temporale':bad.w.gust>=70?'Vento forte':bad.w.rain>=70?'Pioggia intensa':info[1],severe=severity(bad.w)>=4;$('driveRiskMain').textContent=`${kind} · ${nextKm} km`;$('driveRiskSub').textContent=`Tra circa ${nextMin} min · grandine ${hr[0]} · raffiche ${Math.round(bad.w.gust)} km/h`;$('weatherChange').innerHTML=`Prossimo cambio meteo: <b>${nextKm} km</b>`;$('tripStateIcon').textContent=severe?'🔴':'🟡';$('tripStateText').textContent=severe?'Critico':'Attenzione';$('tripStateSub').textContent=`${kind} tra ${nextKm} km`}
- else{$('driveRiskMain').textContent='Nessuno';$('driveRiskSub').textContent='Percorso tranquillo';let change=currentEval?.items?.find((x,i,a)=>i>0&&wi(x.w.code)[1]!==wi(a[0].w.code)[1]),changeKm=change?Math.round(km*change.p.f):null;$('weatherChange').innerHTML=changeKm?`Cambio meteo tra <b>${changeKm} km</b>`:'Meteo stabile lungo il percorso';$('tripStateIcon').textContent='🟢';$('tripStateText').textContent='Tranquillo';$('tripStateSub').textContent=changeKm?`cambio tra ${changeKm} km`:'nessun rischio rilevante'}
+ else{$('driveRiskMain').textContent='Nessuno';$('driveRiskSub').textContent='Percorso tranquillo';let change=currentEval?.items?.find((x,i,a)=>i>0&&wi(x.w.code)[1]!==wi(a[0].w.code)[1]),changeKm=change?Math.round(km*change.p.f):null;$('weatherChange').innerHTML=changeKm?`Cambio meteo tra <b>${changeKm} km</b>`:'Meteo stabile lungo il percorso';$('tripStateIcon').textContent='🟢';$('tripStateText').textContent='Tranquillo';$('tripStateSub').textContent=changeKm?`cambio meteo tra ${changeKm} km`:'meteo stabile · auto 5 min'}
  $('driveDiversionBtn').classList.toggle('hidden',!bestDiversion)
 }
 function renderDiversion(d,mainRisk){
@@ -445,11 +468,16 @@ async function calc(auto=false){
   let r=await route(here,destObj,viaPoint),ev=await evaluateRoute(r,10);currentEval=ev;
   let altNow=await resolveAltitude(here),maxAlt=await maxRouteElevation(r.geometry.coordinates);let km=ev.km,items=ev.items,risk=ev.risk,bad=items.find(x=>severity(x.w)>=3),nextKm=bad?Math.max(0,Math.round(km*bad.p.f)):null,nextMin=bad?Math.max(0,Math.round((r.duration*bad.p.f)/60)):null;
   updateArrivalWeather(r,items);updateDrivePanel(km,r,bad,nextKm,nextMin);
-  $('driveAlt').innerHTML=`⛰️ Quota: <b>${altNow!=null?altNow+' m · '+currentAltitudeSource:'—'}</b>${maxAlt!=null?` · max percorso <b>${maxAlt} m</b>`:''}`;
+  $('driveAlt').innerHTML=`⛰️ <b>${altNow!=null?altNow+' m · '+currentAltitudeSource:'—'}</b>${maxAlt!=null?` · max <b>${maxAlt} m</b>`:''} · 🔄 5 min`;
   let worst=worstRoutePoint(items,km,r),rw=$('routeWorst');
   if(worst){
-    rw.classList.remove('hidden','ok','bad');rw.classList.add(worst.score>=5?'bad':worst.score>=2?'':'ok');
-    $('routeWorstText').textContent=(worst.score>=2?`${worst.kind} tra circa ${worst.km} km (${worst.min} min).`:`Nessun tratto critico: punto più delicato a circa ${worst.km} km.`)+(maxAlt!=null?` Quota massima percorso: ${maxAlt} m.`:'');
+    rw.classList.remove('ok','bad');
+    if(worst.score>=2){
+      rw.classList.remove('hidden');rw.classList.add(worst.score>=5?'bad':'');
+      $('routeWorstText').textContent=`${worst.kind} tra circa ${worst.km} km (${worst.min} min).${maxAlt!=null?` Quota max ${maxAlt} m.`:''}`;
+    }else{
+      rw.classList.add('hidden','ok');
+    }
   }
   $('dist').textContent=Math.round(km)+' km';$('dur').textContent=fd(r.duration);$('risk').textContent=risk;$('next').textContent=bad?nextKm+' km':'Nessuno';
   let aCard=$('nextAlert'),aIcon=$('alertIcon'),aMain=$('alertMain'),aSub=$('alertSub'),aDist=$('alertDist');
