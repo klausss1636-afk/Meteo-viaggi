@@ -141,7 +141,7 @@ body.drive .v61strip{grid-template-columns:repeat(3,1fr);margin:6px 0}
 </head>
 <body>
 <div class="wrap">
-<div class="top"><div class="brand"><div class="logo">🌦️</div><div><h1>Meteo Viaggio</h1><div class="sub">Meteo lungo la strada</div></div></div><div class="pill">V6.4</div></div>
+<div class="top"><div class="brand"><div class="logo">🌦️</div><div><h1>Meteo Viaggio</h1><div class="sub">Meteo lungo la strada</div></div></div><div class="pill">V6.5</div></div>
 
 <section class="hero">
 <div class="form">
@@ -251,7 +251,7 @@ body.drive .v61strip{grid-template-columns:repeat(3,1fr);margin:6px 0}
 </div></div></section>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-let here=null,destObj=null,map,weatherHereMap,weatherHereRadar,routeLine,meMarker,wxMarkers=[],riskLines=[],watch=null,lastSpeech='',busy=false,lastRefresh=0,lastRefreshPos=null,radarLayer=null,radarOn=true,radarTimestamp=null,currentEval=null,lastHeading=null,viaPoint=null,bestDiversion=null,lastVoiceWarnKey='',routeRadarFrames=[],routeRadarTimer=null,routeRadarIx=0,weatherRadarFrames=[],weatherRadarTimer=null,weatherRadarIx=0,radarAnimating=true,currentAltitude=null,routeMaxAltitude=null;
+let here=null,destObj=null,map,weatherHereMap,weatherHereRadar,routeLine,meMarker,wxMarkers=[],riskLines=[],watch=null,lastSpeech='',busy=false,lastRefresh=0,lastRefreshPos=null,radarLayer=null,radarOn=true,radarTimestamp=null,currentEval=null,lastHeading=null,viaPoint=null,bestDiversion=null,lastVoiceWarnKey='',routeRadarFrames=[],routeRadarTimer=null,routeRadarIx=0,weatherRadarFrames=[],weatherRadarTimer=null,weatherRadarIx=0,radarAnimating=true,currentAltitude=null,currentAltitudeSource='',routeMaxAltitude=null;
 const $=x=>document.getElementById(x);
 function st(x){$('status').textContent=x}
 function hav(a,b){const R=6371,r=x=>x*Math.PI/180,d1=r(b.lat-a.lat),d2=r(b.lon-a.lon),q=Math.sin(d1/2)**2+Math.cos(r(a.lat))*Math.cos(r(b.lat))*Math.sin(d2/2)**2;return 2*R*Math.asin(Math.sqrt(q))}
@@ -278,10 +278,12 @@ async function terrainElevation(points){
 async function resolveAltitude(p){
   if(Number.isFinite(p?.alt)){
     currentAltitude=Math.round(p.alt);
+    currentAltitudeSource='GPS';
     return currentAltitude;
   }
   let e=await terrainElevation(p);
   currentAltitude=Number.isFinite(e?.[0])?Math.round(e[0]):null;
+  currentAltitudeSource=currentAltitude!=null?'terreno':'';
   return currentAltitude;
 }
 async function maxRouteElevation(coords){
@@ -443,7 +445,7 @@ async function calc(auto=false){
   let r=await route(here,destObj,viaPoint),ev=await evaluateRoute(r,10);currentEval=ev;
   let altNow=await resolveAltitude(here),maxAlt=await maxRouteElevation(r.geometry.coordinates);let km=ev.km,items=ev.items,risk=ev.risk,bad=items.find(x=>severity(x.w)>=3),nextKm=bad?Math.max(0,Math.round(km*bad.p.f)):null,nextMin=bad?Math.max(0,Math.round((r.duration*bad.p.f)/60)):null;
   updateArrivalWeather(r,items);updateDrivePanel(km,r,bad,nextKm,nextMin);
-  $('driveAlt').innerHTML=`⛰️ Quota: <b>${altNow!=null?altNow+' m':'—'}</b>${maxAlt!=null?` · max percorso <b>${maxAlt} m</b>`:''}`;
+  $('driveAlt').innerHTML=`⛰️ Quota: <b>${altNow!=null?altNow+' m · '+currentAltitudeSource:'—'}</b>${maxAlt!=null?` · max percorso <b>${maxAlt} m</b>`:''}`;
   let worst=worstRoutePoint(items,km,r),rw=$('routeWorst');
   if(worst){
     rw.classList.remove('hidden','ok','bad');rw.classList.add(worst.score>=5?'bad':worst.score>=2?'':'ok');
@@ -529,7 +531,7 @@ async function openWeatherHere(){
   $('whSunrise').textContent=j.daily?.sunrise?.[0]?ti(new Date(j.daily.sunrise[0])):'—';
   $('whSunset').textContent=j.daily?.sunset?.[0]?ti(new Date(j.daily.sunset[0])):'—';
   $('whUpdated').textContent=ti(new Date());
-  let alt=await resolveAltitude(p);$('whAlt').textContent=alt!=null?alt+' m':'—';
+  let alt=await resolveAltitude(p);$('whAlt').textContent=alt!=null?`${alt} m · ${currentAltitudeSource}`:'—';
   let alerts=appAlertsFromWeather(w),ab=$('whAlerts'),at=$('whAlertsTitle');
   let serious=alerts.some(x=>x.includes('alto')||x.includes('molto'));
   ab.className='alertsbox '+(serious?'bad':alerts.length?'warn':'ok');
