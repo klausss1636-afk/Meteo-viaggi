@@ -480,6 +480,20 @@ body.drive .nav-ahead-weather>span:last-child{border-right:0}
 body.drive .nav-ahead-weather small{display:block;color:#9fb0c5;font-size:7px}
 body.drive .nav-ahead-weather b{display:block;font-size:10px;margin-top:1px;white-space:nowrap}
 body.drive .navpill.voice-off{border-color:#ff6b6b88;color:#ff9b9b;background:#240b12dd}
+body.drive .voice-panel{
+  position:fixed;z-index:6800;right:88px;
+  top:calc(max(6px,env(safe-area-inset-top)) + 48px);
+  width:210px;padding:7px;display:grid;gap:6px;border-radius:15px;
+  background:#03101bf5;border:1px solid #55c2ff66;box-shadow:0 12px 32px #000b;
+  opacity:0;pointer-events:none;transform:translateY(-8px);transition:.16s ease
+}
+body.drive.voice-menu-open .voice-panel{opacity:1;pointer-events:auto;transform:translateY(0)}
+body.drive .voice-panel button{
+  min-height:42px;border-radius:11px;border:1px solid #53df9270;
+  background:#102538;color:#fff;text-align:left;padding:0 11px;font-weight:850
+}
+body.drive .voice-panel button.off{border-color:#ff6b6b70;background:#260d15;color:#ff9b9b}
+body:not(.drive) > .voice-panel{display:none!important}
 body.drive .sosbox{z-index:7000}
 body.drive .nav-actions{
   position:fixed;z-index:5400;left:8px;right:8px;bottom:84px;
@@ -488,6 +502,7 @@ body.drive .nav-actions{
 }
 body.drive.nav-menu-open .nav-actions{opacity:1;pointer-events:auto;transform:translateY(0)}
 body.drive.nav-menu-open #navMenuBtn{border-color:#55c2ff;color:#8ed8ff}
+body:not(.drive) > .nav-actions{display:none!important}
 body.drive .nav-actions button{
   min-height:62px;border-radius:14px;padding:5px;font-size:20px;background:#04101bdd;backdrop-filter:blur(15px)
 }
@@ -499,6 +514,7 @@ body.drive .nav-tripbar{
   display:grid!important;visibility:visible!important;opacity:1!important;
   background:#03101bf2;backdrop-filter:blur(18px)
 }
+body:not(.drive) > .nav-tripbar{display:none!important}
 body.drive .nav-tripbar small{font-size:7px}
 body.drive .nav-tripbar b{font-size:13px;margin-top:1px}
 body.drive .nav-stop,body.drive .nav-summary{min-height:48px;font-size:9px;line-height:1.15;padding:3px}
@@ -554,7 +570,7 @@ body.drive .maplibregl-ctrl-attrib{font-size:9px}
 <div class="wrap">
   <div class="top">
     <div class="brand"><div class="logo">🌦️</div><div><h1>Meteo Viaggio</h1><div class="sub">Meteo lungo la strada</div></div></div>
-    <div class="ver">V17.6 ESSENZIALE</div>
+    <div class="ver">V18.1 DESTINAZIONI</div>
   </div>
 
   <section class="hero">
@@ -569,6 +585,10 @@ body.drive .maplibregl-ctrl-attrib{font-size:9px}
       <button id="speak" class="btn alt">🔊 Come sarà?</button>
       <button id="homeGo" class="btn alt">🏠 Vai a casa</button>
       <button id="homeSet" class="btn alt">📌 Imposta casa</button>
+      <button id="workGo" class="btn alt">💼 Vai al lavoro</button>
+      <button id="workSet" class="btn alt">📌 Imposta lavoro</button>
+      <button id="hotelGo" class="btn alt">🏨 Vai in hotel</button>
+      <button id="hotelSet" class="btn alt">📌 Imposta hotel</button>
       <button id="startNowBtn" class="btn">🚀 Parti ora</button>
     </div>
     <div class="favrow">
@@ -776,13 +796,19 @@ let orientationEnabled=false,headingRaf=null,positionRaf=null,renderedPos=null;
 let favorites=[],lastOffRouteRecalc=0,lastTurnVoiceKey='',lastTurnVoiceAt=0;
 let routeAlternatives=[],activeRouteIndex=0,routeWeatherSummaries=[],lastWeatherEta=null;
 let lastAltitude=null,lastGpsUpdate=0,voiceRecognition=null,weatherAvoidMode=false;
-let voiceEnabled=localStorage.getItem('meteoViaggioVoice')!=='false';
+const oldVoiceEnabled=localStorage.getItem('meteoViaggioVoice')!=='false';
+let navVoiceEnabled=localStorage.getItem('meteoViaggioNavVoice')===null?oldVoiceEnabled:localStorage.getItem('meteoViaggioNavVoice')!=='false';
+let weatherVoiceEnabled=localStorage.getItem('meteoViaggioWeatherVoice')===null?oldVoiceEnabled:localStorage.getItem('meteoViaggioWeatherVoice')!=='false';
 let radarFrames=[],radarFrameIndex=0,radarAnimTimer=null,radarHost='https://tilecache.rainviewer.com';
 let tripHistory=[],nightAuto=true,lastHistorySave=0;
 try{tripHistory=JSON.parse(localStorage.getItem('meteoViaggioHistory')||'[]')}catch(e){tripHistory=[]}
 try{favorites=JSON.parse(localStorage.getItem('meteoViaggioFavorites')||'[]')}catch(e){favorites=[]}
 let homeBase=null;
 try{homeBase=JSON.parse(localStorage.getItem('meteoViaggioHome')||'null')}catch(e){homeBase=null}
+let workBase=null;
+try{workBase=JSON.parse(localStorage.getItem('meteoViaggioWork')||'null')}catch(e){workBase=null}
+let hotelBase=null;
+try{hotelBase=JSON.parse(localStorage.getItem('meteoViaggioHotel')||'null')}catch(e){hotelBase=null}
 
 const $=id=>document.getElementById(id);
 const st=t=>$('status').textContent=t;
@@ -1087,7 +1113,7 @@ function updateNextTurn(){
     const key=`${n.step.maneuver?.type}-${n.step.maneuver?.modifier}-${Math.round(meters/100)}`;
     if(key!==lastTurnVoiceKey&&Date.now()-lastTurnVoiceAt>25000){
       lastTurnVoiceKey=key;lastTurnVoiceAt=Date.now();
-      speakNow(`${inf.txt} ${meters<1000?'tra circa '+Math.round(meters/50)*50+' metri':'tra circa '+n.dist.toFixed(1)+' chilometri'}${n.step.name?' su '+n.step.name:''}.`);
+      speakNow(`${inf.txt} ${meters<1000?'tra circa '+Math.round(meters/50)*50+' metri':'tra circa '+n.dist.toFixed(1)+' chilometri'}${n.step.name?' su '+n.step.name:''}.`,'nav');
     }
   }
 }
@@ -1219,6 +1245,84 @@ async function goHome(){
     }
     destObj={lat:homeBase.lat,lon:homeBase.lon,label:'Casa'};
     $('dest').value='Casa';
+    await calc(false);
+  }catch(e){st('Errore: '+e.message)}
+}
+function updateWorkButtons(){
+  if(!$('workGo')||!$('workSet'))return;
+  $('workGo').textContent=workBase?'💼 Vai al lavoro':'💼 Lavoro non impostato';
+  $('workSet').textContent=workBase?'📌 Cambia lavoro':'📌 Imposta lavoro';
+}
+async function setWork(){
+  try{
+    const address=prompt('Scrivi l’indirizzo del lavoro. Lascia vuoto per usare la posizione attuale:','');
+    let p,name;
+    if(address&&address.trim()){
+      st('Cerco l’indirizzo del lavoro…');
+      const g=await geocode(address.trim());p={lat:g.lat,lon:g.lon};name=g.label;
+    }else{
+      let g=here;
+      if(!g){const q=await geoNow();g={lat:q.lat,lon:q.lon};here=g}
+      p={lat:g.lat,lon:g.lon};name=await reverseName(p);
+    }
+    workBase={lat:p.lat,lon:p.lon,label:'Lavoro · '+name};
+    localStorage.setItem('meteoViaggioWork',JSON.stringify(workBase));
+    updateWorkButtons();
+    st('Lavoro salvato. Rimarrà memorizzato su questo dispositivo.');
+    return true;
+  }catch(e){st('Non riesco a impostare il lavoro: '+e.message);return false}
+}
+async function goWork(){
+  if(!workBase){
+    const saved=await setWork();
+    if(!saved||!workBase)return;
+  }
+  try{
+    if(!here){
+      const g=await geoNow();
+      here={lat:g.lat,lon:g.lon};
+    }
+    destObj={lat:workBase.lat,lon:workBase.lon,label:'Lavoro'};
+    $('dest').value='Lavoro';
+    await calc(false);
+  }catch(e){st('Errore: '+e.message)}
+}
+function updateHotelButtons(){
+  if(!$('hotelGo')||!$('hotelSet'))return;
+  $('hotelGo').textContent=hotelBase?'🏨 Vai in hotel':'🏨 Hotel non impostato';
+  $('hotelSet').textContent=hotelBase?'📌 Cambia hotel':'📌 Imposta hotel';
+}
+async function setHotel(){
+  try{
+    const address=prompt('Scrivi il nome o l’indirizzo dell’hotel. Lascia vuoto per usare la posizione attuale:','');
+    let p,name;
+    if(address&&address.trim()){
+      st('Cerco l’hotel…');
+      const g=await geocode(address.trim());p={lat:g.lat,lon:g.lon};name=g.label;
+    }else{
+      let g=here;
+      if(!g){const q=await geoNow();g={lat:q.lat,lon:q.lon};here=g}
+      p={lat:g.lat,lon:g.lon};name=await reverseName(p);
+    }
+    hotelBase={lat:p.lat,lon:p.lon,label:'Hotel · '+name};
+    localStorage.setItem('meteoViaggioHotel',JSON.stringify(hotelBase));
+    updateHotelButtons();
+    st('Hotel salvato. Puoi cambiarlo quando vuoi.');
+    return true;
+  }catch(e){st('Non riesco a impostare l’hotel: '+e.message);return false}
+}
+async function goHotel(){
+  if(!hotelBase){
+    const saved=await setHotel();
+    if(!saved||!hotelBase)return;
+  }
+  try{
+    if(!here){
+      const g=await geoNow();
+      here={lat:g.lat,lon:g.lon};
+    }
+    destObj={lat:hotelBase.lat,lon:hotelBase.lon,label:'Hotel'};
+    $('dest').value='Hotel';
     await calc(false);
   }catch(e){st('Errore: '+e.message)}
 }
@@ -1599,20 +1703,20 @@ function openHUD(){updateHUD();$('hudView').classList.remove('hidden')}
 function closeHUD(){$('hudView').classList.add('hidden')}
 function voiceReply(q){
   q=(q||'').toLowerCase();
-  if(!currentRoute||!currentItems.length){speakNow('Prima calcola un viaggio.');return}
+  if(!currentRoute||!currentItems.length){speakNow('Prima calcola un viaggio.','weather');return}
   const km=currentRoute.distance/1000,s=journeySafety(currentItems),bad=currentItems.find(x=>severity(x.w)>=3);
   if(q.includes('grandine')){
     const h=currentItems.find(x=>hail(x.w)==='ALTO'||hail(x.w)==='MEDIO');
-    speakNow(h?`Sì. Rischio grandine ${hail(h.w).toLowerCase()} tra circa ${Math.round(km*h.p.f)} chilometri.`:'Non vedo rischio significativo di grandine lungo il percorso.');
+    speakNow(h?`Sì. Rischio grandine ${hail(h.w).toLowerCase()} tra circa ${Math.round(km*h.p.f)} chilometri.`:'Non vedo rischio significativo di grandine lungo il percorso.','weather');
   }else if(q.includes('50')||q.includes('prossimi')){
-    const p=pointAtDistanceAhead(50);speakNow(p?'Sto controllando i prossimi cinquanta chilometri. Usa anche il riquadro meteo davanti a te.':'Sei vicino alla destinazione.');
+    const p=pointAtDistanceAhead(50);speakNow(p?'Sto controllando i prossimi cinquanta chilometri. Usa anche il riquadro meteo davanti a te.':'Sei vicino alla destinazione.','weather');
   }else if(q.includes('arrivo')){
-    const a=currentItems.at(-1),inf=wi(a.w.code,a.w.isDay);speakNow(`All'arrivo: ${inf[1]}, ${Math.round(a.w.temp)} gradi, percepiti ${Math.round(a.w.feels)}.`);
+    const a=currentItems.at(-1),inf=wi(a.w.code,a.w.isDay);speakNow(`All'arrivo: ${inf[1]}, ${Math.round(a.w.temp)} gradi, percepiti ${Math.round(a.w.feels)}.`,'weather');
   }else if(q.includes('partire')||q.includes('conviene')){
-    speakNow(`L'indice di sicurezza attuale è ${s} su cento. Controllo anche le finestre di partenza consigliate.`);
+    speakNow(`L'indice di sicurezza attuale è ${s} su cento. Controllo anche le finestre di partenza consigliate.`,'weather');
     departureWindows();
   }else{
-    speakNow(bad?`Attenzione. ${riskKind(bad.w)} tra circa ${Math.round(km*bad.p.f)} chilometri. Sicurezza viaggio ${s} su cento.`:`Percorso tranquillo. Sicurezza viaggio ${s} su cento.`);
+    speakNow(bad?`Attenzione. ${riskKind(bad.w)} tra circa ${Math.round(km*bad.p.f)} chilometri. Sicurezza viaggio ${s} su cento.`:`Percorso tranquillo. Sicurezza viaggio ${s} su cento.`,'weather');
   }
 }
 function startVoiceAsk(){
@@ -1634,31 +1738,40 @@ async function evaluateRoute(r){
   }
   return{km,items};
 }
-function speakNow(msg){
-  if(!voiceEnabled)return;
+function speakNow(msg,channel='general'){
+  if(channel==='nav'&&!navVoiceEnabled)return;
+  if(channel==='weather'&&!weatherVoiceEnabled)return;
+  if(channel==='general'&&!navVoiceEnabled&&!weatherVoiceEnabled)return;
   if(!('speechSynthesis'in window))return;
   speechSynthesis.cancel();
   const u=new SpeechSynthesisUtterance(msg);u.lang='it-IT';speechSynthesis.speak(u);
 }
-function updateVoiceButton(){
-  const b=$('navVoiceBtn');if(!b)return;
-  b.textContent=voiceEnabled?'☑️ Voce':'☐ Voce';
-  b.classList.toggle('voice-off',!voiceEnabled);
-  b.setAttribute('aria-pressed',voiceEnabled?'true':'false');
+function updateVoiceButtons(){
+  const b=$('navVoiceBtn');
+  if(b){
+    b.textContent=navVoiceEnabled&&weatherVoiceEnabled?'🔊 Voci':navVoiceEnabled||weatherVoiceEnabled?'🔉 Voci':'🔇 Voci';
+    b.classList.toggle('voice-off',!navVoiceEnabled&&!weatherVoiceEnabled);
+  }
+  const n=$('navGuideVoiceBtn'),w=$('weatherAlertVoiceBtn');
+  if(n){n.textContent=(navVoiceEnabled?'☑️ ':'☐ ')+'Navigatore';n.classList.toggle('off',!navVoiceEnabled)}
+  if(w){w.textContent=(weatherVoiceEnabled?'☑️ ':'☐ ')+'Avvisi meteo';w.classList.toggle('off',!weatherVoiceEnabled)}
 }
-function toggleVoice(){
-  voiceEnabled=!voiceEnabled;
-  localStorage.setItem('meteoViaggioVoice',voiceEnabled?'true':'false');
-  if(!voiceEnabled&&'speechSynthesis'in window)speechSynthesis.cancel();
-  updateVoiceButton();
-  if(voiceEnabled)speakNow('Voce attivata.');
+function toggleNavGuideVoice(){
+  navVoiceEnabled=!navVoiceEnabled;localStorage.setItem('meteoViaggioNavVoice',navVoiceEnabled?'true':'false');
+  if(!navVoiceEnabled&&'speechSynthesis'in window)speechSynthesis.cancel();
+  updateVoiceButtons();if(navVoiceEnabled)speakNow('Voce del navigatore attivata.','nav');
+}
+function toggleWeatherAlertVoice(){
+  weatherVoiceEnabled=!weatherVoiceEnabled;localStorage.setItem('meteoViaggioWeatherVoice',weatherVoiceEnabled?'true':'false');
+  if(!weatherVoiceEnabled&&'speechSynthesis'in window)speechSynthesis.cancel();
+  updateVoiceButtons();if(weatherVoiceEnabled)speakNow('Avvisi meteo attivati.','weather');
 }
 function maybeVoice(kind,km,min,sev,riskLen=0){
   if(watchId===null||sev<3||km>40)return;
   const key=`${kind}-${Math.ceil(km/5)}`;
   if(key===lastVoiceKey&&Date.now()-lastVoiceAt<2*60*1000)return;
   lastVoiceKey=key;lastVoiceAt=Date.now();
-  speakNow(`Attenzione. ${kind} previsto tra circa ${km} chilometri, fra circa ${min} minuti${riskLen?`, per un tratto di circa ${riskLen} chilometri`:''}.`);
+  speakNow(`Attenzione. ${kind} previsto tra circa ${km} chilometri, fra circa ${min} minuti${riskLen?`, per un tratto di circa ${riskLen} chilometri`:''}.`,'weather');
 }
 function render(r,ev){
   currentRoute=r;currentItems=ev.items;
@@ -1943,7 +2056,7 @@ $('pos').onclick=async()=>{
 $('calc').onclick=()=>{destObj=null;calc(false)};
 $('dest').onkeydown=e=>{if(e.key==='Enter')$('calc').click()};
 $('live').onclick=startLive;
-$('speak').onclick=()=>lastSpeech?speakNow(lastSpeech):st('Prima calcola un viaggio.');
+$('speak').onclick=()=>lastSpeech?speakNow(lastSpeech,'weather'):st('Prima calcola un viaggio.');
 $('driveBtn').onclick=openNavDashboard;
 function recenter(){
   if(map&&here){followMode=true;$('navText').textContent='GPS · seguo la posizione';startHeadingAnimation();updateMapBearing();map.setView([here.lat,here.lon],desiredZoom());updateMarker()}
@@ -1977,6 +2090,12 @@ updateFavorites();
 $('homeSet').onclick=setHome;
 $('homeGo').onclick=goHome;
 updateHomeButtons();
+$('workSet').onclick=setWork;
+$('workGo').onclick=goWork;
+updateWorkButtons();
+$('hotelSet').onclick=setHotel;
+$('hotelGo').onclick=goHotel;
+updateHotelButtons();
 
 let navMapOriginalParent=null,navMapOriginalNext=null;
 
@@ -2150,6 +2269,7 @@ function openNavDashboard(){
   $('navDashboard').classList.remove('hidden');
   document.body.classList.add('drive');
   setNavMenu(false);
+  setVoicePanel(false);
   updateNavDashboard();
   init3DNavMap();
 
@@ -2164,6 +2284,7 @@ function closeNavDashboard(){
   $('navDashboard').classList.add('hidden');
   document.body.classList.remove('drive');
   setNavMenu(false);
+  setVoicePanel(false);
   setTimeout(()=>{try{if(map)map.invalidateSize(true)}catch(e){}},120);
 }
 
@@ -2172,11 +2293,21 @@ function toggleNavNight(){
 }
 
 function setNavMenu(open){
+  if(open)setVoicePanel(false);
   document.body.classList.toggle('nav-menu-open',open);
   const b=$('navMenuBtn');
   if(b){b.textContent=open?'✕ Chiudi':'☰ Menu';b.setAttribute('aria-expanded',open?'true':'false')}
 }
 function toggleNavMenu(){setNavMenu(!document.body.classList.contains('nav-menu-open'))}
+function setVoicePanel(open){
+  document.body.classList.toggle('voice-menu-open',open);
+  const b=$('navVoiceBtn');if(b)b.setAttribute('aria-expanded',open?'true':'false');
+}
+function toggleVoicePanel(){
+  const open=!document.body.classList.contains('voice-menu-open');
+  if(open)setNavMenu(false);
+  setVoicePanel(open);
+}
 
 $('whClose').onclick=()=>{if(radarAnimTimer){clearInterval(radarAnimTimer);radarAnimTimer=null} $('weatherHere').classList.add('hidden')};
 
@@ -2188,10 +2319,14 @@ document.addEventListener('DOMContentLoaded',()=>{
   $('navAvoidWeather').onclick=chooseWeatherSafeRoute;
   $('navSOS').onclick=openSOS;
   $('navHome').onclick=goHome;
+  $('navWork').onclick=goWork;
+  $('navHotel').onclick=goHotel;
   $('navRadar').onclick=()=>{$('radarBtn').click()};
   $('navFav').onclick=()=>{closeNavDashboard();setTimeout(()=>$('favSelect')?.focus(),120)};
-  $('navVoiceBtn').onclick=toggleVoice;
-  updateVoiceButton();
+  $('navVoiceBtn').onclick=toggleVoicePanel;
+  $('navGuideVoiceBtn').onclick=toggleNavGuideVoice;
+  $('weatherAlertVoiceBtn').onclick=toggleWeatherAlertVoice;
+  updateVoiceButtons();
   $('navMenuBtn').onclick=toggleNavMenu;
   $('navNightBtn').onclick=toggleNavNight;
   $('nav3dCenter').onclick=()=>update3DNavMap(true);
@@ -2205,7 +2340,7 @@ setInterval(()=>{if(radarOn&&map)refreshRadar()},5*60*1000);
 <section id="navDashboard" class="navdash hidden">
   <div class="navdash-head">
     <div class="nav-active">● NAV ATTIVA</div>
-    <button id="navVoiceBtn" class="navpill" aria-pressed="true">☑️ Voce</button>
+    <button id="navVoiceBtn" class="navpill" aria-expanded="false">🔊 Voci</button>
     <button id="navMenuBtn" class="navpill" aria-expanded="false">☰ Menu</button>
   </div>
 
@@ -2254,23 +2389,32 @@ setInterval(()=>{if(radarOn&&map)refreshRadar()},5*60*1000);
     <div class="nav3d-arrow"></div>
   </div>
 
-  <div class="nav-actions">
-    <button id="navNightBtn">🌙<span>Modalità<br>notte</span></button>
-    <button id="navAvoidWeather">🛡️<span>Evita<br>maltempo</span></button>
-    <button id="navSOS">⛈️<span>SOS<br>meteo</span></button>
-    <button id="navFav">⭐<span>Preferiti</span></button>
-    <button id="navHome">🏠<span>Casa</span></button>
-    <button id="navRadar">📡<span>Radar</span></button>
-  </div>
-
-  <div class="nav-tripbar">
-    <button id="navStop" class="nav-stop">Termina<br>viaggio</button>
-    <div><small>Distanza</small><b id="navDistance">—</b></div>
-    <div><small>Tempo rimanente</small><b id="navRemaining">—</b></div>
-    <div><small>Arrivo alle</small><b id="navArrivalBottom">—</b></div>
-    <button id="navSummary" class="nav-summary">Riepilogo<br>viaggio</button>
-  </div>
 </section>
+
+<!-- Fuori dal pannello NAV: su iPhone menu e barra restano sopra alla mappa. -->
+<div class="voice-panel" aria-label="Impostazioni voci">
+  <button id="navGuideVoiceBtn">☑️ Navigatore</button>
+  <button id="weatherAlertVoiceBtn">☑️ Avvisi meteo</button>
+</div>
+
+<div class="nav-actions">
+  <button id="navNightBtn">🌙<span>Modalità<br>notte</span></button>
+  <button id="navAvoidWeather">🛡️<span>Evita<br>maltempo</span></button>
+  <button id="navSOS">⛈️<span>SOS<br>meteo</span></button>
+  <button id="navFav">⭐<span>Preferiti</span></button>
+  <button id="navHome">🏠<span>Casa</span></button>
+  <button id="navWork">💼<span>Lavoro</span></button>
+  <button id="navHotel">🏨<span>Hotel</span></button>
+  <button id="navRadar">📡<span>Radar</span></button>
+</div>
+
+<div class="nav-tripbar">
+  <button id="navStop" class="nav-stop">Termina<br>viaggio</button>
+  <div><small>Distanza</small><b id="navDistance">—</b></div>
+  <div><small>Tempo rimanente</small><b id="navRemaining">—</b></div>
+  <div><small>Arrivo alle</small><b id="navArrivalBottom">—</b></div>
+  <button id="navSummary" class="nav-summary">Riepilogo<br>viaggio</button>
+</div>
 
 </body>
 </html>
