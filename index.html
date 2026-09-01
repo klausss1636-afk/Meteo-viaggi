@@ -160,11 +160,24 @@ body.drive .centerbtn{width:48px;height:48px;font-size:21px}
   body.drive .arrivalstrip .item{font-size:12px}
   body.drive #map{height:62vh;min-height:340px}
 }
+
+/* V7.1 - Safe area superiore iPhone/Carlink */
+body.drive .wrap{
+  padding-top:calc(8px + env(safe-area-inset-top, 0px));
+}
+body.drive .top{
+  padding-top:2px;
+}
+@supports(padding:max(0px)){
+  body.drive .wrap{
+    padding-top:max(12px, calc(env(safe-area-inset-top) + 8px));
+  }
+}
 </style>
 </head>
 <body>
 <div class="wrap">
-<div class="top"><div class="brand"><div class="logo">🌦️</div><div><h1>Meteo Viaggio</h1><div class="sub">Meteo lungo la strada</div></div></div><div class="pill">V7.0</div></div>
+<div class="top"><div class="brand"><div class="logo">🌦️</div><div><h1>Meteo Viaggio</h1><div class="sub">Meteo lungo la strada</div></div></div><div class="pill">V7.1</div></div>
 
 <section class="hero">
 <div class="form">
