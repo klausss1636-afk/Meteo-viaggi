@@ -250,7 +250,7 @@ body.nightAuto .mapwrap,body.nightAuto .wcard{box-shadow:0 0 0 1px #ffffff08}
 }
 .nav-map-slot #nav3dmap{height:64vh;min-height:560px;background:#071019}
 .nav3d-arrow{
-  position:absolute;z-index:850;left:50%;bottom:16%;transform:translateX(-50%);
+  position:absolute;z-index:1000;left:50%;bottom:35%;transform:translateX(-50%);
   width:78px;height:98px;background:#fff;
   clip-path:polygon(50% 0,96% 100%,50% 78%,4% 100%);
   filter:drop-shadow(0 12px 12px #000e) drop-shadow(0 0 12px #168cffcc);
@@ -429,9 +429,12 @@ body.drive .wrap{display:none!important}
   .nav-map-slot{min-height:500px;border-radius:17px}
   .nav-map-slot #map{height:61vh;min-height:500px}
   .nav-map-slot #nav3dmap{height:61vh;min-height:500px}
-  .nav-metrics{overflow-x:auto;grid-template-columns:repeat(5,92px);scrollbar-width:none}
+  .nav-metrics{overflow:hidden;grid-template-columns:repeat(5,minmax(0,1fr));scrollbar-width:none}
   .navmetric{min-height:65px}
-  .nav-weather-strip{overflow-x:auto;grid-template-columns:repeat(7,78px);scrollbar-width:none}
+  .navmetric small{font-size:8px}.navmetric b{font-size:16px}.navmetric span{font-size:8px}
+  .nav-weather-strip{overflow:hidden;grid-template-columns:repeat(7,minmax(0,1fr));scrollbar-width:none}
+  .nav-weather-strip>div{min-width:0;padding:5px 1px}
+  .nav-weather-strip small{font-size:7px}.nav-weather-strip b{font-size:11px}
   .nav-actions{overflow-x:auto;grid-template-columns:repeat(5,82px);scrollbar-width:none}
   .nav-actions button{min-height:64px}
 }
@@ -460,7 +463,7 @@ body.drive .wrap{display:none!important}
 <div class="wrap">
   <div class="top">
     <div class="brand"><div class="logo">🌦️</div><div><h1>Meteo Viaggio</h1><div class="sub">Meteo lungo la strada</div></div></div>
-    <div class="ver">V16 NAV 3D</div>
+    <div class="ver">V16.1 NAV 3D</div>
   </div>
 
   <section class="hero">
@@ -1973,6 +1976,8 @@ function update3DRoute(){
   if(!nav3dReady||!nav3dMap)return;
   const src=nav3dMap.getSource('active-route');
   if(src)src.setData(nav3dRouteData());
+  if(nav3dMap.getLayer('route-shadow'))nav3dMap.moveLayer('route-shadow');
+  if(nav3dMap.getLayer('route-main'))nav3dMap.moveLayer('route-main');
 }
 
 function init3DNavMap(){
@@ -1990,12 +1995,12 @@ function init3DNavMap(){
     nav3dMap.addLayer({
       id:'route-shadow',type:'line',source:'active-route',
       layout:{'line-cap':'round','line-join':'round'},
-      paint:{'line-color':'#006cff','line-width':15,'line-opacity':.72,'line-blur':4}
+      paint:{'line-color':'#006cff','line-width':24,'line-opacity':.95,'line-blur':5}
     });
     nav3dMap.addLayer({
       id:'route-main',type:'line',source:'active-route',
       layout:{'line-cap':'round','line-join':'round'},
-      paint:{'line-color':'#67e1ff','line-width':6,'line-opacity':1}
+      paint:{'line-color':'#9ff3ff','line-width':9,'line-opacity':1}
     });
     update3DNavMap(true);
   });
@@ -2010,7 +2015,7 @@ function update3DNavMap(immediate=false){
   nav3dMap.easeTo({
     center:[p.lon,p.lat],bearing:Number.isFinite(h)?h:0,pitch:62,
     zoom:currentSpeedKmh>90?16.2:currentSpeedKmh>50?16.8:17.35,
-    offset:[0,Math.round((nav3dMap.getContainer().clientHeight||500)*.18)],
+    offset:[0,Math.round((nav3dMap.getContainer().clientHeight||500)*.05)],
     duration:immediate?0:720,essential:true
   });
 }
