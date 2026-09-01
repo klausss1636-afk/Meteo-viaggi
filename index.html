@@ -493,9 +493,18 @@ body.drive .nav-actions button{
 }
 body.drive .nav-actions button span{font-size:9px;margin-top:2px}
 body.drive .nav-tripbar{
-  position:fixed;z-index:5300;left:8px;right:8px;bottom:max(6px,env(safe-area-inset-bottom));
-  max-width:none;margin:0;min-height:80px;border-radius:18px;background:#03101bed;backdrop-filter:blur(18px)
+  position:fixed!important;z-index:6500!important;left:8px;right:8px;bottom:8px;
+  bottom:calc(8px + env(safe-area-inset-bottom));
+  max-width:none;margin:0;min-height:58px;border-radius:16px;padding:4px;
+  display:grid!important;visibility:visible!important;opacity:1!important;
+  background:#03101bf2;backdrop-filter:blur(18px)
 }
+body.drive .nav-tripbar small{font-size:7px}
+body.drive .nav-tripbar b{font-size:13px;margin-top:1px}
+body.drive .nav-stop,body.drive .nav-summary{min-height:48px;font-size:9px;line-height:1.15;padding:3px}
+body.drive .nav3d-compass{bottom:78px}
+body.drive .maplibregl-ctrl-bottom-right{bottom:68px;right:6px}
+body.drive .maplibregl-ctrl-attrib{font-size:9px}
 
 @media(max-width:760px){
   body.drive .nav-active{font-size:11px;padding-left:3px}
@@ -514,11 +523,11 @@ body.drive .nav-tripbar{
   body.drive .nav3d-center{width:48px;height:48px;font-size:20px}
   body.drive .nav3d-arrow{width:68px;height:86px;top:60%}
   body.drive .nav-ahead-weather{top:calc(max(6px,env(safe-area-inset-top)) + 136px);left:8px;right:8px}
-  body.drive .nav-actions{bottom:78px}
+  body.drive .nav-actions{bottom:70px}
   body.drive .nav-actions button{min-height:54px;font-size:17px}
-  body.drive .nav-tripbar{grid-template-columns:82px repeat(3,1fr) 88px;min-height:70px;padding:5px}
-  body.drive .nav-tripbar b{font-size:15px}
-  body.drive .nav-stop,body.drive .nav-summary{min-height:58px;font-size:10px}
+  body.drive .nav-tripbar{grid-template-columns:70px repeat(3,1fr) 74px;min-height:58px;padding:4px}
+  body.drive .nav-tripbar b{font-size:12px}
+  body.drive .nav-stop,body.drive .nav-summary{min-height:48px;font-size:9px}
 }
 
 </style>
@@ -545,7 +554,7 @@ body.drive .nav-tripbar{
 <div class="wrap">
   <div class="top">
     <div class="brand"><div class="logo">🌦️</div><div><h1>Meteo Viaggio</h1><div class="sub">Meteo lungo la strada</div></div></div>
-    <div class="ver">V17.5 PULITA</div>
+    <div class="ver">V17.6 ESSENZIALE</div>
   </div>
 
   <section class="hero">
@@ -2109,11 +2118,15 @@ function init3DNavMap(){
   nav3dMap=new maplibregl.Map({
     container:'nav3dmap',style:nav3dStyle(),center:[p.lon,p.lat],zoom:16.8,
     pitch:62,bearing:Number.isFinite(lastHeading)?lastHeading:0,
-    attributionControl:true,canvasContextAttributes:{antialias:true},dragRotate:true
+    attributionControl:false,canvasContextAttributes:{antialias:true},dragRotate:true
   });
+  nav3dMap.addControl(new maplibregl.AttributionControl({compact:true}),'bottom-right');
   nav3dMap.on('load',()=>{
     nav3dReady=true;
     update3DNavMap(true);
+    setTimeout(()=>{
+      nav3dMap?.getContainer()?.querySelector('.maplibregl-ctrl-attrib')?.classList.remove('maplibregl-compact-show');
+    },300);
   });
 }
 
