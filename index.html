@@ -49,7 +49,19 @@ h1{font-size:23px;margin:0}.sub{font-size:12px;color:var(--muted)}
 .centerbtn{position:absolute;z-index:750;right:12px;top:50px;width:50px;height:50px;border-radius:50%;border:1px solid #ffffff35;background:#07111fe8;color:white;font-size:23px;box-shadow:0 5px 18px #0008}
 .navbadge{position:absolute;z-index:740;left:50%;top:51px;transform:translateX(-50%);display:none;align-items:center;gap:7px;padding:7px 11px;border-radius:999px;background:#07111fe8;border:1px solid #63d69b80;font-size:11px;font-weight:900;white-space:nowrap;pointer-events:none}
 .navbadge.on{display:flex}.pulse{width:8px;height:8px;border-radius:50%;background:var(--ok)}
-.navarrow{width:66px;height:66px;display:grid;place-items:center;border-radius:50%;background:#268cff;border:4px solid white;box-shadow:0 6px 20px #000b;color:white;font-size:40px;line-height:1;transform-origin:center;will-change:transform;transition:none}
+.navarrow{
+  position:relative;width:70px;height:88px;display:block;
+  background:#fff;border:0;border-radius:0;
+  clip-path:polygon(50% 0,96% 100%,50% 78%,4% 100%);
+  filter:drop-shadow(0 8px 10px #000c);
+  color:transparent;font-size:0;line-height:1;
+  transform-origin:center;will-change:transform;transition:none
+}
+.navarrow:after{
+  content:"";position:absolute;inset:7px 8px 10px;
+  background:linear-gradient(180deg,#60c8ff,#066cff 72%);
+  clip-path:polygon(50% 0,96% 100%,50% 77%,4% 100%)
+}
 .legend{position:absolute;z-index:500;left:10px;bottom:10px;background:#07111fbd;border:1px solid #ffffff20;border-radius:9px;padding:5px 7px;font-size:9px}
 .risklegend{bottom:auto;top:82px}
 .timeline{display:grid;gap:8px;margin-top:10px}
@@ -302,10 +314,10 @@ body.drive .wrap{display:none!important}
   .nav-stop,.nav-summary{min-height:58px;font-size:12px}
 }
 
-/* V14 - guida visuale: la mappa diventa l'elemento principale */
+/* V15 - stile premium ispirato al riferimento approvato */
 .navdash{
   background:
-    radial-gradient(circle at 50% -15%,#19334f 0,#08121d 36%,#03070c 76%);
+    radial-gradient(circle at 50% -15%,#14283d 0,#050c14 38%,#010409 78%);
   padding:8px 8px max(12px,env(safe-area-inset-bottom));
 }
 .navdash-head{margin-bottom:6px}
@@ -314,39 +326,63 @@ body.drive .wrap{display:none!important}
 .nav-turn-card{
   min-height:102px;border-radius:18px;padding:10px 13px;
   grid-template-columns:76px minmax(0,1fr) auto;gap:10px;
-  background:linear-gradient(145deg,#10273beF,#07131fF2);
-  border-color:#4aa9ff66;box-shadow:0 9px 28px #0009,inset 4px 0 #3b9dff;
+  background:linear-gradient(145deg,#0d1c2cef,#040a11f5);
+  border-color:#238eff77;box-shadow:0 9px 28px #000b,inset 5px 0 #168cff;
 }
 .nav-turn-icon{font-size:54px;filter:drop-shadow(0 5px 10px #0008)}
+.nav-turn-icon{
+  width:64px;height:64px;border-radius:17px;display:grid;place-items:center;
+  background:linear-gradient(145deg,#11395e,#071521);border:1px solid #2e9cff77;
+  box-shadow:inset 0 0 24px #168cff2e
+}
 .nav-turn-main{font-size:clamp(20px,3.1vw,31px)}
 .nav-turn-street{font-size:clamp(15px,2.3vw,22px);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .nav-turn-dist{font-size:clamp(19px,2.6vw,28px);padding-bottom:2px}
-.nav-arrival-card{border-radius:18px;padding:10px 13px;background:linear-gradient(145deg,#102131F2,#07111bF2)}
+.nav-arrival-card{border-radius:18px;padding:10px 13px;background:linear-gradient(145deg,#0c1826f2,#03080df5)}
 .nav-arrival-card>b{font-size:30px}.nav-speedline{margin-top:6px;padding-top:6px}
 .nav-map-slot{
   position:relative;max-width:1100px;min-height:560px;margin:0 auto 7px;
   border-radius:22px;border:1px solid #8ecaff55;
   box-shadow:0 18px 46px #000c,0 0 0 1px #ffffff0a;
 }
-.nav-map-slot #map{height:64vh;min-height:560px;background:#b8c8d1}
+.nav-map-slot #map{height:64vh;min-height:560px;background:#071019}
 .nav-map-slot #map::after{
   content:"";position:absolute;z-index:410;inset:0;pointer-events:none;
   box-shadow:inset 0 25px 40px #05101b44,inset 0 -45px 55px #05101b66;
 }
 .nav-map-slot .navarrow{
-  width:74px;height:74px;font-size:46px;border-width:5px;
-  background:linear-gradient(145deg,#42a7ff,#0872ec);
-  box-shadow:0 10px 24px #001d3dcc,0 0 0 6px #1688ff2b;
+  width:78px;height:98px;
+  filter:drop-shadow(0 12px 12px #000e) drop-shadow(0 0 10px #168cffaa);
 }
 .nav-map-slot .navbadge{top:12px;padding:8px 13px;backdrop-filter:blur(14px)}
 .nav-map-slot .centerbtn,.nav-map-slot .hudbtn{backdrop-filter:blur(14px);background:#06111dcc}
 .nav-metrics{margin-bottom:6px;gap:6px}
-.navmetric{min-height:70px;padding:7px;border-radius:13px;background:linear-gradient(145deg,#102131,#08131f)}
+.navmetric{min-height:78px;padding:8px;border-radius:13px;background:linear-gradient(145deg,#0c1928,#03080e);border-color:#ffffff20}
 .navmetric b{font-size:21px;margin:3px 0 1px}
-.nav-weather-strip{margin-bottom:6px;background:linear-gradient(145deg,#102131,#08131f);padding:5px}
+.navmetric:nth-child(1) b{color:#fff;text-shadow:0 0 18px #53e36f88}
+.navmetric:nth-child(2) b{color:#8af08f}
+.navmetric:nth-child(3) b{color:#ffd866}
+.navmetric:nth-child(4) b{color:#b5c8ff}
+.navmetric:nth-child(5) b{color:#e9f5ff}
+.nav-weather-strip{margin-bottom:6px;background:linear-gradient(145deg,#0b1724,#02070c);padding:5px;border-color:#ffffff20}
 .nav-actions button{min-height:72px;background:linear-gradient(145deg,#102338,#07131f)}
+.nav-actions button:nth-child(1){color:#9ff0b0;box-shadow:inset 0 3px #48df7b55}
+.nav-actions button:nth-child(2){color:#ff7777;box-shadow:inset 0 3px #ff494955}
+.nav-actions button:nth-child(3){color:#ffd96a;box-shadow:inset 0 3px #ffd34d55}
+.nav-actions button:nth-child(4){color:#bba4ff;box-shadow:inset 0 3px #9a6aff55}
+.nav-actions button:nth-child(5){color:#76e7ea;box-shadow:inset 0 3px #3edbdc55}
 .nav-tripbar{position:sticky;bottom:0;z-index:1200;backdrop-filter:blur(18px);background:#06101aee}
 .leaflet-control-zoom a{background:#07131fe8!important;color:white!important;border-color:#ffffff22!important}
+.nav-map-slot .leaflet-control-zoom{margin-top:78px!important}
+.nav-map-slot .leaflet-tile-pane{filter:saturate(1.16) contrast(1.08) brightness(.76)}
+.nav-map-slot .leaflet-control-attribution{background:#02070caa!important;color:#bac6d2!important}
+.nav-map-slot .leaflet-control-attribution a{color:#64b6ff!important}
+.nav-map-slot:before{
+  content:"3D\A N";white-space:pre;position:absolute;z-index:820;left:13px;top:13px;
+  width:45px;height:58px;border-radius:12px;background:#02070ce8;border:1px solid #ffffff28;
+  color:#fff;display:grid;place-items:center;text-align:center;font-weight:1000;line-height:1.15;
+  box-shadow:0 8px 22px #000a;pointer-events:none
+}
 
 @media(max-width:760px){
   .navdash{padding:6px 5px max(10px,env(safe-area-inset-bottom))}
@@ -394,7 +430,7 @@ body.drive .wrap{display:none!important}
 <div class="wrap">
   <div class="top">
     <div class="brand"><div class="logo">🌦️</div><div><h1>Meteo Viaggio</h1><div class="sub">Meteo lungo la strada</div></div></div>
-    <div class="ver">V14.1 NAVIGATORE</div>
+    <div class="ver">V15 PREMIUM</div>
   </div>
 
   <section class="hero">
@@ -768,8 +804,8 @@ function headingFrame(){
   const d=angleDelta(smoothHeading,targetHeading);
   smoothHeading=normHeading(smoothHeading+d*0.16);
   const el=document.querySelector('.navarrow');
-  // Il glifo ➤ a 0 gradi punta a est: -90 lo allinea al nord della mappa.
-  if(el)el.style.transform=`rotate(${smoothHeading-90}deg)`;
+  // La freccia CSS nasce gia rivolta verso nord.
+  if(el)el.style.transform=`rotate(${smoothHeading}deg)`;
   headingRaf=requestAnimationFrame(headingFrame);
 }
 function startHeadingAnimation(){
@@ -1062,8 +1098,11 @@ async function goHome(){
 function initMap(){
   if(map)return;
   map=L.map('map',{zoomControl:true});
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',{
-    maxZoom:20,subdomains:'abcd',attribution:'© OpenStreetMap · © CARTO'
+  L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{
+    maxZoom:20,attribution:'Immagini © Esri'
+  }).addTo(map);
+  L.tileLayer('https://services.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}',{
+    maxZoom:20,opacity:.82,attribution:'Dati cartografici © Esri'
   }).addTo(map);
   map.on('dragstart',()=>{
     if(watchId!==null){followMode=false;$('navText').textContent='GPS · mappa libera · premi 🎯'}
@@ -1088,7 +1127,7 @@ function updateMarker(){
 
   if(!meMarker){
     const icon=L.divIcon({
-      html:`<div class="navarrow" style="transform:rotate(${smoothHeading-90}deg)">➤</div>`,
+      html:`<div class="navarrow" style="transform:rotate(${smoothHeading}deg)"></div>`,
       className:'',iconSize:[62,62],iconAnchor:[31,31]
     });
     meMarker=L.marker([markerPos.lat,markerPos.lon],{icon,zIndexOffset:1000}).addTo(map);
@@ -1117,8 +1156,8 @@ function drawMap(r,items){
   wxMarkers.forEach(x=>map.removeLayer(x));wxMarkers=[];
   riskLines.forEach(x=>map.removeLayer(x));riskLines=[];
   const ll=r.geometry.coordinates.map(x=>[x[1],x[0]]);
-  routeOutline=L.polyline(ll,{color:'#063766',weight:12,opacity:.9,lineCap:'round',lineJoin:'round'}).addTo(map);
-  routeLine=L.polyline(ll,{color:'#38a9ff',weight:7,opacity:1,lineCap:'round',lineJoin:'round'}).addTo(map);
+  routeOutline=L.polyline(ll,{color:'#0075ff',weight:15,opacity:.78,lineCap:'round',lineJoin:'round'}).addTo(map);
+  routeLine=L.polyline(ll,{color:'#7de8ff',weight:6,opacity:1,lineCap:'round',lineJoin:'round'}).addTo(map);
   items.forEach((x,i)=>{
     const sev=severity(x.w),col=sev>=5?'#ff4d4d':sev>=2?'#ffd166':'#63d69b';
     const m=L.circleMarker([x.p.lat,x.p.lon],{radius:7,color:col,fillColor:col,fillOpacity:.95}).addTo(map)
@@ -1942,8 +1981,6 @@ setInterval(()=>{if(radarOn&&map)refreshRadar()},5*60*1000);
     </div>
   </div>
 
-  <div id="navMapSlot" class="nav-map-slot"></div>
-
   <div class="nav-metrics">
     <div class="navmetric"><small>Velocità</small><b id="navSpeed">0</b><span>km/h</span></div>
     <div class="navmetric"><small>Sicurezza</small><b id="navSafety">—</b><span id="navSafetyLabel">—</span></div>
@@ -1961,6 +1998,8 @@ setInterval(()=>{if(radarOn&&map)refreshRadar()},5*60*1000);
     <div><small>Zero termico</small><b id="navZero">—</b></div>
     <div><small>Grandine</small><b id="navHail">—</b></div>
   </div>
+
+  <div id="navMapSlot" class="nav-map-slot"></div>
 
   <div class="nav-actions">
     <button id="navAvoidWeather">🛡️<span>Evita<br>maltempo</span></button>
