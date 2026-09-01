@@ -7,7 +7,6 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@5.7.1/dist/maplibre-gl.css">
 <title>Meteo Viaggio</title>
 <style>
 :root{--bg:#07111f;--card:#101c2d;--card2:#13243a;--muted:#9fb0c5;--txt:#fff;--ok:#63d69b;--warn:#ffd166;--bad:#ff5b5b;--blue:#55c2ff}
@@ -167,72 +166,66 @@ body.nightAuto .mapwrap,body.nightAuto .wcard{box-shadow:0 0 0 1px #ffffff08}
 }
 
 
-/* V13 - Navigator cockpit */
-#map{height:64vh;min-height:470px;background:#d9e2e8}
-.maplibregl-canvas{outline:none}
-.maplibregl-ctrl-bottom-left,.maplibregl-ctrl-bottom-right{font-size:9px}
-.maplibregl-ctrl-group{border-radius:14px!important;overflow:hidden;box-shadow:0 5px 18px #0005!important}
-.navvehicle{
-  width:72px;height:72px;display:grid;place-items:center;
-  filter:drop-shadow(0 8px 12px #0009);
-  transform-origin:center;
-  pointer-events:none;
-}
-.navvehicle .cararrow{
-  width:66px;height:66px;display:grid;place-items:center;
-  color:#fff;font-size:47px;line-height:1;
-  border-radius:50%;
-  border:4px solid #fff;
-  background:linear-gradient(145deg,#188cff,#0c66d7);
-  box-shadow:0 0 0 7px #2695ff28,0 8px 22px #000a;
-}
-.navvehicle .cararrow span{display:block;transform:rotate(-90deg)}
-.navcockpit{display:none}
-body.drive .navcockpit{display:grid}
+/* V13.1 - Navigator look, stable Leaflet engine */
 body.drive .nextturn{
-  position:sticky;top:4px;z-index:1200;
-  background:#07111ff2;border-color:#55c2ff80;
+  position:sticky;
+  top:4px;
+  z-index:1200;
+  background:#07111ff2;
+  border-color:#55c2ff80;
   box-shadow:0 8px 28px #0009,inset 5px 0 #55c2ff;
 }
 body.drive .turnico{font-size:44px}
 body.drive .turnmain{font-size:22px}
 body.drive .turndist{font-size:25px}
 body.drive .arrival{
-  position:sticky;top:94px;z-index:1150;
-  background:#07111ff0;border-color:#ffffff22;
-  grid-template-columns:repeat(8,1fr);
+  position:sticky;
+  top:94px;
+  z-index:1150;
+  background:#07111ff0;
+  border-color:#ffffff22;
   box-shadow:0 8px 22px #0007
 }
 body.drive .mapwrap{
-  margin-top:6px;border-radius:24px;
+  margin-top:6px;
+  border-radius:24px;
   border:1px solid #ffffff28;
   box-shadow:0 10px 30px #0008;
 }
 body.drive #map{height:68vh;min-height:520px}
-body.drive .centerbtn{top:66px}
-body.drive .hudbtn{bottom:82px}
 body.drive .navbadge{
-  top:16px;background:#07111fef;border-color:#63d69baa;
-  font-size:13px;padding:9px 14px
+  top:16px;
+  background:#07111fef;
+  border-color:#63d69baa;
+  font-size:13px;
+  padding:9px 14px
 }
-body.drive .drivequick{
-  background:linear-gradient(transparent,#07111fd9);
-  padding:14px 8px 7px;left:0;right:0;bottom:0
+.navarrow{
+  width:68px!important;
+  height:68px!important;
+  font-size:42px!important;
+  border-width:4px!important;
+  box-shadow:0 0 0 7px #2695ff28,0 8px 22px #000a!important;
 }
 .cockpitline{
-  display:grid;grid-template-columns:repeat(3,1fr);gap:8px;
+  display:none;
+  grid-template-columns:repeat(3,1fr);
+  gap:8px;
   margin:6px 0
 }
+body.drive .cockpitline{display:grid}
 .cockpititem{
-  background:#0b1729;border:1px solid #ffffff18;border-radius:14px;
-  padding:9px;text-align:center;font-size:11px
+  background:#0b1729;
+  border:1px solid #ffffff18;
+  border-radius:14px;
+  padding:9px;
+  text-align:center;
+  font-size:11px
 }
 .cockpititem b{display:block;font-size:18px;margin-top:2px}
 @media(max-width:720px){
   body.drive .arrival{grid-template-columns:repeat(4,1fr);top:90px}
   body.drive #map{height:66vh;min-height:500px}
-  .navvehicle{width:68px;height:68px}
-  .navvehicle .cararrow{width:62px;height:62px;font-size:44px}
 }
 
 </style>
@@ -241,7 +234,7 @@ body.drive .drivequick{
 <div class="wrap">
   <div class="top">
     <div class="brand"><div class="logo">🌦️</div><div><h1>Meteo Viaggio</h1><div class="sub">Meteo lungo la strada</div></div></div>
-    <div class="ver">V13.0</div>
+    <div class="ver">V13.1</div>
   </div>
 
   <section class="hero">
@@ -374,7 +367,7 @@ body.drive .drivequick{
       <span>🌡️ Percepita <span id="arrFeels">—</span></span>
     </div>
 
-    <div class="navcockpit cockpitline">
+    <div class="cockpitline">
       <div class="cockpititem"><small>Velocità</small><b id="cockpitSpeed">—</b></div>
       <div class="cockpititem"><small>Sicurezza</small><b id="cockpitScore">—</b></div>
       <div class="cockpititem"><small>Meteo davanti</small><b id="cockpitWeather">—</b></div>
@@ -454,11 +447,10 @@ body.drive .drivequick{
 </section>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="https://unpkg.com/maplibre-gl@5.7.1/dist/maplibre-gl.js"></script>
+<script src="https://unpkg.com/leaflet-rotate@0.2.8/dist/leaflet-rotate.js"></script>
 <script>
 let here=null,destObj=null,map=null,weatherMap=null,routeLine=null,meMarker=null;
 let wxMarkers=[],riskLines=[],radarLayer=null,weatherRadarLayer=null,radarOn=true;
-let mainMapReady=false,mainMapStyleLoaded=false;
 let currentRoute=null,currentItems=[],watchId=null,lastHeading=0,lastPoint=null,followMode=true;
 let busy=false,lastCalcAt=0,lastCalcPos=null,lastSpeech="",lastVoiceKey="",lastVoiceAt=0;
 let radarTimer=null,weatherRadarTimer=null;
@@ -612,8 +604,13 @@ function setHeadingTarget(v){
 }
 function headingFrame(){
   const d=angleDelta(smoothHeading,targetHeading);
-  smoothHeading=normHeading(smoothHeading+d*0.16);
+  smoothHeading=normHeading(smoothHeading+d*0.12);
   updateMapBearing();
+  const el=document.querySelector('.navarrow');
+  if(el){
+    const rotatingMap=watchId!==null&&followMode&&map&&typeof map.setBearing==='function';
+    el.style.transform=rotatingMap?'rotate(0deg)':`rotate(${smoothHeading}deg)`;
+  }
   headingRaf=requestAnimationFrame(headingFrame);
 }
 function startHeadingAnimation(){
@@ -764,17 +761,9 @@ function desiredZoom(){
   return 17;
 }
 function updateMapBearing(){
-  if(!map||!mainMapReady)return;
-  if(watchId!==null&&followMode){
-    const wanted=normHeading(smoothHeading);
-    const cur=map.getBearing();
-    const d=angleDelta(cur,wanted);
-    if(Math.abs(d)>.15)map.rotateTo(normHeading(cur+d*0.22),{duration:0});
-  }else{
-    const cur=map.getBearing();
-    const d=angleDelta(cur,0);
-    if(Math.abs(d)>.3)map.rotateTo(normHeading(cur+d*0.18),{duration:0});
-  }
+  if(!map||typeof map.setBearing!=='function')return;
+  if(watchId!==null&&followMode&&typeof map.setBearing==='function')map.setBearing(smoothHeading);
+  else map.setBearing(0);
 }
 function renderAheadBar(items,km){
   const el=$('aheadBar');if(!el)return;
@@ -903,132 +892,15 @@ async function goHome(){
 }
 function initMap(){
   if(map)return;
-
-  const style={
-    version:8,
-    sources:{
-      osm:{
-        type:'raster',
-        tiles:['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],
-        tileSize:256,
-        attribution:'© OpenStreetMap'
-      }
-    },
-    layers:[{id:'osm',type:'raster',source:'osm'}]
-  };
-
-  map=new maplibregl.Map({
-    container:'map',
-    style,
-    center:here?[here.lon,here.lat]:[11.25,43.77],
-    zoom:here?15:6,
-    bearing:0,
-    pitch:0,
-    maxPitch:70,
-    attributionControl:true,
-    dragRotate:false,
-    touchPitch:false
-  });
-
-  map.addControl(new maplibregl.NavigationControl({showCompass:false}),'top-left');
-
-  map.on('load',()=>{
-    mainMapReady=true;mainMapStyleLoaded=true;
-    ensureMainLayers();
-    if(currentRoute&&currentItems.length)drawMap(currentRoute,currentItems);
-    updateMarker();
-  });
-
+  map=L.map('map',{zoomControl:true,rotate:true,bearing:0,touchRotate:false});
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap'}).addTo(map);
   map.on('dragstart',()=>{
-    if(watchId!==null){
-      followMode=false;
-      $('navText').textContent='GPS · mappa libera · premi 🎯';
-    }
+    if(watchId!==null){followMode=false;$('navText').textContent='GPS · mappa libera · premi 🎯'}
   });
 }
-function ensureMainLayers(){
-  if(!map||!mainMapReady)return;
-
-  if(!map.getSource('route')){
-    map.addSource('route',{type:'geojson',data:{type:'Feature',geometry:{type:'LineString',coordinates:[]}}});
-    map.addLayer({id:'route-casing',type:'line',source:'route',paint:{
-      'line-color':'#ffffff','line-width':10,'line-opacity':.9
-    }});
-    map.addLayer({id:'route-line',type:'line',source:'route',paint:{
-      'line-color':'#168cff','line-width':7,'line-opacity':1
-    }});
-  }
-
-  if(!map.getSource('risk-route')){
-    map.addSource('risk-route',{type:'geojson',data:{type:'FeatureCollection',features:[]}});
-    map.addLayer({id:'risk-route-line',type:'line',source:'risk-route',paint:{
-      'line-color':['match',['get','level'],'bad','#ff4d4d','warn','#ffd166','#63d69b'],
-      'line-width':10,'line-opacity':.9
-    }});
-  }
-
-  if(!map.getSource('weather-points')){
-    map.addSource('weather-points',{type:'geojson',data:{type:'FeatureCollection',features:[]}});
-    map.addLayer({id:'weather-points-layer',type:'circle',source:'weather-points',paint:{
-      'circle-radius':6,
-      'circle-color':['match',['get','level'],'bad','#ff4d4d','warn','#ffd166','#63d69b'],
-      'circle-stroke-color':'#ffffff','circle-stroke-width':1.5
-    }});
-  }
-}
-
-function routeGeoJSON(r){
-  return {type:'Feature',properties:{},geometry:{type:'LineString',coordinates:r.geometry.coordinates}};
-}
-
-function updateMainMapRoute(r,items){
-  if(!map||!mainMapReady)return;
-  ensureMainLayers();
-
-  map.getSource('route').setData(routeGeoJSON(r));
-
-  const riskFeatures=[];
-  const pts=[];
-  const coords=r.geometry.coordinates;
-
-  items.forEach((x,i)=>{
-    const sev=severity(x.w);
-    const level=sev>=5?'bad':sev>=2?'warn':'ok';
-    pts.push({
-      type:'Feature',
-      properties:{level},
-      geometry:{type:'Point',coordinates:[x.p.lon,x.p.lat]}
-    });
-
-    if(sev>=2&&i<items.length-1){
-      const a=Math.floor(x.p.f*(coords.length-1));
-      const b=Math.max(a+1,Math.floor(items[i+1].p.f*(coords.length-1)));
-      riskFeatures.push({
-        type:'Feature',
-        properties:{level},
-        geometry:{type:'LineString',coordinates:coords.slice(a,b+1)}
-      });
-    }
-  });
-
-  map.getSource('weather-points').setData({type:'FeatureCollection',features:pts});
-  map.getSource('risk-route').setData({type:'FeatureCollection',features:riskFeatures});
-  $('riskLegend').classList.toggle('hidden',riskFeatures.length===0);
-}
-
-function makeVehicleMarker(){
-  const el=document.createElement('div');
-  el.className='navvehicle';
-  el.innerHTML='<div class="cararrow"><span>➤</span></div>';
-  return new maplibregl.Marker({element:el,anchor:'center'});
-}
-
 function updateMarker(){
-  if(!map||!here||!mainMapReady)return;
-
-  if(lastPoint&&hav(lastPoint,here)>.006&&(!Number.isFinite(lastHeading)||lastHeading===0)){
-    lastHeading=bearing(lastPoint,here);
-  }
+  if(!map||!here)return;
+  if(lastPoint&&hav(lastPoint,here)>.006&&(!Number.isFinite(lastHeading)||lastHeading===0))lastHeading=bearing(lastPoint,here);
   if(!lastPoint||hav(lastPoint,here)>.004)lastPoint={lat:here.lat,lon:here.lon};
 
   setHeadingTarget(chooseNavigationHeading());
@@ -1036,46 +908,221 @@ function updateMarker(){
   updateNextTurn();
 
   if(!meMarker){
-    meMarker=makeVehicleMarker()
-      .setLngLat([here.lon,here.lat])
-      .addTo(map);
+    const icon=L.divIcon({
+      html:`<div class="navarrow" style="transform:rotate(${watchId!==null&&followMode?0:smoothHeading}deg)">➤</div>`,
+      className:'',iconSize:[62,62],iconAnchor:[31,31]
+    });
+    meMarker=L.marker([here.lat,here.lon],{icon,zIndexOffset:1000}).addTo(map);
+    renderedPos={lat:here.lat,lon:here.lon};
   }else{
-    meMarker.setLngLat([here.lon,here.lat]);
+    animateMarkerPosition(here,currentSpeedKmh>5?750:420);
   }
 
   if(watchId!==null&&followMode){
     const z=desiredZoom();
-    const h=map.getContainer().clientHeight||600;
-
-    map.easeTo({
-      center:[here.lon,here.lat],
-      zoom:z,
-      bearing:smoothHeading,
-      pitch:58,
-      duration:260,
-      easing:t=>1-Math.pow(1-t,3),
-      offset:[0,Math.round(h*0.18)],
-      essential:true
-    });
+    if(map.getZoom()!==z)map.setZoom(z,{animate:true});
+    const focus=renderedPos||here;
+    map.panTo([focus.lat,focus.lon],{animate:true,duration:.22,noMoveStart:true});
+    setTimeout(()=>{
+      if(map&&followMode){
+        const hpx=map.getSize().y;
+        map.panBy([0,-Math.round(hpx*0.18)],{animate:false});
+      }
+    },30);
   }
 }
 function drawMap(r,items){
   initMap();
-  if(!mainMapReady){
-    setTimeout(()=>drawMap(r,items),120);
-    return;
-  }
-
-  updateMainMapRoute(r,items);
-
-  if(watchId===null||!followMode){
-    const b=new maplibregl.LngLatBounds();
-    r.geometry.coordinates.forEach(c=>b.extend(c));
-    map.fitBounds(b,{padding:45,duration:450,pitch:0,bearing:0});
-  }
-
+  if(routeLine)map.removeLayer(routeLine);
+  wxMarkers.forEach(x=>map.removeLayer(x));wxMarkers=[];
+  riskLines.forEach(x=>map.removeLayer(x));riskLines=[];
+  const ll=r.geometry.coordinates.map(x=>[x[1],x[0]]);
+  routeLine=L.polyline(ll,{color:'#55c2ff',weight:6,opacity:.9}).addTo(map);
+  items.forEach((x,i)=>{
+    const sev=severity(x.w),col=sev>=5?'#ff4d4d':sev>=2?'#ffd166':'#63d69b';
+    const m=L.circleMarker([x.p.lat,x.p.lon],{radius:7,color:col,fillColor:col,fillOpacity:.95}).addTo(map)
+      .bindPopup(`${wi(x.w.code,x.w.isDay)[1]} · ${Math.round(x.w.temp)}°C · percepita ${Math.round(x.w.feels)}°C<br>Umidità ${x.w.humidity==null?'—':Math.round(x.w.humidity)+'%'} · Pioggia ${Math.round(x.w.rain)}%<br><b>Grandine ${hail(x.w)}</b>`);
+    wxMarkers.push(m);
+    if(sev>=2&&i<items.length-1){
+      const a=Math.floor(x.p.f*(ll.length-1)),b=Math.floor(items[i+1].p.f*(ll.length-1));
+      riskLines.push(L.polyline(ll.slice(a,b+1),{color:sev>=5?'#ff4d4d':'#ffd166',weight:9,opacity:.88}).addTo(map));
+    }
+  });
+  $('riskLegend').classList.toggle('hidden',riskLines.length===0);
+  if(watchId===null||!followMode)map.fitBounds(routeLine.getBounds(),{padding:[24,24]});
   updateMarker();
-  setTimeout(()=>map&&map.resize(),100);
+  setTimeout(()=>map.invalidateSize(),100);
+}
+function crosswindFor(x){
+  if(!x?.w||!Number.isFinite(x.w.windDir))return null;
+  const road=routeBearingAtPosition(x.p);
+  if(!Number.isFinite(road))return null;
+  const diff=Math.abs(angleDelta(road,x.w.windDir));
+  return Math.abs((x.w.gust||0)*Math.sin(diff*Math.PI/180));
+}
+function iceRiskFor(w){
+  const t=w?.temp??99,feels=w?.feels??t,prec=w?.precip??0,zero=w?.zero??9999;
+  let s=0;
+  if(t<=2)s+=2;if(t<=0)s+=2;if(feels<=0)s++;
+  if(prec>0)s+=2;if(zero<1200)s+=1;
+  return s>=5?'ALTO':s>=3?'MEDIO':s>=1?'BASSO':'NO';
+}
+function stormLightningRisk(w){
+  let s=0;
+  if([95,96,99].includes(w?.code))s+=4;
+  if((w?.cape||0)>=800)s+=2;if((w?.cape||0)>=1500)s+=2;
+  if((w?.showers||0)>1)s++;
+  return s>=6?'ALTO':s>=3?'MEDIO':s>=1?'BASSO':'NO';
+}
+function updateRoadSafety(items){
+  if(!items?.length)return;
+  const cross=items.map(crosswindFor).filter(Number.isFinite);
+  const maxCross=cross.length?Math.max(...cross):null;
+  $('crossWind').textContent=maxCross==null?'—':Math.round(maxCross)+' km/h';
+  const vis=Math.min(...items.map(x=>x.w.visibility||99999));
+  $('visibilityRisk').textContent=vis<1000?'🔴 '+Math.round(vis)+' m':vis<3000?'🟡 '+(vis/1000).toFixed(1)+' km':'🟢 Buona';
+  const iceLevels=items.map(x=>iceRiskFor(x.w)),ice=iceLevels.includes('ALTO')?'ALTO':iceLevels.includes('MEDIO')?'MEDIO':iceLevels.includes('BASSO')?'BASSO':'NO';
+  $('iceRisk').textContent=(ice==='ALTO'?'🔴 ':ice==='MEDIO'?'🟡 ':ice==='BASSO'?'🟢 ':'')+ice;
+  const storms=items.map(x=>stormLightningRisk(x.w)),st=storms.includes('ALTO')?'ALTO':storms.includes('MEDIO')?'MEDIO':storms.includes('BASSO')?'BASSO':'NO';
+  $('stormRisk').textContent=(st==='ALTO'?'🔴 ':st==='MEDIO'?'🟡 ':st==='BASSO'?'🟢 ':'')+st;
+}
+function updatePreTrip(r,items){
+  if(!r||!items?.length)return;
+  const maxRain=Math.max(...items.map(x=>x.w.rain||0));
+  const maxWind=Math.max(...items.map(x=>x.w.gust||0));
+  const s=journeySafety(items),bad=items.find(x=>severity(x.w)>=3);
+  $('preDur').textContent=durTxt(r.duration);
+  $('preEta').textContent=timeTxt(new Date(Date.now()+r.duration*1000));
+  $('preRain').textContent=Math.round(maxRain)+'%';
+  $('preWind').textContent=Math.round(maxWind)+' km/h';
+  $('preTripText').textContent=bad
+    ?`Sicurezza ${s}/100 · fenomeno peggiore: ${riskKind(bad.w)} tra circa ${Math.round((r.distance/1000)*bad.p.f)} km.`
+    :`Sicurezza ${s}/100 · nessun fenomeno importante rilevato lungo il percorso.`;
+}
+async function loadNowcast90(){
+  if(!here)return;
+  const box=$('nowcast90'),status=$('nowcastStatus');if(!box)return;
+  box.innerHTML='<div class="nowchip">Carico…</div>';
+  try{
+    const qs=new URLSearchParams({
+      latitude:here.lat,longitude:here.lon,timezone:'auto',
+      minutely_15:'precipitation,precipitation_probability,weather_code',
+      forecast_days:'1'
+    });
+    const r=await fetch('https://api.open-meteo.com/v1/forecast?'+qs);
+    if(!r.ok)throw Error('HTTP '+r.status);
+    const j=await r.json(),m=j.minutely_15;
+    if(!m?.time?.length)throw Error('dati non disponibili');
+    const now=Date.now();box.innerHTML='';
+    const rows=[];
+    m.time.forEach((t,i)=>{
+      const dt=new Date(t),mins=(dt.getTime()-now)/60000;
+      if(mins>=-8&&mins<=95)rows.push({dt,p:m.precipitation?.[i]||0,prob:m.precipitation_probability?.[i]||0,code:m.weather_code?.[i]||0});
+    });
+    rows.slice(0,7).forEach(x=>{
+      const d=document.createElement('div');
+      const sev=x.p>=5||x.prob>=80?'bad':x.p>=1||x.prob>=50?'warn':'';
+      d.className='nowchip '+sev;
+      d.innerHTML=`<b>${Math.abs(x.dt.getTime()-now)<8*60000?'Ora':timeTxt(x.dt)}</b><br>🌧️ ${x.prob}%<br>${x.p.toFixed(1)} mm`;
+      box.appendChild(d);
+    });
+    status.textContent=rows.length?'15 min':'—';
+  }catch(e){
+    box.innerHTML='<div class="nowchip">Dati non disponibili</div>';status.textContent='—';
+  }
+}
+function saveTripHistory(){
+  if(!currentRoute||!destObj||!currentItems.length)return;
+  if(Date.now()-lastHistorySave<60000)return;
+  lastHistorySave=Date.now();
+  const item={
+    when:new Date().toISOString(),
+    dest:destObj.label||$('dest').value||'Destinazione',
+    km:Math.round(currentRoute.distance/1000),
+    min:Math.round(currentRoute.duration/60),
+    score:journeySafety(currentItems),
+    risk:(currentItems.find(x=>severity(x.w)>=3)?riskKind(currentItems.find(x=>severity(x.w)>=3).w):'Tranquillo')
+  };
+  tripHistory=[item,...tripHistory].slice(0,8);
+  localStorage.setItem('meteoViaggioHistory',JSON.stringify(tripHistory));
+  renderTripHistory();
+}
+function renderTripHistory(){
+  const box=$('tripHistory');if(!box)return;box.innerHTML='';
+  if(!tripHistory.length){box.innerHTML='<div class="muted">Nessun viaggio salvato.</div>';return}
+  tripHistory.forEach(x=>{
+    const d=document.createElement('div');d.className='historyitem';
+    const dt=new Date(x.when);
+    d.innerHTML=`<b>${x.dest}</b><div class="det">${dt.toLocaleDateString('it-IT')} ${timeTxt(dt)} · ${x.km} km · ${x.min} min · sicurezza ${x.score}/100 · ${x.risk}</div>`;
+    box.appendChild(d);
+  });
+}
+function clearTripHistory(){
+  tripHistory=[];localStorage.removeItem('meteoViaggioHistory');renderTripHistory();
+}
+function applyNightAuto(){
+  if(!nightAuto){document.body.classList.remove('nightAuto');return}
+  const h=new Date().getHours();
+  document.body.classList.toggle('nightAuto',h>=20||h<7);
+}
+async function startNow(){
+  try{
+    if(!here){
+      st('Cerco la posizione…');
+      const p=await geoNow();here={lat:p.lat,lon:p.lon};
+      currentSpeedKmh=Number.isFinite(p.speed)?Math.max(0,p.speed*3.6):0;
+      lastAltitude=Number.isFinite(p.altitude)?p.altitude:lastAltitude;
+    }
+    if(!destObj){
+      const q=$('dest').value.trim();
+      if(!q){st('Scrivi prima una destinazione oppure usa Casa/Preferiti.');return}
+    }
+    await startLive();
+    document.body.classList.add('drive');
+    $('driveBtn').textContent='↩️ Vista completa';
+  }catch(e){st('Errore: '+e.message)}
+}
+function setRadarFrame(i){
+  if(!weatherMap||!radarFrames.length)return;
+  radarFrameIndex=(i+radarFrames.length)%radarFrames.length;
+  const f=radarFrames[radarFrameIndex];
+  if(weatherRadarLayer){try{weatherMap.removeLayer(weatherRadarLayer)}catch(e){}}
+  weatherRadarLayer=L.tileLayer(radarHost+f.path+'/256/{z}/{x}/{y}/2/1_1.png',{
+    opacity:.58,zIndex:350,maxNativeZoom:7,maxZoom:19,tileSize:256,crossOrigin:true
+  }).addTo(weatherMap);
+  const s=$('weatherRadarStatus');if(s)s.textContent='Radar '+timeTxt(new Date(f.time*1000))+' · fotogramma '+(radarFrameIndex+1)+'/'+radarFrames.length;
+}
+function toggleRadarAnimation(){
+  const b=$('radarPlayBtn');if(!b)return;
+  if(radarAnimTimer){
+    clearInterval(radarAnimTimer);radarAnimTimer=null;b.textContent='▶️ Anima radar';return;
+  }
+  if(!radarFrames.length){b.textContent='Radar non pronto';return}
+  b.textContent='⏸️ Pausa';
+  radarAnimTimer=setInterval(()=>setRadarFrame(radarFrameIndex+1),650);
+}
+function weatherRiskScore(w){
+  let p=0;
+  p+=Math.min(30,(w.rain||0)*0.3);
+  p+=Math.min(18,(w.gust||0)*0.22);
+  if([95,96,99].includes(w.code))p+=25;
+  if(hail(w)==='ALTO')p+=25;else if(hail(w)==='MEDIO')p+=12;
+  if((w.visibility||99999)<1000)p+=18;else if((w.visibility||99999)<3000)p+=8;
+  if([71,73,75,77,85,86].includes(w.code))p+=15;
+  return Math.min(100,p);
+}
+function journeySafety(items){
+  if(!items?.length)return 100;
+  const vals=items.map(x=>weatherRiskScore(x.w));
+  const peak=Math.max(...vals),avg=vals.reduce((a,b)=>a+b,0)/vals.length;
+  return Math.max(0,Math.round(100-(peak*0.65+avg*0.35)));
+}
+function safetyLabel(s){
+  if(s>=85)return['🟢','Ottimo'];
+  if(s>=70)return['🟢','Buono'];
+  if(s>=50)return['🟡','Attenzione'];
+  if(s>=30)return['🟠','Critico'];
+  return['🔴','Sconsigliato'];
 }
 async function evaluateRouteAtOffset(r,offsetMin=0,maxPts=9){
   const km=r.distance/1000,pts=sample(r.geometry.coordinates,km,maxPts),now=Date.now()+offsetMin*60000,items=[];
@@ -1342,27 +1389,15 @@ async function calc(auto=false){
   finally{busy=false}
 }
 async function refreshRadar(){
-  if(!radarOn||!map||!mainMapReady)return;
+  if(!radarOn||!map)return;
   try{
-    const r=await fetch('https://api.rainviewer.com/public/weather-maps.json',{cache:'no-store'});
-    const j=await r.json(),frames=j.radar?.past||[];
+    const r=await fetch('https://api.rainviewer.com/public/weather-maps.json',{cache:'no-store'}),j=await r.json(),frames=j.radar?.past||[];
     if(!frames.length)return;
     const f=frames.at(-1),host=j.host||'https://tilecache.rainviewer.com';
-    const url=host+f.path+'/256/{z}/{x}/{y}/2/1_1.png';
-
-    if(map.getLayer('main-radar'))map.removeLayer('main-radar');
-    if(map.getSource('main-radar'))map.removeSource('main-radar');
-
-    map.addSource('main-radar',{type:'raster',tiles:[url],tileSize:256,maxzoom:19});
-    map.addLayer({
-      id:'main-radar',type:'raster',source:'main-radar',
-      paint:{'raster-opacity':.48}
-    });
-
+    if(radarLayer)map.removeLayer(radarLayer);
+    radarLayer=L.tileLayer(host+f.path+'/256/{z}/{x}/{y}/2/1_1.png',{opacity:.48,zIndex:350,maxNativeZoom:7,maxZoom:19,tileSize:256,crossOrigin:true}).addTo(map);
     $('radarLegend').textContent='🌧️ Radar · '+timeTxt(new Date(f.time*1000))+' · confronto automatico col percorso';
-  }catch(e){
-    $('radarLegend').textContent='🌧️ Radar non disponibile';
-  }
+  }catch(e){$('radarLegend').textContent='🌧️ Radar non disponibile'}
 }
 async function startLive(){
   const orientationPromise=enableOrientation();
@@ -1429,12 +1464,12 @@ async function startLive(){
     $('live').classList.add('live');
     $('live').textContent='⏹ Ferma viaggio';
     if($('mapstate'))$('mapstate').textContent='Guida GPS · meteo in tempo reale';
-    map.easeTo({center:[here.lon,here.lat],zoom:17,pitch:58,bearing:smoothHeading,duration:250});
+    map.setView([here.lat,here.lon],17);
     updateMarker();
     const orientOk=await orientationPromise;
     saveTripHistory();
     st(orientOk
-      ?'Viaggio avviato: GPS, bussola e meteo in tempo reale attivi.'
+      ?'Viaggio avviato: GPS, bussola, navigazione fluida e meteo attivi.'
       :'Viaggio avviato: GPS e meteo attivi. Bussola non autorizzata.');
   }catch(e){
     st('Errore: '+e.message);
@@ -1549,7 +1584,7 @@ $('pos').onclick=async()=>{
   try{
     st('Cerco la tua posizione…');
     const p=await geoNow();here={lat:p.lat,lon:p.lon};currentSpeedKmh=Number.isFinite(p.speed)?Math.max(0,p.speed*3.6):0;lastAltitude=Number.isFinite(p.altitude)?p.altitude:lastAltitude;if(Number.isFinite(p.heading))lastHeading=p.heading;
-    initMap();updateMarker();map.easeTo({center:[here.lon,here.lat],zoom:15,pitch:0,bearing:0,duration:250});st('Posizione acquisita. Ora inserisci la destinazione.');
+    initMap();updateMarker();map.setView([here.lat,here.lon],13);st('Posizione acquisita. Ora inserisci la destinazione.');
   }catch(e){st('Non riesco ad accedere alla posizione. Controlla i permessi GPS.')}
 };
 $('calc').onclick=()=>{destObj=null;calc(false)};
@@ -1557,23 +1592,18 @@ $('dest').onkeydown=e=>{if(e.key==='Enter')$('calc').click()};
 $('live').onclick=startLive;
 $('speak').onclick=()=>lastSpeech?speakNow(lastSpeech):st('Prima calcola un viaggio.');
 $('driveBtn').onclick=()=>{
-  document.body.classList.toggle('drive');if(!document.body.classList.contains('drive')&&map&&mainMapReady)map.easeTo({bearing:0,pitch:0,duration:300});
+  document.body.classList.toggle('drive');if(!document.body.classList.contains('drive')&&map&&typeof map.setBearing==='function')map.setBearing(0);
   $('driveBtn').textContent=document.body.classList.contains('drive')?'↩️ Vista completa':'🚘 Modalità Carlink';
-  setTimeout(()=>{if(map&&mainMapReady){map.resize();if(here&&watchId!==null){followMode=true;updateMarker()}}},180);
+  setTimeout(()=>{if(map){map.invalidateSize();if(here&&watchId!==null){followMode=true;map.setView([here.lat,here.lon],15)}}},150);
 };
 function recenter(){
-  if(map&&here&&mainMapReady){
-    followMode=true;
-    $('navText').textContent='GPS · seguo la posizione';
-    startHeadingAnimation();
-    updateMarker();
-  }
+  if(map&&here){followMode=true;$('navText').textContent='GPS · seguo la posizione';startHeadingAnimation();updateMapBearing();map.setView([here.lat,here.lon],desiredZoom());updateMarker()}
 }
 $('centerBtn').onclick=recenter;$('recenterBtn').onclick=recenter;
 $('radarBtn').onclick=()=>{
   radarOn=!radarOn;$('radarBtn').textContent=radarOn?'🌧️ Radar ON':'🌧️ Radar OFF';
   $('radarLegend').style.display=radarOn?'block':'none';
-  if(!radarOn&&map&&mainMapReady){if(map.getLayer('main-radar'))map.removeLayer('main-radar');if(map.getSource('main-radar'))map.removeSource('main-radar');radarLayer=null}
+  if(!radarOn&&radarLayer){map.removeLayer(radarLayer);radarLayer=null}
   if(radarOn)refreshRadar();
 };
 $('weatherHereBtn').onclick=openWeatherHere;
