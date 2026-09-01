@@ -42,7 +42,7 @@ h1{font-size:23px;margin:0}.sub{font-size:12px;color:var(--muted)}
 .alert.ok{box-shadow:inset 5px 0 var(--ok)}.alert.warn{box-shadow:inset 5px 0 var(--warn)}.alert.bad{box-shadow:inset 5px 0 var(--bad)}
 .alertico{font-size:31px}.alertmain{font-weight:900;font-size:17px}.alertsub{color:var(--muted);font-size:12px;margin-top:3px}
 .alertdist{text-align:right;font-size:20px;font-weight:900}.alertdist small{display:block;color:var(--muted);font-size:10px}
-.arrival{display:grid;grid-template-columns:repeat(6,1fr);gap:5px;padding:9px;margin:8px 0;text-align:center;font-size:12px;font-weight:800}
+.arrival{display:grid;grid-template-columns:repeat(8,1fr);gap:5px;padding:9px;margin:8px 0;text-align:center;font-size:12px;font-weight:800}
 .mapwrap{position:relative;overflow:hidden;margin-top:8px}
 .mapbar{padding:9px 11px;display:flex;justify-content:space-between;gap:8px;color:var(--muted);font-size:11px}
 #map{height:58vh;min-height:390px}
@@ -61,14 +61,14 @@ h1{font-size:23px;margin:0}.sub{font-size:12px;color:var(--muted)}
 .weatherinner{max-width:720px;margin:auto}
 .wtop{display:flex;justify-content:space-between;align-items:center}.close{width:46px;height:46px;border-radius:14px;border:1px solid #ffffff22;background:#13243a;color:white;font-size:22px}
 .wcard{background:var(--card);border:1px solid #ffffff16;border-radius:18px;padding:14px;margin-top:10px}
-.wtemp{font-size:44px;font-weight:900}.wgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-top:10px}
+.wtemp{font-size:44px;font-weight:900}.wgrid{display:grid;grid-template-columns:repeat(6,1fr);gap:7px;margin-top:10px}
 .witem{background:#0d1a2c;border-radius:12px;padding:9px;text-align:center}.witem small{display:block;color:var(--muted)}
 .hours{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-top:9px}.hour{background:#0d1a2c;border-radius:12px;padding:9px;text-align:center;font-size:12px}
 #weatherMap{height:290px;border-radius:15px;overflow:hidden;margin-top:9px}
 @media(max-width:720px){
  .actions{grid-template-columns:1fr 1fr}.tools{grid-template-columns:1fr 1fr 1fr}
  .drivebar{grid-template-columns:1.1fr .9fr}.big{font-size:21px}
- .arrival{grid-template-columns:repeat(3,1fr);row-gap:8px}
+ .arrival{grid-template-columns:repeat(4,1fr);row-gap:8px}
  .wgrid,.hours{grid-template-columns:1fr 1fr}
  #map{height:60vh;min-height:360px}
 }
@@ -85,7 +85,7 @@ body.drive .alert.ok{display:none}
 <div class="wrap">
   <div class="top">
     <div class="brand"><div class="logo">🌦️</div><div><h1>Meteo Viaggio</h1><div class="sub">Meteo lungo la strada</div></div></div>
-    <div class="ver">V9.1</div>
+    <div class="ver">V9.2</div>
   </div>
 
   <section class="hero">
@@ -137,6 +137,8 @@ body.drive .alert.ok{display:none}
       <span>💧 <span id="arrRain">—</span></span>
       <span>💨 <span id="arrWind">—</span></span>
       <span>🧊 <span id="arrHail">—</span></span>
+      <span>💧 Umidità <span id="arrHum">—</span></span>
+      <span>🌡️ Percepita <span id="arrFeels">—</span></span>
     </div>
 
     <h2>Mappa del viaggio</h2>
@@ -167,6 +169,8 @@ body.drive .alert.ok{display:none}
         <div class="witem"><small>Raffiche</small><b id="whWind">—</b></div>
         <div class="witem"><small>Grandine</small><b id="whHail">—</b></div>
         <div class="witem"><small>Zero termico</small><b id="whZero">—</b></div>
+        <div class="witem"><small>Umidità</small><b id="whHum">—</b></div>
+        <div class="witem"><small>Percepita</small><b id="whFeels">—</b></div>
       </div>
     </div>
     <div class="wcard"><b>Prossime ore</b><div id="whHours" class="hours"></div></div>
@@ -246,7 +250,7 @@ function sample(coords,km,max=12){
 async function weather(p,eta){
   const qs=new URLSearchParams({
     latitude:p.lat,longitude:p.lon,
-    hourly:'temperature_2m,visibility,precipitation_probability,precipitation,showers,weather_code,wind_gusts_10m,cape,freezing_level_height',
+    hourly:'temperature_2m,apparent_temperature,relative_humidity_2m,visibility,precipitation_probability,precipitation,showers,weather_code,wind_gusts_10m,cape,freezing_level_height',
     daily:'sunrise,sunset',timezone:'auto',forecast_days:'3'
   });
   const r=await fetch('https://api.open-meteo.com/v1/forecast?'+qs),j=await r.json();
@@ -261,6 +265,8 @@ async function weather(p,eta){
   }
   return{
     temp:j.hourly.temperature_2m[ix],
+    feels:j.hourly.apparent_temperature?.[ix]??j.hourly.temperature_2m[ix],
+    humidity:j.hourly.relative_humidity_2m?.[ix]??null,
     visibility:j.hourly.visibility?.[ix]??99999,
     rain:j.hourly.precipitation_probability?.[ix]??0,
     precip:j.hourly.precipitation?.[ix]??0,
@@ -337,7 +343,7 @@ function drawMap(r,items){
   items.forEach((x,i)=>{
     const sev=severity(x.w),col=sev>=5?'#ff4d4d':sev>=2?'#ffd166':'#63d69b';
     const m=L.circleMarker([x.p.lat,x.p.lon],{radius:7,color:col,fillColor:col,fillOpacity:.95}).addTo(map)
-      .bindPopup(`${wi(x.w.code,x.w.isDay)[1]} · ${Math.round(x.w.temp)}°C<br>Pioggia ${Math.round(x.w.rain)}%<br><b>Grandine ${hail(x.w)}</b>`);
+      .bindPopup(`${wi(x.w.code,x.w.isDay)[1]} · ${Math.round(x.w.temp)}°C · percepita ${Math.round(x.w.feels)}°C<br>Umidità ${x.w.humidity==null?'—':Math.round(x.w.humidity)+'%'} · Pioggia ${Math.round(x.w.rain)}%<br><b>Grandine ${hail(x.w)}</b>`);
     wxMarkers.push(m);
     if(sev>=2&&i<items.length-1){
       const a=Math.floor(x.p.f*(ll.length-1)),b=Math.floor(items[i+1].p.f*(ll.length-1));
@@ -382,6 +388,8 @@ function render(r,ev){
   $('arrTime').textContent=timeTxt(eta);$('arrTemp').textContent=Math.round(arr.w.temp)+'°';
   $('arrIcon').textContent=arrInfo[0];$('arrRain').textContent=Math.round(arr.w.rain)+'%';
   $('arrWind').textContent=Math.round(arr.w.gust)+' km/h';$('arrHail').textContent=hail(arr.w);
+  $('arrHum').textContent=arr.w.humidity==null?'—':Math.round(arr.w.humidity)+'%';
+  $('arrFeels').textContent=Math.round(arr.w.feels)+'°';
 
   if(bad){
     const sev=severity(bad.w),kind=riskKind(bad.w),hr=hail(bad.w);
@@ -404,7 +412,7 @@ function render(r,ev){
   items.forEach((x,i)=>{
     const sev=severity(x.w),info=wi(x.w.code,x.w.isDay),d=document.createElement('div');
     d.className='stop '+(sev>=5?'bad':sev>=2?'warn':'');
-    d.innerHTML=`<div class="sub">${timeTxt(x.eta)}</div><div><div class="place">${i===0?'Partenza':i===items.length-1?destObj.label:'Percorso '+Math.round(x.p.f*100)+'%'}</div><div class="det">${info[1]} · ${Math.round(x.w.temp)}°C · Pioggia ${Math.round(x.w.rain)}%<br>Raffiche ${Math.round(x.w.gust)} km/h${x.w.zero?` · Zero termico ${Math.round(x.w.zero)} m`:''} · Grandine ${hail(x.w)}</div></div><div class="ico">${info[0]}</div>`;
+    d.innerHTML=`<div class="sub">${timeTxt(x.eta)}</div><div><div class="place">${i===0?'Partenza':i===items.length-1?destObj.label:'Percorso '+Math.round(x.p.f*100)+'%'}</div><div class="det">${info[1]} · ${Math.round(x.w.temp)}°C · Percepita ${Math.round(x.w.feels)}°C · Umidità ${x.w.humidity==null?'—':Math.round(x.w.humidity)+'%'} · Pioggia ${Math.round(x.w.rain)}%<br>Raffiche ${Math.round(x.w.gust)} km/h${x.w.zero?` · Zero termico ${Math.round(x.w.zero)} m`:''} · Grandine ${hail(x.w)}</div></div><div class="ico">${info[0]}</div>`;
     $('timeline').appendChild(d);
   });
 
@@ -458,7 +466,6 @@ async function startLive(){
     $('live').disabled=true;
     st('Avvio viaggio…');
 
-    // Se manca la posizione, la prende automaticamente.
     if(!here){
       st('Cerco la tua posizione GPS…');
       const p=await geoNow();
@@ -468,7 +475,6 @@ async function startLive(){
       updateMarker();
     }
 
-    // Se manca la destinazione già risolta, usa ciò che è scritto nel campo.
     if(!destObj){
       const q=$('dest').value.trim();
       if(!q)throw Error('Scrivi prima la destinazione.');
@@ -476,7 +482,6 @@ async function startLive(){
       destObj=await geocode(q);
     }
 
-    // Calcola subito il percorso prima di partire.
     await calc(false);
     if(!currentRoute)throw Error('Non riesco a calcolare il percorso.');
 
@@ -484,7 +489,6 @@ async function startLive(){
     $('navBadge').classList.add('on');
     $('navText').textContent='GPS · seguo la posizione';
 
-    // Avvia il tracciamento continuo GPS.
     watchId=navigator.geolocation.watchPosition(async p=>{
       const nuovo={lat:p.coords.latitude,lon:p.coords.longitude};
       if(Number.isFinite(p.coords.heading))lastHeading=p.coords.heading;
@@ -492,7 +496,6 @@ async function startLive(){
       here=nuovo;
       updateMarker();
 
-      // Meteo/percorso aggiornati ogni ~2 km o ~2 minuti.
       const moved=!lastCalcPos||hav(here,lastCalcPos)>=2;
       const timed=Date.now()-lastCalcAt>=2*60*1000;
       if((moved||timed)&&!busy)await calc(true);
@@ -521,10 +524,12 @@ async function openWeatherHere(){
     $('whIcon').textContent=info[0];$('whTemp').textContent=Math.round(w.temp)+'°C';$('whDesc').textContent=info[1];
     $('whRain').textContent=Math.round(w.rain)+'%';$('whWind').textContent=Math.round(w.gust)+' km/h';
     $('whHail').textContent=hail(w);$('whZero').textContent=w.zero?Math.round(w.zero)+' m':'—';
+    $('whHum').textContent=w.humidity==null?'—':Math.round(w.humidity)+'%';
+    $('whFeels').textContent=Math.round(w.feels)+'°C';
     $('whHours').innerHTML='';
     for(let h=0;h<=6;h+=2){
       const eta=new Date(Date.now()+h*3600*1000),ww=await weather(here,eta),inf=wi(ww.code,ww.isDay),d=document.createElement('div');
-      d.className='hour';d.innerHTML=`${h===0?'Ora':timeTxt(eta)}<br><b>${inf[0]} ${Math.round(ww.temp)}°</b><br>💧 ${Math.round(ww.rain)}% · 🧊 ${hail(ww)}`;
+      d.className='hour';d.innerHTML=`${h===0?'Ora':timeTxt(eta)}<br><b>${inf[0]} ${Math.round(ww.temp)}°</b><br>🌡️ percepita ${Math.round(ww.feels)}° · 💧 umidità ${ww.humidity==null?'—':Math.round(ww.humidity)+'%'}<br>🌧️ ${Math.round(ww.rain)}% · 🧊 ${hail(ww)}`;
       $('whHours').appendChild(d);
     }
     if(!weatherMap){
