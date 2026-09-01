@@ -5,8 +5,12 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#07111f">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<link rel="manifest" href="manifest.webmanifest">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Meteo Viaggio">
+<link rel="apple-touch-icon" sizes="180x180" href="icon-512.png">
+<link rel="shortcut icon" type="image/png" href="icon-192.png">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@5/dist/maplibre-gl.css">
 <title>Meteo Viaggio</title>
 <style>
 :root{--bg:#07111f;--card:#101c2d;--card2:#13243a;--muted:#9fb0c5;--txt:#fff;--ok:#63d69b;--warn:#ffd166;--bad:#ff5b5b;--blue:#55c2ff}
@@ -49,7 +53,19 @@ h1{font-size:23px;margin:0}.sub{font-size:12px;color:var(--muted)}
 .centerbtn{position:absolute;z-index:750;right:12px;top:50px;width:50px;height:50px;border-radius:50%;border:1px solid #ffffff35;background:#07111fe8;color:white;font-size:23px;box-shadow:0 5px 18px #0008}
 .navbadge{position:absolute;z-index:740;left:50%;top:51px;transform:translateX(-50%);display:none;align-items:center;gap:7px;padding:7px 11px;border-radius:999px;background:#07111fe8;border:1px solid #63d69b80;font-size:11px;font-weight:900;white-space:nowrap;pointer-events:none}
 .navbadge.on{display:flex}.pulse{width:8px;height:8px;border-radius:50%;background:var(--ok)}
-.navarrow{width:66px;height:66px;display:grid;place-items:center;border-radius:50%;background:#268cff;border:4px solid white;box-shadow:0 6px 20px #000b;color:white;font-size:40px;line-height:1;transform-origin:center;will-change:transform;transition:none}
+.navarrow{
+  position:relative;width:70px;height:88px;display:block;
+  background:#fff;border:0;border-radius:0;
+  clip-path:polygon(50% 0,96% 100%,50% 78%,4% 100%);
+  filter:drop-shadow(0 8px 10px #000c);
+  color:transparent;font-size:0;line-height:1;
+  transform-origin:center;will-change:transform;transition:none
+}
+.navarrow:after{
+  content:"";position:absolute;inset:7px 8px 10px;
+  background:linear-gradient(180deg,#60c8ff,#066cff 72%);
+  clip-path:polygon(50% 0,96% 100%,50% 77%,4% 100%)
+}
 .legend{position:absolute;z-index:500;left:10px;bottom:10px;background:#07111fbd;border:1px solid #ffffff20;border-radius:9px;padding:5px 7px;font-size:9px}
 .risklegend{bottom:auto;top:82px}
 .timeline{display:grid;gap:8px;margin-top:10px}
@@ -235,6 +251,34 @@ body.nightAuto .mapwrap,body.nightAuto .wcard{box-shadow:0 0 0 1px #ffffff08}
   box-shadow:0 14px 36px #000a;
   min-height:520px;background:#0a121c;
 }
+.nav-map-slot #nav3dmap{height:64vh;min-height:560px;background:#071019}
+.nav3d-arrow{
+  position:absolute;z-index:2000;left:50%;top:58%;transform:translate(-50%,-50%);
+  width:78px;height:98px;background:#fff;
+  clip-path:polygon(50% 0,96% 100%,50% 78%,4% 100%);
+  filter:drop-shadow(0 12px 12px #000e) drop-shadow(0 0 12px #168cffcc);
+  pointer-events:none
+}
+.nav3d-arrow:after{
+  content:"";position:absolute;inset:7px 8px 10px;
+  background:linear-gradient(180deg,#78dcff,#0569f5 72%);
+  clip-path:polygon(50% 0,96% 100%,50% 77%,4% 100%)
+}
+.nav3d-gps{
+  position:absolute;z-index:860;left:50%;top:14px;transform:translateX(-50%);
+  padding:9px 15px;border-radius:999px;background:#03101be8;border:1px solid #53e39a;
+  color:#fff;font-weight:900;white-space:nowrap;box-shadow:0 8px 24px #000a;
+  backdrop-filter:blur(14px)
+}
+.nav3d-gps:before{content:"";display:inline-block;width:10px;height:10px;border-radius:50%;background:#59df99;margin-right:9px}
+.nav3d-center{
+  position:absolute;z-index:860;right:14px;top:14px;width:54px;height:54px;border-radius:50%;
+  border:1px solid #ffffff30;background:#03101be8;color:white;font-size:24px;box-shadow:0 8px 24px #000a
+}
+.nav3d-compass{
+  position:absolute;z-index:860;right:14px;bottom:14px;width:54px;height:54px;border-radius:50%;
+  border:1px solid #ffffff30;background:#03101be8;color:white;font-size:24px;box-shadow:0 8px 24px #000a
+}
 .nav-map-slot .mapwrap{margin:0;border-radius:0;border:0;background:#0a121c}
 .nav-map-slot .mapbar{display:none}
 .nav-map-slot #map{height:58vh;min-height:520px}
@@ -302,6 +346,177 @@ body.drive .wrap{display:none!important}
   .nav-stop,.nav-summary{min-height:58px;font-size:12px}
 }
 
+/* V15 - stile premium ispirato al riferimento approvato */
+.navdash{
+  background:
+    radial-gradient(circle at 50% -15%,#14283d 0,#050c14 38%,#010409 78%);
+  padding:8px 8px max(12px,env(safe-area-inset-bottom));
+}
+.navdash-head{margin-bottom:6px}
+.nav-active{text-align:left;padding-left:8px;font-size:13px;text-shadow:0 0 18px #5ce36f66}
+.navdash-top{margin-bottom:7px;grid-template-columns:minmax(0,1fr) 190px;gap:7px}
+.nav-turn-card{
+  min-height:102px;border-radius:18px;padding:10px 13px;
+  grid-template-columns:76px minmax(0,1fr) auto;gap:10px;
+  background:linear-gradient(145deg,#0d1c2cef,#040a11f5);
+  border-color:#238eff77;box-shadow:0 9px 28px #000b,inset 5px 0 #168cff;
+}
+.nav-turn-icon{font-size:54px;filter:drop-shadow(0 5px 10px #0008)}
+.nav-turn-icon{
+  width:64px;height:64px;border-radius:17px;display:grid;place-items:center;
+  background:linear-gradient(145deg,#11395e,#071521);border:1px solid #2e9cff77;
+  box-shadow:inset 0 0 24px #168cff2e
+}
+.nav-turn-main{font-size:clamp(20px,3.1vw,31px)}
+.nav-turn-street{font-size:clamp(15px,2.3vw,22px);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nav-turn-dist{font-size:clamp(19px,2.6vw,28px);padding-bottom:2px}
+.nav-arrival-card{border-radius:18px;padding:10px 13px;background:linear-gradient(145deg,#0c1826f2,#03080df5)}
+.nav-arrival-card>b{font-size:30px}.nav-speedline{margin-top:6px;padding-top:6px}
+.nav-map-slot{
+  position:relative;max-width:1100px;min-height:560px;margin:0 auto 7px;
+  border-radius:22px;border:1px solid #8ecaff55;
+  box-shadow:0 18px 46px #000c,0 0 0 1px #ffffff0a;
+}
+.nav-map-slot #map{height:64vh;min-height:560px;background:#071019}
+.nav-map-slot #map::after{
+  content:"";position:absolute;z-index:410;inset:0;pointer-events:none;
+  box-shadow:inset 0 25px 40px #05101b44,inset 0 -45px 55px #05101b66;
+}
+.nav-map-slot .navarrow{
+  width:78px;height:98px;
+  filter:drop-shadow(0 12px 12px #000e) drop-shadow(0 0 10px #168cffaa);
+}
+.nav-map-slot .navbadge{top:12px;padding:8px 13px;backdrop-filter:blur(14px)}
+.nav-map-slot .centerbtn,.nav-map-slot .hudbtn{backdrop-filter:blur(14px);background:#06111dcc}
+.nav-metrics{margin-bottom:6px;gap:6px}
+.navmetric{min-height:78px;padding:8px;border-radius:13px;background:linear-gradient(145deg,#0c1928,#03080e);border-color:#ffffff20}
+.navmetric b{font-size:21px;margin:3px 0 1px}
+.navmetric:nth-child(1) b{color:#fff;text-shadow:0 0 18px #53e36f88}
+.navmetric:nth-child(2) b{color:#8af08f}
+.navmetric:nth-child(3) b{color:#ffd866}
+.navmetric:nth-child(4) b{color:#b5c8ff}
+.navmetric:nth-child(5) b{color:#e9f5ff}
+.nav-weather-strip{margin-bottom:6px;background:linear-gradient(145deg,#0b1724,#02070c);padding:5px;border-color:#ffffff20}
+.nav-actions button{min-height:72px;background:linear-gradient(145deg,#102338,#07131f)}
+.nav-actions button:nth-child(1){color:#9ff0b0;box-shadow:inset 0 3px #48df7b55}
+.nav-actions button:nth-child(2){color:#ff7777;box-shadow:inset 0 3px #ff494955}
+.nav-actions button:nth-child(3){color:#ffd96a;box-shadow:inset 0 3px #ffd34d55}
+.nav-actions button:nth-child(4){color:#bba4ff;box-shadow:inset 0 3px #9a6aff55}
+.nav-actions button:nth-child(5){color:#76e7ea;box-shadow:inset 0 3px #3edbdc55}
+.nav-tripbar{position:sticky;bottom:0;z-index:1200;backdrop-filter:blur(18px);background:#06101aee}
+.leaflet-control-zoom a{background:#07131fe8!important;color:white!important;border-color:#ffffff22!important}
+.nav-map-slot .leaflet-control-zoom{margin-top:78px!important}
+.nav-map-slot .leaflet-tile-pane{filter:saturate(1.16) contrast(1.08) brightness(.76)}
+.nav-map-slot .leaflet-control-attribution{background:#02070caa!important;color:#bac6d2!important}
+.nav-map-slot .leaflet-control-attribution a{color:#64b6ff!important}
+.nav-map-slot:before{
+  content:"3D\A N";white-space:pre;position:absolute;z-index:820;left:13px;top:13px;
+  width:45px;height:58px;border-radius:12px;background:#02070ce8;border:1px solid #ffffff28;
+  color:#fff;display:grid;place-items:center;text-align:center;font-weight:1000;line-height:1.15;
+  box-shadow:0 8px 22px #000a;pointer-events:none
+}
+
+@media(max-width:760px){
+  .navdash{padding:6px 5px max(10px,env(safe-area-inset-bottom))}
+  .navdash-head{margin-bottom:5px}
+  .navdash-top{grid-template-columns:minmax(0,1fr) 118px;gap:5px;margin-bottom:5px}
+  .nav-turn-card{min-height:94px;grid-template-columns:58px minmax(0,1fr) auto;padding:8px;gap:6px}
+  .nav-turn-icon{font-size:45px}
+  .nav-turn-main{font-size:18px}
+  .nav-turn-street{font-size:14px}
+  .nav-turn-dist{font-size:17px}
+  .nav-arrival-card{padding:8px}
+  .nav-arrival-card>b{font-size:23px}
+  .nav-arrival-card small{font-size:11px}
+  .nav-speedline{margin-top:5px;padding-top:5px}
+  .nav-map-slot{min-height:500px;border-radius:17px}
+  .nav-map-slot #map{height:61vh;min-height:500px}
+  .nav-map-slot #nav3dmap{height:61vh;min-height:500px}
+  .nav-metrics{overflow:hidden;grid-template-columns:repeat(5,minmax(0,1fr));scrollbar-width:none}
+  .navmetric{min-height:65px}
+  .navmetric small{font-size:8px}.navmetric b{font-size:16px}.navmetric span{font-size:8px}
+  .nav-weather-strip{overflow:hidden;grid-template-columns:repeat(7,minmax(0,1fr));scrollbar-width:none}
+  .nav-weather-strip>div{min-width:0;padding:5px 1px}
+  .nav-weather-strip small{font-size:7px}.nav-weather-strip b{font-size:11px}
+  .nav-actions{overflow-x:auto;grid-template-columns:repeat(5,82px);scrollbar-width:none}
+  .nav-actions button{min-height:64px}
+}
+
+/* V17 - durante la guida la mappa occupa tutto lo schermo */
+body.drive{overflow:hidden!important;background:#020509}
+body.drive .navdash{position:fixed;inset:0;overflow:hidden;padding:0;max-width:none;background:#020509}
+body.drive .nav-map-slot{
+  position:fixed;inset:0;z-index:0;width:100%;height:100dvh;min-height:100dvh;
+  max-width:none;margin:0;border:0;border-radius:0;box-shadow:none;background:#071019
+}
+body.drive .nav-map-slot #nav3dmap{position:absolute;inset:0;width:100%;height:100dvh;min-height:100dvh}
+body.drive .navdash-head{
+  position:fixed;z-index:5200;left:8px;right:8px;top:max(6px,env(safe-area-inset-top));
+  max-width:none;margin:0;min-height:42px;padding:3px 5px;border-radius:16px;
+  background:linear-gradient(180deg,#02080ee8,#02080eaa);backdrop-filter:blur(14px)
+}
+body.drive .navdash-top{
+  position:fixed;z-index:5100;left:8px;right:8px;
+  top:calc(max(6px,env(safe-area-inset-top)) + 48px);
+  max-width:none;margin:0;grid-template-columns:minmax(0,1fr) 130px;gap:6px
+}
+body.drive .nav-turn-card{min-height:104px;background:#06101be8;backdrop-filter:blur(16px)}
+body.drive .nav-arrival-card{min-height:104px;background:#06101be8;backdrop-filter:blur(16px)}
+body.drive .nav-metrics,body.drive .nav-weather-strip{display:none!important}
+body.drive .nav-map-slot:before{top:174px;left:12px}
+body.drive .nav3d-gps{top:174px}
+body.drive .nav3d-center{top:174px}
+body.drive .nav3d-compass{bottom:178px}
+body.drive .nav3d-arrow{top:62%;z-index:5000}
+body.drive .nav-ahead-weather{
+  position:fixed;z-index:5050;left:12px;right:12px;top:234px;
+  display:grid;grid-template-columns:repeat(4,1fr);gap:1px;padding:5px;
+  border:1px solid #55c2ff66;border-radius:15px;background:#03101be8;color:white;
+  backdrop-filter:blur(16px);box-shadow:0 8px 24px #0009
+}
+body.drive .nav-ahead-weather>span{text-align:center;padding:3px;border-right:1px solid #ffffff18;min-width:0}
+body.drive .nav-ahead-weather>span:last-child{border-right:0}
+body.drive .nav-ahead-weather small{display:block;color:#9fb0c5;font-size:8px}
+body.drive .nav-ahead-weather b{display:block;font-size:12px;margin-top:2px;white-space:nowrap}
+body.drive .navpill.voice-off{border-color:#ff6b6b88;color:#ff9b9b;background:#240b12dd}
+body.drive .sosbox{z-index:7000}
+body.drive .nav-actions{
+  position:fixed;z-index:5100;left:8px;right:8px;bottom:92px;
+  max-width:none;margin:0;display:grid;grid-template-columns:repeat(5,1fr);gap:5px
+}
+body.drive .nav-actions button{
+  min-height:62px;border-radius:14px;padding:5px;font-size:20px;background:#04101bdd;backdrop-filter:blur(15px)
+}
+body.drive .nav-actions button span{font-size:9px;margin-top:2px}
+body.drive .nav-tripbar{
+  position:fixed;z-index:5300;left:8px;right:8px;bottom:max(6px,env(safe-area-inset-bottom));
+  max-width:none;margin:0;min-height:80px;border-radius:18px;background:#03101bed;backdrop-filter:blur(18px)
+}
+
+@media(max-width:760px){
+  body.drive .nav-active{font-size:11px;padding-left:3px}
+  body.drive .navpill{min-height:34px;padding:0 8px;font-size:11px}
+  body.drive .navdash-top{top:calc(max(6px,env(safe-area-inset-top)) + 48px);grid-template-columns:minmax(0,1fr) 112px}
+  body.drive .nav-turn-card{min-height:96px;grid-template-columns:54px minmax(0,1fr) auto;padding:7px}
+  body.drive .nav-turn-icon{width:52px;height:52px;font-size:38px;border-radius:14px}
+  body.drive .nav-turn-main{font-size:17px}
+  body.drive .nav-turn-street{font-size:13px}
+  body.drive .nav-turn-dist{font-size:17px}
+  body.drive .nav-arrival-card{min-height:96px;padding:7px}
+  body.drive .nav-arrival-card>b{font-size:22px}
+  body.drive .nav-map-slot:before,body.drive .nav3d-gps,body.drive .nav3d-center{top:155px}
+  body.drive .nav3d-gps{font-size:11px;padding:8px 11px}
+  body.drive .nav-map-slot:before{width:40px;height:52px;font-size:13px}
+  body.drive .nav3d-center{width:48px;height:48px;font-size:20px}
+  body.drive .nav3d-arrow{width:68px;height:86px;top:60%}
+  body.drive .nav-ahead-weather{top:212px;left:8px;right:8px}
+  body.drive .nav-actions{bottom:82px}
+  body.drive .nav-actions button{min-height:54px;font-size:17px}
+  body.drive .nav-tripbar{grid-template-columns:82px repeat(3,1fr) 88px;min-height:70px;padding:5px}
+  body.drive .nav-tripbar b{font-size:15px}
+  body.drive .nav-stop,body.drive .nav-summary{min-height:58px;font-size:10px}
+}
+
 </style>
 
 <script>
@@ -326,7 +541,7 @@ body.drive .wrap{display:none!important}
 <div class="wrap">
   <div class="top">
     <div class="brand"><div class="logo">🌦️</div><div><h1>Meteo Viaggio</h1><div class="sub">Meteo lungo la strada</div></div></div>
-    <div class="ver">V13.4 NAV UI</div>
+    <div class="ver">V17.4 VOCE</div>
   </div>
 
   <section class="hero">
@@ -367,6 +582,23 @@ body.drive .wrap{display:none!important}
       <div id="turnDist" class="turndist">—</div>
     </div>
     <div id="aheadBar" class="aheadbar"></div>
+
+    <h2>Mappa del viaggio</h2>
+    <div id="mapHomeSlot"></div>
+    <div class="mapwrap">
+      <div class="mapbar"><span id="mapstate">Percorso calcolato</span><span id="updated">—</span></div>
+      <div id="map"></div>
+      <button id="centerBtn" class="centerbtn">🎯</button>
+      <button id="hudBtn" class="hudbtn">🧭</button>
+      <div id="navBadge" class="navbadge"><span class="pulse"></span><span id="navText">GPS · seguo la posizione</span></div>
+      <div id="riskLegend" class="legend risklegend hidden">🟡 attenzione · 🔴 rischio alto</div>
+      <div id="radarLegend" class="legend">🌧️ Radar precipitazioni</div>
+      <div id="driveQuick" class="drivequick">
+        <button id="quickCenter" class="btn">🎯 Centra</button>
+        <button id="quickSOS" class="btn">⚡ Meteo</button>
+        <button id="quickExit" class="btn">↩️ Esci</button>
+      </div>
+    </div>
 
     <div class="smartpanel">
       <div class="smarttitle"><span>🛡️ Sicurezza viaggio</span><div id="safetyScore" class="score">—<small>/100</small></div></div>
@@ -459,23 +691,6 @@ body.drive .wrap{display:none!important}
       <span>🌡️ Percepita <span id="arrFeels">—</span></span>
     </div>
 
-    <h2>Mappa del viaggio</h2>
-    <div id="mapHomeSlot"></div>
-    <div class="mapwrap">
-      <div class="mapbar"><span id="mapstate">Percorso calcolato</span><span id="updated">—</span></div>
-      <div id="map"></div>
-      <button id="centerBtn" class="centerbtn">🎯</button>
-      <button id="hudBtn" class="hudbtn">🧭</button>
-      <div id="navBadge" class="navbadge"><span class="pulse"></span><span id="navText">GPS · seguo la posizione</span></div>
-      <div id="riskLegend" class="legend risklegend hidden">🟡 attenzione · 🔴 rischio alto</div>
-      <div id="radarLegend" class="legend">🌧️ Radar precipitazioni</div>
-      <div id="driveQuick" class="drivequick">
-        <button id="quickCenter" class="btn">🎯 Centra</button>
-        <button id="quickSOS" class="btn">⚡ Meteo</button>
-        <button id="quickExit" class="btn">↩️ Esci</button>
-      </div>
-    </div>
-
     <h2>Meteo lungo il percorso</h2>
     <div id="timeline" class="timeline"></div>
     <div class="note"><b>Grandine:</b> stima prudenziale basata su temporali, CAPE, precipitazioni e zero termico. Gli avvisi dell'app non sostituiscono quelli ufficiali.</div>
@@ -535,8 +750,10 @@ body.drive .wrap{display:none!important}
 </section>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/maplibre-gl@5/dist/maplibre-gl.js"></script>
 <script>
-let here=null,destObj=null,map=null,weatherMap=null,routeLine=null,meMarker=null;
+let here=null,destObj=null,map=null,weatherMap=null,routeLine=null,routeOutline=null,meMarker=null;
+let nav3dMap=null,nav3dReady=false;
 let wxMarkers=[],riskLines=[],radarLayer=null,weatherRadarLayer=null,radarOn=true;
 let currentRoute=null,currentItems=[],watchId=null,lastHeading=0,lastPoint=null,followMode=true;
 let busy=false,lastCalcAt=0,lastCalcPos=null,lastSpeech="",lastVoiceKey="",lastVoiceAt=0;
@@ -546,6 +763,7 @@ let orientationEnabled=false,headingRaf=null,positionRaf=null,renderedPos=null;
 let favorites=[],lastOffRouteRecalc=0,lastTurnVoiceKey='',lastTurnVoiceAt=0;
 let routeAlternatives=[],activeRouteIndex=0,routeWeatherSummaries=[],lastWeatherEta=null;
 let lastAltitude=null,lastGpsUpdate=0,voiceRecognition=null,weatherAvoidMode=false;
+let voiceEnabled=localStorage.getItem('meteoViaggioVoice')!=='false';
 let radarFrames=[],radarFrameIndex=0,radarAnimTimer=null,radarHost='https://tilecache.rainviewer.com';
 let tripHistory=[],nightAuto=true,lastHistorySave=0;
 try{tripHistory=JSON.parse(localStorage.getItem('meteoViaggioHistory')||'[]')}catch(e){tripHistory=[]}
@@ -700,8 +918,8 @@ function headingFrame(){
   const d=angleDelta(smoothHeading,targetHeading);
   smoothHeading=normHeading(smoothHeading+d*0.16);
   const el=document.querySelector('.navarrow');
-  // Il glifo ➤ a 0 gradi punta a est: -90 lo allinea al nord della mappa.
-  if(el)el.style.transform=`rotate(${smoothHeading-90}deg)`;
+  // La freccia CSS nasce gia rivolta verso nord.
+  if(el)el.style.transform=`rotate(${smoothHeading}deg)`;
   headingRaf=requestAnimationFrame(headingFrame);
 }
 function startHeadingAnimation(){
@@ -994,7 +1212,12 @@ async function goHome(){
 function initMap(){
   if(map)return;
   map=L.map('map',{zoomControl:true});
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap'}).addTo(map);
+  L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{
+    maxZoom:20,attribution:'Immagini © Esri'
+  }).addTo(map);
+  L.tileLayer('https://services.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}',{
+    maxZoom:20,opacity:.82,attribution:'Dati cartografici © Esri'
+  }).addTo(map);
   map.on('dragstart',()=>{
     if(watchId!==null){followMode=false;$('navText').textContent='GPS · mappa libera · premi 🎯'}
   });
@@ -1018,7 +1241,7 @@ function updateMarker(){
 
   if(!meMarker){
     const icon=L.divIcon({
-      html:`<div class="navarrow" style="transform:rotate(${smoothHeading-90}deg)">➤</div>`,
+      html:`<div class="navarrow" style="transform:rotate(${smoothHeading}deg)"></div>`,
       className:'',iconSize:[62,62],iconAnchor:[31,31]
     });
     meMarker=L.marker([markerPos.lat,markerPos.lon],{icon,zIndexOffset:1000}).addTo(map);
@@ -1039,14 +1262,18 @@ function updateMarker(){
       }
     },30);
   }
+  if(nav3dMap&&!$('navDashboard')?.classList.contains('hidden'))update3DNavMap();
 }
 function drawMap(r,items){
   initMap();
   if(routeLine)map.removeLayer(routeLine);
+  if(routeOutline)map.removeLayer(routeOutline);
   wxMarkers.forEach(x=>map.removeLayer(x));wxMarkers=[];
   riskLines.forEach(x=>map.removeLayer(x));riskLines=[];
   const ll=r.geometry.coordinates.map(x=>[x[1],x[0]]);
-  routeLine=L.polyline(ll,{color:'#55c2ff',weight:6,opacity:.9}).addTo(map);
+  routeOutline=L.polyline(ll,{color:'#0075ff',weight:15,opacity:.78,lineCap:'round',lineJoin:'round'}).addTo(map);
+  routeLine=L.polyline(ll,{color:'#7de8ff',weight:6,opacity:1,lineCap:'round',lineJoin:'round'}).addTo(map);
+  update3DRoute();
   items.forEach((x,i)=>{
     const sev=severity(x.w),col=sev>=5?'#ff4d4d':sev>=2?'#ffd166':'#63d69b';
     const m=L.circleMarker([x.p.lat,x.p.lon],{radius:7,color:col,fillColor:col,fillOpacity:.95}).addTo(map)
@@ -1395,9 +1622,23 @@ async function evaluateRoute(r){
   return{km,items};
 }
 function speakNow(msg){
+  if(!voiceEnabled)return;
   if(!('speechSynthesis'in window))return;
   speechSynthesis.cancel();
   const u=new SpeechSynthesisUtterance(msg);u.lang='it-IT';speechSynthesis.speak(u);
+}
+function updateVoiceButton(){
+  const b=$('navVoiceBtn');if(!b)return;
+  b.textContent=voiceEnabled?'☑️ Voce':'☐ Voce';
+  b.classList.toggle('voice-off',!voiceEnabled);
+  b.setAttribute('aria-pressed',voiceEnabled?'true':'false');
+}
+function toggleVoice(){
+  voiceEnabled=!voiceEnabled;
+  localStorage.setItem('meteoViaggioVoice',voiceEnabled?'true':'false');
+  if(!voiceEnabled&&'speechSynthesis'in window)speechSynthesis.cancel();
+  updateVoiceButton();
+  if(voiceEnabled)speakNow('Voce attivata.');
 }
 function maybeVoice(kind,km,min,sev,riskLen=0){
   if(watchId===null||sev<3||km>40)return;
@@ -1737,6 +1978,20 @@ function navCurrentWeather(){
   return currentItems.reduce((best,x)=>Math.abs(x.p.f-prog)<Math.abs(best.p.f-prog)?x:best,currentItems[0]);
 }
 
+function updateNavAheadWeather(){
+  const el=$('navAheadWeather');
+  if(!el||!currentItems?.length||!currentRoute)return;
+  const prog=here?nearestRouteProgress(here).f:0,totalKm=Math.max(1,currentRoute.distance/1000);
+  const distances=[0,10,20,50];
+  el.innerHTML=distances.map(km=>{
+    const target=Math.min(1,prog+km/totalKm);
+    const item=currentItems.reduce((best,x)=>Math.abs(x.p.f-target)<Math.abs(best.p.f-target)?x:best,currentItems[0]);
+    const w=item.w,inf=wi(w.code,w.isDay);
+    const label=km===0?'Adesso':'Tra '+km+' km';
+    return`<span><small>${label}</small><b>${inf[0]} ${Math.round(w.temp)}° · ${Math.round(w.rain)}%</b></span>`;
+  }).join('');
+}
+
 function updateNavDashboard(){
   if(!$('navDashboard'))return;
 
@@ -1782,29 +2037,107 @@ function updateNavDashboard(){
     $('navVisibility').textContent=vis>=10000?'10+ km':vis>=1000?(vis/1000).toFixed(1)+' km':Math.round(vis)+' m';
     $('navVisibilityLabel').textContent=vis>=5000?'Ottima':vis>=2000?'Buona':vis>=1000?'Ridotta':'Scarsa';
   }
+  updateNavAheadWeather();
+}
+
+function nav3dStyle(){
+  return{
+    version:8,
+    sources:{
+      satellite:{
+        type:'raster',tileSize:256,maxzoom:19,
+        tiles:['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'],
+        attribution:'Immagini © Esri'
+      },
+      openmaptiles:{type:'vector',url:'https://tiles.openfreemap.org/planet'},
+      'active-route':{type:'geojson',data:nav3dRouteData()},
+      terrain:{
+        type:'raster-dem',tileSize:256,maxzoom:15,encoding:'terrarium',
+        tiles:['https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png']
+      }
+    },
+    layers:[
+      {id:'background',type:'background',paint:{'background-color':'#06101a'}},
+      {id:'satellite',type:'raster',source:'satellite',paint:{'raster-saturation':.12,'raster-contrast':.12,'raster-brightness-max':.82}},
+      {
+        id:'buildings-3d',type:'fill-extrusion',source:'openmaptiles','source-layer':'building',minzoom:14,
+        paint:{
+          'fill-extrusion-color':['interpolate',['linear'],['zoom'],14,'#596673',18,'#a8b3bd'],
+          'fill-extrusion-height':['coalesce',['get','render_height'],['get','height'],8],
+          'fill-extrusion-base':['coalesce',['get','render_min_height'],['get','min_height'],0],
+          'fill-extrusion-opacity':.58
+        }
+      },
+      {
+        id:'route-shadow',type:'line',source:'active-route',
+        layout:{'line-cap':'round','line-join':'round'},
+        paint:{'line-color':'#006cff','line-width':24,'line-opacity':.95,'line-blur':5}
+      },
+      {
+        id:'route-main',type:'line',source:'active-route',
+        layout:{'line-cap':'round','line-join':'round'},
+        paint:{'line-color':'#b8f7ff','line-width':9,'line-opacity':1}
+      }
+    ]
+  };
+}
+
+function nav3dRouteData(){
+  return{
+    type:'FeatureCollection',
+    features:currentRoute?.geometry?.coordinates?.length?[{
+      type:'Feature',properties:{},geometry:{type:'LineString',coordinates:currentRoute.geometry.coordinates}
+    }]:[]
+  };
+}
+
+function update3DRoute(){
+  if(!nav3dReady||!nav3dMap)return;
+  const src=nav3dMap.getSource('active-route');
+  if(src)src.setData(nav3dRouteData());
+  if(nav3dMap.getLayer('route-shadow'))nav3dMap.moveLayer('route-shadow');
+  if(nav3dMap.getLayer('route-main'))nav3dMap.moveLayer('route-main');
+}
+
+function init3DNavMap(){
+  if(nav3dMap||typeof maplibregl==='undefined'||!$('nav3dmap'))return;
+  const p=here||{lat:43.77,lon:11.25};
+  nav3dMap=new maplibregl.Map({
+    container:'nav3dmap',style:nav3dStyle(),center:[p.lon,p.lat],zoom:16.8,
+    pitch:62,bearing:Number.isFinite(lastHeading)?lastHeading:0,
+    attributionControl:true,canvasContextAttributes:{antialias:true},dragRotate:true
+  });
+  nav3dMap.on('load',()=>{
+    nav3dReady=true;
+    update3DNavMap(true);
+  });
+}
+
+function update3DNavMap(immediate=false){
+  if(!nav3dMap||!nav3dReady||!here)return;
+  const progress=currentRoute?nearestRouteProgress(here):null;
+  const p=progress?.point&&progress.dist<=.055?progress.point:here;
+  const h=chooseNavigationHeading();
+  update3DRoute();
+  nav3dMap.easeTo({
+    center:[p.lon,p.lat],bearing:Number.isFinite(h)?h:0,pitch:62,
+    zoom:currentSpeedKmh>90?16.2:currentSpeedKmh>50?16.8:17.35,
+    offset:[0,Math.round((nav3dMap.getContainer().clientHeight||500)*.05)],
+    duration:immediate?0:720,essential:true
+  });
 }
 
 function openNavDashboard(){
   if(!$('navDashboard'))return;
 
-  const mw=document.querySelector('.mapwrap');
-  const slot=$('navMapSlot');
-  if(mw&&slot&&mw.parentElement!==slot){
-    navMapOriginalParent=mw.parentElement;
-    navMapOriginalNext=mw.nextSibling;
-    slot.appendChild(mw);
-  }
-
   $('navDashboard').classList.remove('hidden');
   document.body.classList.add('drive');
   updateNavDashboard();
+  init3DNavMap();
 
   setTimeout(()=>{
     try{
-      if(map){
-        map.invalidateSize(true);
-        if(here){followMode=true;map.setView([here.lat,here.lon],17);updateMarker()}
-      }
+      if(nav3dMap){nav3dMap.resize();update3DNavMap(true)}
     }catch(e){}
   },180);
 }
@@ -1812,13 +2145,6 @@ function openNavDashboard(){
 function closeNavDashboard(){
   $('navDashboard').classList.add('hidden');
   document.body.classList.remove('drive');
-
-  const mw=$('navMapSlot')?.querySelector('.mapwrap');
-  const home=$('mapHomeSlot');
-  if(mw&&home&&home.parentElement){
-    home.parentElement.insertBefore(mw,home.nextSibling);
-  }
-
   setTimeout(()=>{try{if(map)map.invalidateSize(true)}catch(e){}},120);
 }
 
@@ -1828,15 +2154,23 @@ function toggleNavNight(){
 
 $('whClose').onclick=()=>{if(radarAnimTimer){clearInterval(radarAnimTimer);radarAnimTimer=null} $('weatherHere').classList.add('hidden')};
 
-$('navStop').onclick=async()=>{if(watchId!==null)await startLive();closeNavDashboard()};
-$('navSummary').onclick=closeNavDashboard;
-$('navAvoidWeather').onclick=chooseWeatherSafeRoute;
-$('navSOS').onclick=openSOS;
-$('navHome').onclick=goHome;
-$('navRadar').onclick=()=>{$('radarBtn').click()};
-$('navFav').onclick=()=>{closeNavDashboard();setTimeout(()=>$('favSelect')?.focus(),120)};
-$('navVoiceBtn').onclick=()=>lastSpeech?speakNow(lastSpeech):st('Prima calcola un viaggio.');
-$('navNightBtn').onclick=toggleNavNight;
+// La schermata NAV si trova dopo questo script nell'HTML: collega i suoi
+// pulsanti soltanto quando il documento e stato costruito completamente.
+document.addEventListener('DOMContentLoaded',()=>{
+  $('navStop').onclick=async()=>{if(watchId!==null)await startLive();closeNavDashboard()};
+  $('navSummary').onclick=closeNavDashboard;
+  $('navAvoidWeather').onclick=chooseWeatherSafeRoute;
+  $('navSOS').onclick=openSOS;
+  $('navHome').onclick=goHome;
+  $('navRadar').onclick=()=>{$('radarBtn').click()};
+  $('navFav').onclick=()=>{closeNavDashboard();setTimeout(()=>$('favSelect')?.focus(),120)};
+  $('navVoiceBtn').onclick=toggleVoice;
+  updateVoiceButton();
+  $('navNightBtn').onclick=toggleNavNight;
+  $('nav3dCenter').onclick=()=>update3DNavMap(true);
+  $('nav3dCompass').onclick=()=>{if(nav3dMap)nav3dMap.easeTo({bearing:0,pitch:55,duration:500})};
+  $('navAheadWeather').onclick=openSOS;
+});
 
 setInterval(()=>{if(radarOn&&map)refreshRadar()},5*60*1000);
 </script>
@@ -1844,7 +2178,7 @@ setInterval(()=>{if(radarOn&&map)refreshRadar()},5*60*1000);
 <section id="navDashboard" class="navdash hidden">
   <div class="navdash-head">
     <div class="nav-active">● NAVIGAZIONE ATTIVA</div>
-    <button id="navVoiceBtn" class="navpill">🔊 Voce</button>
+    <button id="navVoiceBtn" class="navpill" aria-pressed="true">☑️ Voce</button>
     <button id="navNightBtn" class="navpill">🌙 Notte</button>
   </div>
 
@@ -1884,7 +2218,14 @@ setInterval(()=>{if(radarOn&&map)refreshRadar()},5*60*1000);
     <div><small>Grandine</small><b id="navHail">—</b></div>
   </div>
 
-  <div id="navMapSlot" class="nav-map-slot"></div>
+  <div id="navMapSlot" class="nav-map-slot">
+    <div id="nav3dmap"></div>
+    <div class="nav3d-gps">GPS · seguo la posizione</div>
+    <button id="nav3dCenter" class="nav3d-center" aria-label="Centra posizione">🎯</button>
+    <button id="nav3dCompass" class="nav3d-compass" aria-label="Orienta verso nord">🧭</button>
+    <button id="navAheadWeather" class="nav-ahead-weather" aria-label="Apri meteo lungo il viaggio"></button>
+    <div class="nav3d-arrow"></div>
+  </div>
 
   <div class="nav-actions">
     <button id="navAvoidWeather">🛡️<span>Evita<br>maltempo</span></button>
