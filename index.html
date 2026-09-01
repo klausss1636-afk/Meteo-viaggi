@@ -700,7 +700,8 @@ function headingFrame(){
   const d=angleDelta(smoothHeading,targetHeading);
   smoothHeading=normHeading(smoothHeading+d*0.16);
   const el=document.querySelector('.navarrow');
-  if(el)el.style.transform=`rotate(${smoothHeading}deg)`;
+  // Il glifo ➤ a 0 gradi punta a est: -90 lo allinea al nord della mappa.
+  if(el)el.style.transform=`rotate(${smoothHeading-90}deg)`;
   headingRaf=requestAnimationFrame(headingFrame);
 }
 function startHeadingAnimation(){
@@ -773,12 +774,23 @@ function animateMarkerPosition(to,duration=900){
 function nearestRouteProgress(pos){
   if(!currentRoute?.geometry?.coordinates?.length||!pos)return{index:0,f:0,dist:Infinity};
   const c=currentRoute.geometry.coordinates;
-  let best=Infinity,bestI=0;
-  for(let i=0;i<c.length;i++){
-    const d=hav(pos,{lat:c[i][1],lon:c[i][0]});
-    if(d<best){best=d;bestI=i}
+  let best=Infinity,bestI=0,bestPoint={lat:c[0][1],lon:c[0][0]},bestBearing=0;
+  // Proietta il GPS sul segmento di strada piu vicino. Usare solo il vertice
+  // piu vicino lasciava spesso la freccia a lato della carreggiata.
+  const cosLat=Math.max(.2,Math.cos(rad(pos.lat)));
+  for(let i=0;i<c.length-1;i++){
+    const a={lat:c[i][1],lon:c[i][0]},b={lat:c[i+1][1],lon:c[i+1][0]};
+    const ax=(a.lon-pos.lon)*cosLat,ay=a.lat-pos.lat;
+    const bx=(b.lon-pos.lon)*cosLat,by=b.lat-pos.lat;
+    const dx=bx-ax,dy=by-ay,den=dx*dx+dy*dy;
+    const t=den?Math.max(0,Math.min(1,-(ax*dx+ay*dy)/den)):0;
+    const q={lat:a.lat+(b.lat-a.lat)*t,lon:a.lon+(b.lon-a.lon)*t};
+    const d=hav(pos,q);
+    if(d<best){
+      best=d;bestI=t>.5?i+1:i;bestPoint=q;bestBearing=bearing(a,b);
+    }
   }
-  return{index:bestI,f:c.length>1?bestI/(c.length-1):0,dist:best};
+  return{index:bestI,f:c.length>1?bestI/(c.length-1):0,dist:best,point:bestPoint,bearing:bestBearing};
 }
 function stepRouteIndex(step){
   if(Number.isFinite(step._routeIndex))return step._routeIndex;
@@ -819,7 +831,13 @@ function turnInfo(step){
   const t=step?.maneuver?.type||'',m=step?.maneuver?.modifier||'',name=step?.name||'';
   let icon='⬆️',txt='Prosegui';
   if(t==='arrive'){icon='🏁';txt='Arrivo a destinazione'}
-  else if(t==='roundabout'||t==='rotary'){icon='🔄';txt='Entra nella rotonda'}
+  else if(t==='roundabout'||t==='rotary'){
+    const exit=Number(step?.maneuver?.exit);
+    icon='🔄';
+    txt=Number.isFinite(exit)&&exit>0
+      ?`Alla rotonda prendi la ${exit}ª uscita`
+      :'Entra nella rotonda';
+  }
   else if(m.includes('left')){icon=m.includes('slight')?'↖️':'⬅️';txt=m.includes('slight')?'Tieni la sinistra':'Gira a sinistra'}
   else if(m.includes('right')){icon=m.includes('slight')?'↗️':'➡️';txt=m.includes('slight')?'Tieni la destra':'Gira a destra'}
   else if(m==='uturn'){icon='↩️';txt='Fai inversione'}
@@ -931,14 +949,11 @@ async function openSOS(){
 }
 function routeBearingAtPosition(pos){
   if(!currentRoute?.geometry?.coordinates?.length||!pos)return null;
-  const c=currentRoute.geometry.coordinates;
-  let best=Infinity,bestI=0;
-  for(let i=0;i<c.length;i++){
-    const d=hav(pos,{lat:c[i][1],lon:c[i][0]});
-    if(d<best){best=d;bestI=i}
-  }
+  const progress=nearestRouteProgress(pos),c=currentRoute.geometry.coordinates;
+  const bestI=progress.index;
   const look=Math.min(c.length-1,bestI+Math.max(2,Math.floor(c.length/350)));
   const back=Math.max(0,bestI-2);
+  if(look===back&&Number.isFinite(progress.bearing))return progress.bearing;
   return bearing({lat:c[back][1],lon:c[back][0]},{lat:c[look][1],lon:c[look][0]});
 }
 function updateHomeButtons(){
@@ -993,15 +1008,23 @@ function updateMarker(){
   startHeadingAnimation();
   updateNextTurn();
 
+  // Durante la guida mostra la freccia sulla strada se il GPS e abbastanza
+  // vicino al percorso. La posizione reale resta in `here` per rilevare
+  // correttamente un'uscita dal percorso e avviare il ricalcolo.
+  const progress=currentRoute?nearestRouteProgress(here):null;
+  const markerPos=watchId!==null&&progress?.point&&progress.dist<=0.055
+    ?progress.point
+    :here;
+
   if(!meMarker){
     const icon=L.divIcon({
-      html:`<div class="navarrow" style="transform:rotate(${smoothHeading}deg)">➤</div>`,
+      html:`<div class="navarrow" style="transform:rotate(${smoothHeading-90}deg)">➤</div>`,
       className:'',iconSize:[62,62],iconAnchor:[31,31]
     });
-    meMarker=L.marker([here.lat,here.lon],{icon,zIndexOffset:1000}).addTo(map);
-    renderedPos={lat:here.lat,lon:here.lon};
+    meMarker=L.marker([markerPos.lat,markerPos.lon],{icon,zIndexOffset:1000}).addTo(map);
+    renderedPos={lat:markerPos.lat,lon:markerPos.lon};
   }else{
-    animateMarkerPosition(here,currentSpeedKmh>5?750:420);
+    animateMarkerPosition(markerPos,currentSpeedKmh>5?750:420);
   }
 
   if(watchId!==null&&followMode){
