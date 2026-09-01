@@ -85,7 +85,7 @@ body.drive .alert.ok{display:none}
 <div class="wrap">
   <div class="top">
     <div class="brand"><div class="logo">🌦️</div><div><h1>Meteo Viaggio</h1><div class="sub">Meteo lungo la strada</div></div></div>
-    <div class="ver">V9.0</div>
+    <div class="ver">V9.1</div>
   </div>
 
   <section class="hero">
@@ -444,24 +444,73 @@ async function refreshRadar(){
     $('radarLegend').textContent='🌧️ Radar · '+timeTxt(new Date(f.time*1000));
   }catch(e){$('radarLegend').textContent='🌧️ Radar non disponibile'}
 }
-function startLive(){
+async function startLive(){
   if(watchId!==null){
     navigator.geolocation.clearWatch(watchId);watchId=null;
     $('live').classList.remove('live');$('live').textContent='🚗 Avvia viaggio';
-    $('navBadge').classList.remove('on');$('mapstate').textContent='Aggiornamento fermato';return;
+    $('navBadge').classList.remove('on');
+    if($('mapstate'))$('mapstate').textContent='Aggiornamento fermato';
+    st('Viaggio fermato.');
+    return;
   }
-  if(!destObj){st('Prima calcola un viaggio.');return}
-  followMode=true;$('navBadge').classList.add('on');$('navText').textContent='GPS · seguo la posizione';
-  watchId=navigator.geolocation.watchPosition(async p=>{
-    here={lat:p.coords.latitude,lon:p.coords.longitude};
-    if(Number.isFinite(p.coords.heading))lastHeading=p.coords.heading;
-    else if(lastPoint&&hav(lastPoint,here)>.006)lastHeading=bearing(lastPoint,here);
+
+  try{
+    $('live').disabled=true;
+    st('Avvio viaggio…');
+
+    // Se manca la posizione, la prende automaticamente.
+    if(!here){
+      st('Cerco la tua posizione GPS…');
+      const p=await geoNow();
+      here={lat:p.lat,lon:p.lon};
+      if(Number.isFinite(p.heading))lastHeading=p.heading;
+      initMap();
+      updateMarker();
+    }
+
+    // Se manca la destinazione già risolta, usa ciò che è scritto nel campo.
+    if(!destObj){
+      const q=$('dest').value.trim();
+      if(!q)throw Error('Scrivi prima la destinazione.');
+      st('Calcolo il percorso…');
+      destObj=await geocode(q);
+    }
+
+    // Calcola subito il percorso prima di partire.
+    await calc(false);
+    if(!currentRoute)throw Error('Non riesco a calcolare il percorso.');
+
+    followMode=true;
+    $('navBadge').classList.add('on');
+    $('navText').textContent='GPS · seguo la posizione';
+
+    // Avvia il tracciamento continuo GPS.
+    watchId=navigator.geolocation.watchPosition(async p=>{
+      const nuovo={lat:p.coords.latitude,lon:p.coords.longitude};
+      if(Number.isFinite(p.coords.heading))lastHeading=p.coords.heading;
+      else if(here&&hav(here,nuovo)>.006)lastHeading=bearing(here,nuovo);
+      here=nuovo;
+      updateMarker();
+
+      // Meteo/percorso aggiornati ogni ~2 km o ~2 minuti.
+      const moved=!lastCalcPos||hav(here,lastCalcPos)>=2;
+      const timed=Date.now()-lastCalcAt>=2*60*1000;
+      if((moved||timed)&&!busy)await calc(true);
+    },err=>{
+      st('GPS non disponibile. Controlla il permesso Posizione del browser.');
+    },{enableHighAccuracy:true,maximumAge:3000,timeout:20000});
+
+    $('live').classList.add('live');
+    $('live').textContent='⏹ Ferma viaggio';
+    if($('mapstate'))$('mapstate').textContent='Guida GPS · meteo in tempo reale';
+    map.setView([here.lat,here.lon],15);
     updateMarker();
-    const moved=!lastCalcPos||hav(here,lastCalcPos)>=2;
-    const timed=Date.now()-lastCalcAt>=2*60*1000;
-    if((moved||timed)&&!busy)await calc(true);
-  },()=>st('Posizione non disponibile durante il viaggio.'),{enableHighAccuracy:true,maximumAge:5000,timeout:20000});
-  $('live').classList.add('live');$('live').textContent='⏹ Ferma viaggio';$('mapstate').textContent='Guida GPS · meteo in tempo reale';
+    st('Viaggio avviato: GPS e meteo in tempo reale attivi.');
+  }catch(e){
+    st('Errore: '+e.message);
+  }finally{
+    $('live').disabled=false;
+  }
 }
 async function openWeatherHere(){
   try{
