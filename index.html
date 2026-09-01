@@ -30,7 +30,7 @@ h1{font-size:23px;margin:0}.sub{font-size:12px;color:var(--muted)}
 .actions{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:9px}
 .status{font-size:12px;color:var(--muted);margin-top:10px;min-height:16px}
 .hidden{display:none!important}
-.tools{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:10px 0}
+.tools{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin:10px 0}
 .drivebar{display:grid;grid-template-columns:1.1fr .9fr;gap:8px;margin:8px 0}
 .panel{padding:12px}
 .k{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em}
@@ -66,7 +66,7 @@ h1{font-size:23px;margin:0}.sub{font-size:12px;color:var(--muted)}
 .hours{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-top:9px}.hour{background:#0d1a2c;border-radius:12px;padding:9px;text-align:center;font-size:12px}
 #weatherMap{height:290px;border-radius:15px;overflow:hidden;margin-top:9px}
 @media(max-width:720px){
- .actions{grid-template-columns:1fr 1fr}.tools{grid-template-columns:1fr 1fr 1fr}
+ .actions{grid-template-columns:1fr 1fr}.tools{grid-template-columns:1fr 1fr}
  .drivebar{grid-template-columns:1.1fr .9fr}.big{font-size:21px}
  .arrival{grid-template-columns:repeat(4,1fr);row-gap:8px}
  .wgrid,.hours{grid-template-columns:1fr 1fr}
@@ -79,13 +79,37 @@ body.drive .tools{margin-top:0}
 body.drive #map{height:66vh;min-height:380px}
 body.drive .arrival{font-size:11px}
 body.drive .alert.ok{display:none}
+
+.nextturn{display:none;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;background:#0b2038;border:1px solid #55c2ff55;border-radius:18px;padding:12px 14px;margin:8px 0;box-shadow:inset 5px 0 #55c2ff}
+.nextturn.on{display:grid}.turnico{font-size:34px}.turnmain{font-size:18px;font-weight:900}.turnsub{font-size:12px;color:var(--muted);margin-top:3px}.turndist{font-size:22px;font-weight:900;text-align:right}
+.aheadbar{display:flex;gap:7px;overflow-x:auto;padding:3px 0 8px;scrollbar-width:none}.aheadbar::-webkit-scrollbar{display:none}
+.aheadchip{flex:0 0 auto;background:#102033;border:1px solid #ffffff18;border-radius:999px;padding:8px 11px;font-size:11px;font-weight:800;white-space:nowrap}
+.aheadchip.warn{border-color:#ffd16680}.aheadchip.bad{border-color:#ff5b5b99}
+.favrow{display:grid;grid-template-columns:1fr auto auto;gap:7px;margin-top:8px}.favsel{min-height:46px;border-radius:13px;border:1px solid #ffffff20;background:#0d1a2c;color:white;padding:0 10px}
+.drivequick{display:none;position:absolute;z-index:900;left:10px;right:10px;bottom:12px;grid-template-columns:repeat(3,1fr);gap:8px}
+.drivequick .btn{min-height:46px;background:#07111fe8;border:1px solid #ffffff30}
+.sosbox{position:fixed;inset:0;z-index:3200;background:#07111ff8;overflow:auto;padding:15px}
+.sosinner{max-width:720px;margin:auto}.soslist{display:grid;gap:8px;margin-top:12px}.sositem{background:#101c2d;border:1px solid #ffffff18;border-radius:15px;padding:12px}
+body.drive .tools{display:none}
+body.drive .nextturn{margin:4px 0 7px}
+body.drive .aheadbar{padding-bottom:4px}
+body.drive .drivequick{display:grid}
+body.drive .state{display:none}
+body.drive .drivebar{grid-template-columns:1fr 1fr}
+body.drive .mapbar{display:none}
+@media(max-width:720px){
+ .favrow{grid-template-columns:1fr 1fr}.favrow .favsel{grid-column:1/-1}
+ .nextturn{grid-template-columns:auto 1fr auto}
+ .turnmain{font-size:16px}.turndist{font-size:18px}
+}
+
 </style>
 </head>
 <body>
 <div class="wrap">
   <div class="top">
     <div class="brand"><div class="logo">🌦️</div><div><h1>Meteo Viaggio</h1><div class="sub">Meteo lungo la strada</div></div></div>
-    <div class="ver">V9.4</div>
+    <div class="ver">V10.0</div>
   </div>
 
   <section class="hero">
@@ -101,6 +125,11 @@ body.drive .alert.ok{display:none}
       <button id="homeGo" class="btn alt">🏠 Vai a casa</button>
       <button id="homeSet" class="btn alt">📌 Imposta casa</button>
     </div>
+    <div class="favrow">
+      <select id="favSelect" class="favsel"><option value="">⭐ Preferiti</option></select>
+      <button id="favGo" class="btn alt">Vai</button>
+      <button id="favSave" class="btn alt">⭐ Salva</button>
+    </div>
     <div id="status" class="status">Acquisisci la posizione e inserisci la destinazione.</div>
   </section>
 
@@ -109,9 +138,17 @@ body.drive .alert.ok{display:none}
       <button id="radarBtn" class="btn alt">🌧️ Radar ON</button>
       <button id="driveBtn" class="btn alt">🚘 Modalità Carlink</button>
       <button id="recenterBtn" class="btn alt">🎯 Segui GPS</button>
+      <button id="sosBtn" class="btn alt">⚡ SOS meteo</button>
     </div>
 
     <div id="state" class="state"><span id="stateIcon">🟢</span><span id="stateText">Tranquillo</span><small id="stateSub">meteo viaggio</small></div>
+
+    <div id="nextTurn" class="nextturn">
+      <div id="turnIcon" class="turnico">⬆️</div>
+      <div><div id="turnMain" class="turnmain">Prosegui</div><div id="turnSub" class="turnsub">Indicazioni di guida</div></div>
+      <div id="turnDist" class="turndist">—</div>
+    </div>
+    <div id="aheadBar" class="aheadbar"></div>
 
     <div class="drivebar">
       <div class="panel">
@@ -151,6 +188,11 @@ body.drive .alert.ok{display:none}
       <div id="navBadge" class="navbadge"><span class="pulse"></span><span id="navText">GPS · seguo la posizione</span></div>
       <div id="riskLegend" class="legend risklegend hidden">🟡 attenzione · 🔴 rischio alto</div>
       <div id="radarLegend" class="legend">🌧️ Radar precipitazioni</div>
+      <div id="driveQuick" class="drivequick">
+        <button id="quickCenter" class="btn">🎯 Centra</button>
+        <button id="quickSOS" class="btn">⚡ Meteo</button>
+        <button id="quickExit" class="btn">↩️ Esci</button>
+      </div>
     </div>
 
     <h2>Meteo lungo il percorso</h2>
@@ -180,7 +222,20 @@ body.drive .alert.ok{display:none}
   </div>
 </section>
 
+
+<section id="sosWeather" class="sosbox hidden">
+  <div class="sosinner">
+    <div class="wtop">
+      <div><div class="sub">CONTROLLO RAPIDO</div><h2 style="margin:0">⚡ Meteo prossimi 50 km</h2><div class="sub">Situazione davanti a te lungo il percorso</div></div>
+      <button id="sosClose" class="close">✕</button>
+    </div>
+    <div id="sosSummary" class="wcard">—</div>
+    <div id="sosList" class="soslist"></div>
+  </div>
+</section>
+
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/leaflet-rotate@0.2.8/dist/leaflet-rotate.js"></script>
 <script>
 let here=null,destObj=null,map=null,weatherMap=null,routeLine=null,meMarker=null;
 let wxMarkers=[],riskLines=[],radarLayer=null,weatherRadarLayer=null,radarOn=true;
@@ -189,6 +244,8 @@ let busy=false,lastCalcAt=0,lastCalcPos=null,lastSpeech="",lastVoiceKey="",lastV
 let radarTimer=null,weatherRadarTimer=null;
 let deviceHeading=null,targetHeading=0,smoothHeading=0,currentSpeedKmh=0;
 let orientationEnabled=false,headingRaf=null,positionRaf=null,renderedPos=null;
+let favorites=[],lastOffRouteRecalc=0,lastTurnVoiceKey='',lastTurnVoiceAt=0;
+try{favorites=JSON.parse(localStorage.getItem('meteoViaggioFavorites')||'[]')}catch(e){favorites=[]}
 let homeBase=null;
 try{homeBase=JSON.parse(localStorage.getItem('meteoViaggioHome')||'null')}catch(e){homeBase=null}
 
@@ -237,7 +294,7 @@ async function reverseName(p){
   }catch(e){return'Posizione attuale'}
 }
 async function route(a,b){
-  const r=await fetch(`https://router.project-osrm.org/route/v1/driving/${a.lon},${a.lat};${b.lon},${b.lat}?overview=full&geometries=geojson&alternatives=false`);
+  const r=await fetch(`https://router.project-osrm.org/route/v1/driving/${a.lon},${a.lat};${b.lon},${b.lat}?overview=full&geometries=geojson&alternatives=false&steps=true`);
   const j=await r.json();
   if(j.code!=='Ok'||!j.routes?.length)throw Error('Percorso non trovato');
   return j.routes[0];
@@ -327,8 +384,9 @@ function setHeadingTarget(v){
 function headingFrame(){
   const d=angleDelta(smoothHeading,targetHeading);
   smoothHeading=normHeading(smoothHeading+d*0.18);
+  updateMapBearing();
   const el=document.querySelector('.navarrow');
-  if(el)el.style.transform=`rotate(${smoothHeading}deg)`;
+  if(el)el.style.transform=watchId!==null&&followMode?'rotate(0deg)':`rotate(${smoothHeading}deg)`;
   headingRaf=requestAnimationFrame(headingFrame);
 }
 function startHeadingAnimation(){
@@ -398,6 +456,169 @@ function animateMarkerPosition(to,duration=900){
   }
   positionRaf=requestAnimationFrame(step);
 }
+function nearestRouteProgress(pos){
+  if(!currentRoute?.geometry?.coordinates?.length||!pos)return{index:0,f:0,dist:Infinity};
+  const c=currentRoute.geometry.coordinates;
+  let best=Infinity,bestI=0;
+  for(let i=0;i<c.length;i++){
+    const d=hav(pos,{lat:c[i][1],lon:c[i][0]});
+    if(d<best){best=d;bestI=i}
+  }
+  return{index:bestI,f:c.length>1?bestI/(c.length-1):0,dist:best};
+}
+function stepRouteIndex(step){
+  if(Number.isFinite(step._routeIndex))return step._routeIndex;
+  const loc=step.maneuver?.location;
+  if(!loc||!currentRoute?.geometry?.coordinates)return 0;
+  const c=currentRoute.geometry.coordinates;
+  let best=Infinity,bestI=0;
+  for(let i=0;i<c.length;i++){
+    const d=hav({lat:loc[1],lon:loc[0]},{lat:c[i][1],lon:c[i][0]});
+    if(d<best){best=d;bestI=i}
+  }
+  step._routeIndex=bestI;
+  return bestI;
+}
+function routeSteps(){
+  return currentRoute?.legs?.flatMap(l=>l.steps||[])||[];
+}
+function nextManeuver(){
+  const steps=routeSteps();
+  if(!steps.length||!here)return null;
+  const prog=nearestRouteProgress(here).index;
+  for(const s of steps){
+    const idx=stepRouteIndex(s);
+    const type=s.maneuver?.type||'';
+    if(idx>=prog-2 && !['depart','arrive'].includes(type)){
+      const loc=s.maneuver.location;
+      return{step:s,dist:hav(here,{lat:loc[1],lon:loc[0]})};
+    }
+  }
+  const arrive=steps.find(s=>s.maneuver?.type==='arrive');
+  if(arrive){
+    const loc=arrive.maneuver.location;
+    return{step:arrive,dist:hav(here,{lat:loc[1],lon:loc[0]})};
+  }
+  return null;
+}
+function turnInfo(step){
+  const t=step?.maneuver?.type||'',m=step?.maneuver?.modifier||'',name=step?.name||'';
+  let icon='⬆️',txt='Prosegui';
+  if(t==='arrive'){icon='🏁';txt='Arrivo a destinazione'}
+  else if(t==='roundabout'||t==='rotary'){icon='🔄';txt='Entra nella rotonda'}
+  else if(m.includes('left')){icon=m.includes('slight')?'↖️':'⬅️';txt=m.includes('slight')?'Tieni la sinistra':'Gira a sinistra'}
+  else if(m.includes('right')){icon=m.includes('slight')?'↗️':'➡️';txt=m.includes('slight')?'Tieni la destra':'Gira a destra'}
+  else if(m==='uturn'){icon='↩️';txt='Fai inversione'}
+  else if(t==='merge'){icon='🔀';txt='Immettiti'}
+  else if(t==='fork'){icon='⑂';txt='Mantieni la direzione'}
+  return{icon,txt,sub:name?`su ${name}`:'continua sul percorso'};
+}
+function updateNextTurn(){
+  const n=nextManeuver();
+  if(!n){$('nextTurn').classList.remove('on');return}
+  const inf=turnInfo(n.step),meters=n.dist*1000;
+  $('nextTurn').classList.add('on');
+  $('turnIcon').textContent=inf.icon;$('turnMain').textContent=inf.txt;$('turnSub').textContent=inf.sub;
+  $('turnDist').textContent=meters<1000?`${Math.max(10,Math.round(meters/10)*10)} m`:`${n.dist.toFixed(n.dist<10?1:0)} km`;
+  if(watchId!==null&&meters<700){
+    const key=`${n.step.maneuver?.type}-${n.step.maneuver?.modifier}-${Math.round(meters/100)}`;
+    if(key!==lastTurnVoiceKey&&Date.now()-lastTurnVoiceAt>25000){
+      lastTurnVoiceKey=key;lastTurnVoiceAt=Date.now();
+      speakNow(`${inf.txt} ${meters<1000?'tra circa '+Math.round(meters/50)*50+' metri':'tra circa '+n.dist.toFixed(1)+' chilometri'}${n.step.name?' su '+n.step.name:''}.`);
+    }
+  }
+}
+function desiredZoom(){
+  const n=nextManeuver(),d=n?n.dist:999;
+  if(d<0.25)return 18;
+  if(d<0.8)return 17;
+  if(currentSpeedKmh>95)return 15;
+  if(currentSpeedKmh>60)return 16;
+  return 17;
+}
+function updateMapBearing(){
+  if(!map||typeof map.setBearing!=='function')return;
+  if(watchId!==null&&followMode)map.setBearing(smoothHeading);
+  else map.setBearing(0);
+}
+function renderAheadBar(items,km){
+  const el=$('aheadBar');if(!el)return;
+  el.innerHTML='';
+  const useful=[];
+  items.forEach(x=>{
+    const d=Math.round(km*x.p.f),sev=severity(x.w),kind=riskKind(x.w);
+    if(sev>=2||x.w.rain>=40){
+      if(!useful.some(u=>u.kind===kind&&Math.abs(u.d-d)<12))useful.push({d,sev,kind,w:x.w});
+    }
+  });
+  if(!useful.length){
+    const c=document.createElement('div');c.className='aheadchip';c.textContent='✅ Meteo tranquillo davanti';el.appendChild(c);return;
+  }
+  useful.slice(0,4).forEach(u=>{
+    const c=document.createElement('div');c.className='aheadchip '+(u.sev>=5?'bad':'warn');
+    c.textContent=`${u.sev>=5?'🔴':'🟡'} tra ${u.d} km · ${u.kind}`;
+    el.appendChild(c);
+  });
+}
+function estimateRiskLength(bad,items,km){
+  if(!bad)return 0;
+  const i=items.indexOf(bad);let end=bad.p.f;
+  for(let k=i+1;k<items.length;k++){
+    if(severity(items[k].w)<2)break;
+    end=items[k].p.f;
+  }
+  return Math.max(1,Math.round(km*Math.max(0,end-bad.p.f)));
+}
+function updateFavorites(){
+  const s=$('favSelect');if(!s)return;
+  s.innerHTML='<option value="">⭐ Preferiti</option>';
+  favorites.slice(0,5).forEach((f,i)=>{
+    const o=document.createElement('option');o.value=i;o.textContent=`⭐ ${f.name}`;s.appendChild(o);
+  });
+}
+async function saveFavorite(){
+  if(favorites.length>=5){st('Puoi salvare al massimo 5 preferiti.');return}
+  const name=prompt('Nome del preferito (es. Lavoro, Milano, Mare):');
+  if(!name)return;
+  const suggested=$('dest').value.trim();
+  const address=prompt('Indirizzo o località del preferito:',suggested);
+  if(!address)return;
+  try{
+    st('Salvo il preferito…');
+    const p=await geocode(address);
+    favorites.push({name:name.trim(),lat:p.lat,lon:p.lon,label:p.label});
+    localStorage.setItem('meteoViaggioFavorites',JSON.stringify(favorites));
+    updateFavorites();st(`Preferito “${name.trim()}” salvato.`);
+  }catch(e){st('Non riesco a salvare il preferito: '+e.message)}
+}
+async function goFavorite(){
+  const i=+$('favSelect').value;if(!Number.isInteger(i)||!favorites[i])return;
+  try{
+    if(!here){const g=await geoNow();here={lat:g.lat,lon:g.lon}}
+    const f=favorites[i];destObj={lat:f.lat,lon:f.lon,label:f.label||f.name};$('dest').value=f.name;await calc(false);
+  }catch(e){st('Errore: '+e.message)}
+}
+async function openSOS(){
+  $('sosWeather').classList.remove('hidden');
+  const list=$('sosList'),sum=$('sosSummary');list.innerHTML='';
+  if(!currentItems.length||!currentRoute){sum.textContent='Prima calcola o avvia un viaggio.';return}
+  const prog=nearestRouteProgress(here||currentItems[0].p).f;
+  const totalKm=currentRoute.distance/1000;
+  const startKm=totalKm*prog;
+  const ahead=currentItems.filter(x=>{
+    const d=totalKm*x.p.f-startKm;return d>=-2&&d<=50;
+  });
+  const risky=ahead.filter(x=>severity(x.w)>=2||x.w.rain>=40);
+  sum.innerHTML=risky.length
+    ?`<b>Attenzione:</b> ${risky.length} punto/i da controllare nei prossimi 50 km.`
+    :'<b>Situazione tranquilla:</b> nessun rischio importante rilevato nei prossimi 50 km.';
+  ahead.slice(0,8).forEach(x=>{
+    const d=Math.max(0,Math.round(totalKm*x.p.f-startKm)),inf=wi(x.w.code,x.w.isDay),sev=severity(x.w);
+    const e=document.createElement('div');e.className='sositem';
+    e.innerHTML=`<b>${sev>=5?'🔴':sev>=2?'🟡':'🟢'} ${d===0?'Qui':'Tra '+d+' km'} · ${inf[1]}</b><div class="det">${Math.round(x.w.temp)}°C · percepita ${Math.round(x.w.feels)}°C · umidità ${x.w.humidity==null?'—':Math.round(x.w.humidity)+'%'}<br>Pioggia ${Math.round(x.w.rain)}% · raffiche ${Math.round(x.w.gust)} km/h · grandine ${hail(x.w)}</div>`;
+    list.appendChild(e);
+  });
+}
 function routeBearingAtPosition(pos){
   if(!currentRoute?.geometry?.coordinates?.length||!pos)return null;
   const c=currentRoute.geometry.coordinates;
@@ -417,19 +638,21 @@ function updateHomeButtons(){
 }
 async function setHome(){
   try{
-    let p=here;
-    if(!p){
-      st('Cerco la posizione per impostare Casa…');
-      const g=await geoNow();
-      p={lat:g.lat,lon:g.lon};
-      here=p;
+    const address=prompt('Scrivi l’indirizzo di Casa. Lascia vuoto per usare la posizione attuale:','');
+    let p,name;
+    if(address&&address.trim()){
+      st('Cerco l’indirizzo di Casa…');
+      const g=await geocode(address.trim());p={lat:g.lat,lon:g.lon};name=g.label;
+    }else{
+      let g=here;
+      if(!g){const q=await geoNow();g={lat:q.lat,lon:q.lon};here=g}
+      p={lat:g.lat,lon:g.lon};name=await reverseName(p);
     }
-    const name=await reverseName(p);
     homeBase={lat:p.lat,lon:p.lon,label:'Casa · '+name};
     localStorage.setItem('meteoViaggioHome',JSON.stringify(homeBase));
     updateHomeButtons();
     st('Casa salvata. Rimarrà memorizzata su questo dispositivo.');
-  }catch(e){st('Non riesco a impostare Casa. Controlla il GPS.')}
+  }catch(e){st('Non riesco a impostare Casa: '+e.message)}
 }
 async function goHome(){
   if(!homeBase){st('Casa non è ancora impostata. Premi “Imposta casa”.');return}
@@ -445,7 +668,7 @@ async function goHome(){
 }
 function initMap(){
   if(map)return;
-  map=L.map('map',{zoomControl:true});
+  map=L.map('map',{zoomControl:true,rotate:true,bearing:0,touchRotate:false});
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap'}).addTo(map);
   map.on('dragstart',()=>{
     if(watchId!==null){followMode=false;$('navText').textContent='GPS · mappa libera · premi 🎯'}
@@ -453,37 +676,33 @@ function initMap(){
 }
 function updateMarker(){
   if(!map||!here)return;
-
-  if(lastPoint&&hav(lastPoint,here)>.006 && (!Number.isFinite(lastHeading)||lastHeading===0)){
-    lastHeading=bearing(lastPoint,here);
-  }
+  if(lastPoint&&hav(lastPoint,here)>.006&&(!Number.isFinite(lastHeading)||lastHeading===0))lastHeading=bearing(lastPoint,here);
   if(!lastPoint||hav(lastPoint,here)>.004)lastPoint={lat:here.lat,lon:here.lon};
 
   setHeadingTarget(chooseNavigationHeading());
   startHeadingAnimation();
+  updateNextTurn();
 
   if(!meMarker){
     const icon=L.divIcon({
-      html:`<div class="navarrow" style="transform:rotate(${smoothHeading}deg)">➤</div>`,
-      className:'',
-      iconSize:[62,62],
-      iconAnchor:[31,31]
+      html:`<div class="navarrow" style="transform:rotate(${watchId!==null&&followMode?0:smoothHeading}deg)">➤</div>`,
+      className:'',iconSize:[62,62],iconAnchor:[31,31]
     });
     meMarker=L.marker([here.lat,here.lon],{icon,zIndexOffset:1000}).addTo(map);
     renderedPos={lat:here.lat,lon:here.lon};
   }else{
-    // Il punto GPS viene interpolato invece di saltare da una posizione all'altra.
-    animateMarkerPosition(here,currentSpeedKmh>5?850:500);
+    animateMarkerPosition(here,currentSpeedKmh>5?750:420);
   }
 
   if(watchId!==null&&followMode){
-    if(map.getZoom()<16)map.setZoom(17,{animate:false});
+    const z=desiredZoom();
+    if(map.getZoom()!==z)map.setZoom(z,{animate:true});
     const focus=renderedPos||here;
-    map.panTo([focus.lat,focus.lon],{animate:true,duration:.25,noMoveStart:true});
+    map.panTo([focus.lat,focus.lon],{animate:true,duration:.22,noMoveStart:true});
     setTimeout(()=>{
       if(map&&followMode){
         const hpx=map.getSize().y;
-        map.panBy([0,-Math.round(hpx*0.16)],{animate:false});
+        map.panBy([0,-Math.round(hpx*0.18)],{animate:false});
       }
     },30);
   }
@@ -523,12 +742,12 @@ function speakNow(msg){
   speechSynthesis.cancel();
   const u=new SpeechSynthesisUtterance(msg);u.lang='it-IT';speechSynthesis.speak(u);
 }
-function maybeVoice(kind,km,min,sev){
+function maybeVoice(kind,km,min,sev,riskLen=0){
   if(watchId===null||sev<3||km>40)return;
   const key=`${kind}-${Math.ceil(km/5)}`;
   if(key===lastVoiceKey&&Date.now()-lastVoiceAt<2*60*1000)return;
   lastVoiceKey=key;lastVoiceAt=Date.now();
-  speakNow(`Attenzione. ${kind} previsto tra circa ${km} chilometri, fra circa ${min} minuti.`);
+  speakNow(`Attenzione. ${kind} previsto tra circa ${km} chilometri, fra circa ${min} minuti${riskLen?`, per un tratto di circa ${riskLen} chilometri`:''}.`);
 }
 function render(r,ev){
   currentRoute=r;currentItems=ev.items;
@@ -536,7 +755,7 @@ function render(r,ev){
   let bad=items.find(x=>severity(x.w)>=3);
   let nextKm=bad?Math.max(0,Math.round(km*bad.p.f)):null;
   let nextMin=bad?Math.max(0,Math.round(r.duration*bad.p.f/60)):null;
-  const eta=new Date(Date.now()+r.duration*1000),arr=items.at(-1),arrInfo=wi(arr.w.code,arr.w.isDay);
+  const eta=new Date(Date.now()+r.duration*1000),arr=items.at(-1),arrInfo=wi(arr.w.code,arr.w.isDay),riskLen=estimateRiskLength(bad,items,km);
 
   $('eta').textContent=timeTxt(eta);
   $('km').textContent=`${Math.round(km)} km · ${durTxt(r.duration)}`;
@@ -549,13 +768,13 @@ function render(r,ev){
   if(bad){
     const sev=severity(bad.w),kind=riskKind(bad.w),hr=hail(bad.w);
     $('riskMain').textContent=`${kind} · ${nextKm} km`;
-    $('riskSub').textContent=`Tra circa ${nextMin} min · grandine ${hr} · raffiche ${Math.round(bad.w.gust)} km/h`;
+    $('riskSub').textContent=`Tra circa ${nextMin} min · tratto circa ${riskLen} km · grandine ${hr} · raffiche ${Math.round(bad.w.gust)} km/h`;
     $('stateIcon').textContent=sev>=5?'🔴':'🟡';$('stateText').textContent=sev>=5?'Critico':'Attenzione';$('stateSub').textContent=`${kind} tra ${nextKm} km`;
     $('nextAlert').className='alert '+(sev>=5?'bad':'warn');
     $('alertIcon').textContent=hr==='ALTO'?'🧊':wi(bad.w.code,bad.w.isDay)[0];
-    $('alertMain').textContent=kind;$('alertSub').textContent=`Tra circa ${nextMin} min · pioggia ${Math.round(bad.w.rain)}% · raffiche ${Math.round(bad.w.gust)} km/h`;
+    $('alertMain').textContent=kind;$('alertSub').textContent=`Tra circa ${nextMin} min · tratto circa ${riskLen} km · pioggia ${Math.round(bad.w.rain)}% · raffiche ${Math.round(bad.w.gust)} km/h`;
     $('alertDist').innerHTML=`${nextKm} km<small>circa ${nextMin} min</small>`;
-    maybeVoice(kind,nextKm,nextMin,sev);
+    maybeVoice(kind,nextKm,nextMin,sev,riskLen);
   }else{
     $('riskMain').textContent='Nessuno';$('riskSub').textContent='Percorso tranquillo';
     $('stateIcon').textContent='🟢';$('stateText').textContent='Tranquillo';$('stateSub').textContent='controllo automatico ogni 2 min';
@@ -572,11 +791,13 @@ function render(r,ev){
   });
 
   drawMap(r,items);
+  renderAheadBar(items,km);
+  updateNextTurn();
   $('res').classList.remove('hidden');
   $('updated').textContent='Aggiornato '+timeTxt(new Date());
   $('mapstate').textContent=watchId!==null?'Guida GPS · meteo in tempo reale':'Percorso calcolato';
   lastSpeech=bad
-    ?`Viaggio di ${Math.round(km)} chilometri. Attenzione: ${riskKind(bad.w)} tra circa ${nextKm} chilometri. All'arrivo ${arrInfo[1].toLowerCase()}, ${Math.round(arr.w.temp)} gradi.`
+    ?`Viaggio di ${Math.round(km)} chilometri. Attenzione: ${riskKind(bad.w)} tra circa ${nextKm} chilometri, per un tratto stimato di circa ${riskLen} chilometri. All'arrivo ${arrInfo[1].toLowerCase()}, ${Math.round(arr.w.temp)} gradi.`
     :`Viaggio di ${Math.round(km)} chilometri. Nessun fenomeno importante lungo il percorso. All'arrivo ${arrInfo[1].toLowerCase()}, ${Math.round(arr.w.temp)} gradi.`;
 }
 async function calc(auto=false){
@@ -654,6 +875,14 @@ async function startLive(){
       here=nuovo;
       updateMarker();
 
+      const off=nearestRouteProgress(here).dist;
+      if(currentRoute&&off>0.15&&Date.now()-lastOffRouteRecalc>15000&&!busy){
+        lastOffRouteRecalc=Date.now();
+        st('Fuori percorso: ricalcolo…');
+        await calc(true);
+        return;
+      }
+
       const moved=!lastCalcPos||hav(here,lastCalcPos)>=2;
       const timed=Date.now()-lastCalcAt>=2*60*1000;
       if((moved||timed)&&!busy)await calc(true);
@@ -720,12 +949,12 @@ $('dest').onkeydown=e=>{if(e.key==='Enter')$('calc').click()};
 $('live').onclick=startLive;
 $('speak').onclick=()=>lastSpeech?speakNow(lastSpeech):st('Prima calcola un viaggio.');
 $('driveBtn').onclick=()=>{
-  document.body.classList.toggle('drive');
+  document.body.classList.toggle('drive');if(!document.body.classList.contains('drive')&&map&&typeof map.setBearing==='function')map.setBearing(0);
   $('driveBtn').textContent=document.body.classList.contains('drive')?'↩️ Vista completa':'🚘 Modalità Carlink';
   setTimeout(()=>{if(map){map.invalidateSize();if(here&&watchId!==null){followMode=true;map.setView([here.lat,here.lon],15)}}},150);
 };
 function recenter(){
-  if(map&&here){followMode=true;$('navText').textContent='GPS · seguo la posizione';map.setView([here.lat,here.lon],17);startHeadingAnimation();updateMarker()}
+  if(map&&here){followMode=true;$('navText').textContent='GPS · seguo la posizione';startHeadingAnimation();updateMapBearing();map.setView([here.lat,here.lon],desiredZoom());updateMarker()}
 }
 $('centerBtn').onclick=recenter;$('recenterBtn').onclick=recenter;
 $('radarBtn').onclick=()=>{
@@ -735,6 +964,14 @@ $('radarBtn').onclick=()=>{
   if(radarOn)refreshRadar();
 };
 $('weatherHereBtn').onclick=openWeatherHere;
+$('favSave').onclick=saveFavorite;
+$('favGo').onclick=goFavorite;
+$('sosBtn').onclick=openSOS;
+$('quickSOS').onclick=openSOS;
+$('quickCenter').onclick=recenter;
+$('quickExit').onclick=()=>{$('driveBtn').click()};
+$('sosClose').onclick=()=>$('sosWeather').classList.add('hidden');
+updateFavorites();
 $('homeSet').onclick=setHome;
 $('homeGo').onclick=goHome;
 updateHomeButtons();
