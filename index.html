@@ -191,11 +191,13 @@ body.drive .v25tools{
 body.drive .tripstate{
   margin-top:6px !important;
 }
+
+body.drive #weatherChange:empty{display:none}
 </style>
 </head>
 <body>
 <div class="wrap">
-<div class="top"><div class="brand"><div class="logo">🌦️</div><div><h1>Meteo Viaggio</h1><div class="sub">Meteo lungo la strada</div></div></div><div class="pill">V8.0</div></div>
+<div class="top"><div class="brand"><div class="logo">🌦️</div><div><h1>Meteo Viaggio</h1><div class="sub">Meteo lungo la strada</div></div></div><div class="pill">V8.1</div></div>
 
 <section class="hero">
 <div class="form">
@@ -560,7 +562,7 @@ function updateArrivalWeather(r,items){
 function updateDrivePanel(km,r,bad,nextKm,nextMin){
  $('driveEta').textContent=ti(new Date(Date.now()+r.duration*1000));$('driveKm').textContent=`${Math.round(km)} km · ${fd(r.duration)}`;
  if(bad){let hr=hail(bad.w),info=wi(bad.w.code),kind=hr[0]=='ALTO'?'Grandine forte':[95,96,99].includes(bad.w.code)?'Temporale':bad.w.gust>=70?'Vento forte':bad.w.rain>=70?'Pioggia intensa':info[1],severe=severity(bad.w)>=4;$('driveRiskMain').textContent=`${kind} · ${nextKm} km`;$('driveRiskSub').textContent=`Tra circa ${nextMin} min · grandine ${hr[0]} · raffiche ${Math.round(bad.w.gust)} km/h`;$('weatherChange').innerHTML=`Prossimo cambio meteo: <b>${nextKm} km</b>`;$('tripStateIcon').textContent=severe?'🔴':'🟡';$('tripStateText').textContent=severe?'Critico':'Attenzione';$('tripStateSub').textContent=`${kind} tra ${nextKm} km`}
- else{$('driveRiskMain').textContent='Nessuno';$('driveRiskSub').textContent='Percorso tranquillo';let change=currentEval?.items?.find((x,i,a)=>i>0&&wi(x.w.code)[1]!==wi(a[0].w.code)[1]),changeKm=change?Math.round(km*change.p.f):null;$('weatherChange').innerHTML=changeKm?`Cambio condizioni tra <b>${changeKm} km</b>`:'Meteo stabile lungo il percorso';$('tripStateIcon').textContent='🟢';$('tripStateText').textContent='Tranquillo';$('tripStateSub').textContent=changeKm?`cambio condizioni tra ${changeKm} km`:'meteo stabile · auto 5 min · voce intelligente'}
+ else{$('driveRiskMain').textContent='Nessuno';$('driveRiskSub').textContent='Percorso tranquillo';let change=currentEval?.items?.find((x,i,a)=>i>0&&wi(x.w.code)[1]!==wi(a[0].w.code)[1]),changeKm=change?Math.round(km*change.p.f):null;$('weatherChange').textContent='';$('tripStateIcon').textContent='🟢';$('tripStateText').textContent='Tranquillo';$('tripStateSub').textContent=changeKm?`cambio condizioni tra ${changeKm} km`:'meteo stabile · auto 5 min · voce intelligente'}
  $('driveDiversionBtn').classList.toggle('hidden',!bestDiversion)
 }
 function renderDiversion(d,mainRisk){
