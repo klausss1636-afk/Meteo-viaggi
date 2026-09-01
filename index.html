@@ -49,7 +49,7 @@ h1{font-size:23px;margin:0}.sub{font-size:12px;color:var(--muted)}
 .centerbtn{position:absolute;z-index:750;right:12px;top:50px;width:50px;height:50px;border-radius:50%;border:1px solid #ffffff35;background:#07111fe8;color:white;font-size:23px;box-shadow:0 5px 18px #0008}
 .navbadge{position:absolute;z-index:740;left:50%;top:51px;transform:translateX(-50%);display:none;align-items:center;gap:7px;padding:7px 11px;border-radius:999px;background:#07111fe8;border:1px solid #63d69b80;font-size:11px;font-weight:900;white-space:nowrap;pointer-events:none}
 .navbadge.on{display:flex}.pulse{width:8px;height:8px;border-radius:50%;background:var(--ok)}
-.navarrow{width:62px;height:62px;display:grid;place-items:center;border-radius:50%;background:#268cff;border:4px solid white;box-shadow:0 6px 20px #000b;color:white;font-size:38px;line-height:1;transform-origin:center;will-change:transform;transition:none}
+.navarrow{width:66px;height:66px;display:grid;place-items:center;border-radius:50%;background:#268cff;border:4px solid white;box-shadow:0 6px 20px #000b;color:white;font-size:40px;line-height:1;transform-origin:center;will-change:transform;transition:none}
 .legend{position:absolute;z-index:500;left:10px;bottom:10px;background:#07111fbd;border:1px solid #ffffff20;border-radius:9px;padding:5px 7px;font-size:9px}
 .risklegend{bottom:auto;top:82px}
 .timeline{display:grid;gap:8px;margin-top:10px}
@@ -165,76 +165,31 @@ body.nightAuto .mapwrap,body.nightAuto .wcard{box-shadow:0 0 0 1px #ffffff08}
  .safetygrid,.pretripgrid{grid-template-columns:repeat(2,1fr)}
 }
 
-
-/* V13.1 - Navigator look, stable Leaflet engine */
-body.drive .nextturn{
-  position:sticky;
-  top:4px;
-  z-index:1200;
-  background:#07111ff2;
-  border-color:#55c2ff80;
-  box-shadow:0 8px 28px #0009,inset 5px 0 #55c2ff;
-}
-body.drive .turnico{font-size:44px}
-body.drive .turnmain{font-size:22px}
-body.drive .turndist{font-size:25px}
-body.drive .arrival{
-  position:sticky;
-  top:94px;
-  z-index:1150;
-  background:#07111ff0;
-  border-color:#ffffff22;
-  box-shadow:0 8px 22px #0007
-}
-body.drive .mapwrap{
-  margin-top:6px;
-  border-radius:24px;
-  border:1px solid #ffffff28;
-  box-shadow:0 10px 30px #0008;
-}
-body.drive #map{height:68vh;min-height:520px}
-body.drive .navbadge{
-  top:16px;
-  background:#07111fef;
-  border-color:#63d69baa;
-  font-size:13px;
-  padding:9px 14px
-}
-.navarrow{
-  width:68px!important;
-  height:68px!important;
-  font-size:42px!important;
-  border-width:4px!important;
-  box-shadow:0 0 0 7px #2695ff28,0 8px 22px #000a!important;
-}
-.cockpitline{
-  display:none;
-  grid-template-columns:repeat(3,1fr);
-  gap:8px;
-  margin:6px 0
-}
-body.drive .cockpitline{display:grid}
-.cockpititem{
-  background:#0b1729;
-  border:1px solid #ffffff18;
-  border-radius:14px;
-  padding:9px;
-  text-align:center;
-  font-size:11px
-}
-.cockpititem b{display:block;font-size:18px;margin-top:2px}
-@media(max-width:720px){
-  body.drive .arrival{grid-template-columns:repeat(4,1fr);top:90px}
-  body.drive #map{height:66vh;min-height:500px}
-}
-
 </style>
+
+<script>
+(function(){
+  try{
+    if('serviceWorker' in navigator){
+      navigator.serviceWorker.getRegistrations()
+        .then(rs=>rs.forEach(r=>r.unregister()))
+        .catch(()=>{});
+    }
+    if('caches' in window){
+      caches.keys().then(keys=>keys.forEach(k=>{
+        if(String(k).toLowerCase().includes('meteo-viaggio')) caches.delete(k);
+      })).catch(()=>{});
+    }
+  }catch(e){}
+})();
+</script>
+
 </head>
 <body>
 <div class="wrap">
   <div class="top">
     <div class="brand"><div class="logo">🌦️</div><div><h1>Meteo Viaggio</h1><div class="sub">Meteo lungo la strada</div></div></div>
-    <div class="ver">V13.1</div>
+    <div class="ver">V13.2 RECOVERY</div>
   </div>
 
   <section class="hero">
@@ -367,11 +322,6 @@ body.drive .cockpitline{display:grid}
       <span>🌡️ Percepita <span id="arrFeels">—</span></span>
     </div>
 
-    <div class="cockpitline">
-      <div class="cockpititem"><small>Velocità</small><b id="cockpitSpeed">—</b></div>
-      <div class="cockpititem"><small>Sicurezza</small><b id="cockpitScore">—</b></div>
-      <div class="cockpititem"><small>Meteo davanti</small><b id="cockpitWeather">—</b></div>
-    </div>
     <h2>Mappa del viaggio</h2>
     <div class="mapwrap">
       <div class="mapbar"><span id="mapstate">Percorso calcolato</span><span id="updated">—</span></div>
@@ -447,7 +397,6 @@ body.drive .cockpitline{display:grid}
 </section>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="https://unpkg.com/leaflet-rotate@0.2.8/dist/leaflet-rotate.js"></script>
 <script>
 let here=null,destObj=null,map=null,weatherMap=null,routeLine=null,meMarker=null;
 let wxMarkers=[],riskLines=[],radarLayer=null,weatherRadarLayer=null,radarOn=true;
@@ -469,6 +418,13 @@ try{homeBase=JSON.parse(localStorage.getItem('meteoViaggioHome')||'null')}catch(
 const $=id=>document.getElementById(id);
 const st=t=>$('status').textContent=t;
 const rad=x=>x*Math.PI/180;
+
+window.addEventListener('error',e=>{
+  try{st('Errore app: '+(e.message||'errore sconosciuto'))}catch(_){}
+});
+window.addEventListener('unhandledrejection',e=>{
+  try{st('Errore app: '+((e.reason&&e.reason.message)||e.reason||'errore'))}catch(_){}
+});
 
 function hav(a,b){
   const R=6371,d1=rad(b.lat-a.lat),d2=rad(b.lon-a.lon);
@@ -604,13 +560,9 @@ function setHeadingTarget(v){
 }
 function headingFrame(){
   const d=angleDelta(smoothHeading,targetHeading);
-  smoothHeading=normHeading(smoothHeading+d*0.12);
-  updateMapBearing();
+  smoothHeading=normHeading(smoothHeading+d*0.16);
   const el=document.querySelector('.navarrow');
-  if(el){
-    const rotatingMap=watchId!==null&&followMode&&map&&typeof map.setBearing==='function';
-    el.style.transform=rotatingMap?'rotate(0deg)':`rotate(${smoothHeading}deg)`;
-  }
+  if(el)el.style.transform=`rotate(${smoothHeading}deg)`;
   headingRaf=requestAnimationFrame(headingFrame);
 }
 function startHeadingAnimation(){
@@ -760,11 +712,7 @@ function desiredZoom(){
   if(currentSpeedKmh>60)return 16;
   return 17;
 }
-function updateMapBearing(){
-  if(!map||typeof map.setBearing!=='function')return;
-  if(watchId!==null&&followMode&&typeof map.setBearing==='function')map.setBearing(smoothHeading);
-  else map.setBearing(0);
-}
+function updateMapBearing(){return}
 function renderAheadBar(items,km){
   const el=$('aheadBar');if(!el)return;
   el.innerHTML='';
@@ -892,7 +840,7 @@ async function goHome(){
 }
 function initMap(){
   if(map)return;
-  map=L.map('map',{zoomControl:true,rotate:true,bearing:0,touchRotate:false});
+  map=L.map('map',{zoomControl:true});
   L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap'}).addTo(map);
   map.on('dragstart',()=>{
     if(watchId!==null){followMode=false;$('navText').textContent='GPS · mappa libera · premi 🎯'}
@@ -909,7 +857,7 @@ function updateMarker(){
 
   if(!meMarker){
     const icon=L.divIcon({
-      html:`<div class="navarrow" style="transform:rotate(${watchId!==null&&followMode?0:smoothHeading}deg)">➤</div>`,
+      html:`<div class="navarrow" style="transform:rotate(${smoothHeading}deg)">➤</div>`,
       className:'',iconSize:[62,62],iconAnchor:[31,31]
     });
     meMarker=L.marker([here.lat,here.lon],{icon,zIndexOffset:1000}).addTo(map);
@@ -1238,17 +1186,6 @@ function updateHighwayInfo(items){
   const snow=items?.find(x=>[71,73,75,77,85,86].includes(x.w.code));
   $('snowAhead').textContent=snow?'Possibile':'No';
 }
-function updateCockpit(){
-  if(!$('cockpitSpeed'))return;
-  $('cockpitSpeed').textContent=Math.round(currentSpeedKmh||0)+' km/h';
-  $('cockpitScore').textContent=currentItems?.length?journeySafety(currentItems)+'/100':'—';
-  if(currentItems?.length){
-    const prog=nearestRouteProgress(here||currentItems[0].p).f;
-    const ahead=currentItems.find(x=>x.p.f>=Math.min(1,prog+.08))||currentItems.at(-1);
-    const inf=wi(ahead.w.code,ahead.w.isDay);
-    $('cockpitWeather').textContent=inf[0]+' '+Math.round(ahead.w.temp)+'°';
-  }else $('cockpitWeather').textContent='—';
-}
 function updateHUD(){
   const n=nextManeuver(),inf=n?turnInfo(n.step):{icon:'⬆️',txt:'Prosegui',sub:'Percorso'};
   $('hudTurnIcon').textContent=inf.icon;$('hudTurnMain').textContent=inf.txt;$('hudTurnSub').textContent=inf.sub;
@@ -1357,7 +1294,7 @@ function render(r,ev){
   updateRoadSafety(items);
   updatePreTrip(r,items);
   updateNextTurn();
-  updateHUD();updateCockpit();
+  updateHUD();
   $('res').classList.remove('hidden');
   $('updated').textContent='Aggiornato '+timeTxt(new Date());
   $('mapstate').textContent=watchId!==null?'Guida GPS · meteo in tempo reale':'Percorso calcolato';
@@ -1444,7 +1381,7 @@ async function startLive(){
       if(Number.isFinite(p.coords.heading))lastHeading=p.coords.heading;
       else if(here&&hav(here,nuovo)>.006)lastHeading=bearing(here,nuovo);
       here=nuovo;
-      updateMarker();updateHUD();updateCockpit();updateHighwayInfo(currentItems);
+      updateMarker();updateHUD();updateHighwayInfo(currentItems);
 
       const off=nearestRouteProgress(here).dist;
       if(currentRoute&&off>0.15&&Date.now()-lastOffRouteRecalc>15000&&!busy){
@@ -1469,7 +1406,7 @@ async function startLive(){
     const orientOk=await orientationPromise;
     saveTripHistory();
     st(orientOk
-      ?'Viaggio avviato: GPS, bussola, navigazione fluida e meteo attivi.'
+      ?'Viaggio avviato: GPS, bussola e meteo in tempo reale attivi.'
       :'Viaggio avviato: GPS e meteo attivi. Bussola non autorizzata.');
   }catch(e){
     st('Errore: '+e.message);
@@ -1592,7 +1529,7 @@ $('dest').onkeydown=e=>{if(e.key==='Enter')$('calc').click()};
 $('live').onclick=startLive;
 $('speak').onclick=()=>lastSpeech?speakNow(lastSpeech):st('Prima calcola un viaggio.');
 $('driveBtn').onclick=()=>{
-  document.body.classList.toggle('drive');if(!document.body.classList.contains('drive')&&map&&typeof map.setBearing==='function')map.setBearing(0);
+  document.body.classList.toggle('drive');if(!document.body.classList.contains('drive')&&map&&false)
   $('driveBtn').textContent=document.body.classList.contains('drive')?'↩️ Vista completa':'🚘 Modalità Carlink';
   setTimeout(()=>{if(map){map.invalidateSize();if(here&&watchId!==null){followMode=true;map.setView([here.lat,here.lon],15)}}},150);
 };
