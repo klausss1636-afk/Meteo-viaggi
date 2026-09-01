@@ -302,6 +302,74 @@ body.drive .wrap{display:none!important}
   .nav-stop,.nav-summary{min-height:58px;font-size:12px}
 }
 
+/* V14 - guida visuale: la mappa diventa l'elemento principale */
+.navdash{
+  background:
+    radial-gradient(circle at 50% -15%,#19334f 0,#08121d 36%,#03070c 76%);
+  padding:8px 8px max(12px,env(safe-area-inset-bottom));
+}
+.navdash-head{margin-bottom:6px}
+.nav-active{text-align:left;padding-left:8px;font-size:13px;text-shadow:0 0 18px #5ce36f66}
+.navdash-top{margin-bottom:7px;grid-template-columns:minmax(0,1fr) 190px;gap:7px}
+.nav-turn-card{
+  min-height:102px;border-radius:18px;padding:10px 13px;
+  grid-template-columns:76px minmax(0,1fr) auto;gap:10px;
+  background:linear-gradient(145deg,#10273beF,#07131fF2);
+  border-color:#4aa9ff66;box-shadow:0 9px 28px #0009,inset 4px 0 #3b9dff;
+}
+.nav-turn-icon{font-size:54px;filter:drop-shadow(0 5px 10px #0008)}
+.nav-turn-main{font-size:clamp(20px,3.1vw,31px)}
+.nav-turn-street{font-size:clamp(15px,2.3vw,22px);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nav-turn-dist{font-size:clamp(19px,2.6vw,28px);padding-bottom:2px}
+.nav-arrival-card{border-radius:18px;padding:10px 13px;background:linear-gradient(145deg,#102131F2,#07111bF2)}
+.nav-arrival-card>b{font-size:30px}.nav-speedline{margin-top:6px;padding-top:6px}
+.nav-map-slot{
+  position:relative;max-width:1100px;min-height:560px;margin:0 auto 7px;
+  border-radius:22px;border:1px solid #8ecaff55;
+  box-shadow:0 18px 46px #000c,0 0 0 1px #ffffff0a;
+}
+.nav-map-slot #map{height:64vh;min-height:560px;background:#b8c8d1}
+.nav-map-slot #map::after{
+  content:"";position:absolute;z-index:410;inset:0;pointer-events:none;
+  box-shadow:inset 0 25px 40px #05101b44,inset 0 -45px 55px #05101b66;
+}
+.nav-map-slot .navarrow{
+  width:74px;height:74px;font-size:46px;border-width:5px;
+  background:linear-gradient(145deg,#42a7ff,#0872ec);
+  box-shadow:0 10px 24px #001d3dcc,0 0 0 6px #1688ff2b;
+}
+.nav-map-slot .navbadge{top:12px;padding:8px 13px;backdrop-filter:blur(14px)}
+.nav-map-slot .centerbtn,.nav-map-slot .hudbtn{backdrop-filter:blur(14px);background:#06111dcc}
+.nav-metrics{margin-bottom:6px;gap:6px}
+.navmetric{min-height:70px;padding:7px;border-radius:13px;background:linear-gradient(145deg,#102131,#08131f)}
+.navmetric b{font-size:21px;margin:3px 0 1px}
+.nav-weather-strip{margin-bottom:6px;background:linear-gradient(145deg,#102131,#08131f);padding:5px}
+.nav-actions button{min-height:72px;background:linear-gradient(145deg,#102338,#07131f)}
+.nav-tripbar{position:sticky;bottom:0;z-index:1200;backdrop-filter:blur(18px);background:#06101aee}
+.leaflet-control-zoom a{background:#07131fe8!important;color:white!important;border-color:#ffffff22!important}
+
+@media(max-width:760px){
+  .navdash{padding:6px 5px max(10px,env(safe-area-inset-bottom))}
+  .navdash-head{margin-bottom:5px}
+  .navdash-top{grid-template-columns:minmax(0,1fr) 118px;gap:5px;margin-bottom:5px}
+  .nav-turn-card{min-height:94px;grid-template-columns:58px minmax(0,1fr) auto;padding:8px;gap:6px}
+  .nav-turn-icon{font-size:45px}
+  .nav-turn-main{font-size:18px}
+  .nav-turn-street{font-size:14px}
+  .nav-turn-dist{font-size:17px}
+  .nav-arrival-card{padding:8px}
+  .nav-arrival-card>b{font-size:23px}
+  .nav-arrival-card small{font-size:11px}
+  .nav-speedline{margin-top:5px;padding-top:5px}
+  .nav-map-slot{min-height:500px;border-radius:17px}
+  .nav-map-slot #map{height:61vh;min-height:500px}
+  .nav-metrics{overflow-x:auto;grid-template-columns:repeat(5,92px);scrollbar-width:none}
+  .navmetric{min-height:65px}
+  .nav-weather-strip{overflow-x:auto;grid-template-columns:repeat(7,78px);scrollbar-width:none}
+  .nav-actions{overflow-x:auto;grid-template-columns:repeat(5,82px);scrollbar-width:none}
+  .nav-actions button{min-height:64px}
+}
+
 </style>
 
 <script>
@@ -326,7 +394,7 @@ body.drive .wrap{display:none!important}
 <div class="wrap">
   <div class="top">
     <div class="brand"><div class="logo">🌦️</div><div><h1>Meteo Viaggio</h1><div class="sub">Meteo lungo la strada</div></div></div>
-    <div class="ver">V13.4 NAV UI</div>
+    <div class="ver">V14.1 NAVIGATORE</div>
   </div>
 
   <section class="hero">
@@ -367,6 +435,23 @@ body.drive .wrap{display:none!important}
       <div id="turnDist" class="turndist">—</div>
     </div>
     <div id="aheadBar" class="aheadbar"></div>
+
+    <h2>Mappa del viaggio</h2>
+    <div id="mapHomeSlot"></div>
+    <div class="mapwrap">
+      <div class="mapbar"><span id="mapstate">Percorso calcolato</span><span id="updated">—</span></div>
+      <div id="map"></div>
+      <button id="centerBtn" class="centerbtn">🎯</button>
+      <button id="hudBtn" class="hudbtn">🧭</button>
+      <div id="navBadge" class="navbadge"><span class="pulse"></span><span id="navText">GPS · seguo la posizione</span></div>
+      <div id="riskLegend" class="legend risklegend hidden">🟡 attenzione · 🔴 rischio alto</div>
+      <div id="radarLegend" class="legend">🌧️ Radar precipitazioni</div>
+      <div id="driveQuick" class="drivequick">
+        <button id="quickCenter" class="btn">🎯 Centra</button>
+        <button id="quickSOS" class="btn">⚡ Meteo</button>
+        <button id="quickExit" class="btn">↩️ Esci</button>
+      </div>
+    </div>
 
     <div class="smartpanel">
       <div class="smarttitle"><span>🛡️ Sicurezza viaggio</span><div id="safetyScore" class="score">—<small>/100</small></div></div>
@@ -459,23 +544,6 @@ body.drive .wrap{display:none!important}
       <span>🌡️ Percepita <span id="arrFeels">—</span></span>
     </div>
 
-    <h2>Mappa del viaggio</h2>
-    <div id="mapHomeSlot"></div>
-    <div class="mapwrap">
-      <div class="mapbar"><span id="mapstate">Percorso calcolato</span><span id="updated">—</span></div>
-      <div id="map"></div>
-      <button id="centerBtn" class="centerbtn">🎯</button>
-      <button id="hudBtn" class="hudbtn">🧭</button>
-      <div id="navBadge" class="navbadge"><span class="pulse"></span><span id="navText">GPS · seguo la posizione</span></div>
-      <div id="riskLegend" class="legend risklegend hidden">🟡 attenzione · 🔴 rischio alto</div>
-      <div id="radarLegend" class="legend">🌧️ Radar precipitazioni</div>
-      <div id="driveQuick" class="drivequick">
-        <button id="quickCenter" class="btn">🎯 Centra</button>
-        <button id="quickSOS" class="btn">⚡ Meteo</button>
-        <button id="quickExit" class="btn">↩️ Esci</button>
-      </div>
-    </div>
-
     <h2>Meteo lungo il percorso</h2>
     <div id="timeline" class="timeline"></div>
     <div class="note"><b>Grandine:</b> stima prudenziale basata su temporali, CAPE, precipitazioni e zero termico. Gli avvisi dell'app non sostituiscono quelli ufficiali.</div>
@@ -536,7 +604,7 @@ body.drive .wrap{display:none!important}
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-let here=null,destObj=null,map=null,weatherMap=null,routeLine=null,meMarker=null;
+let here=null,destObj=null,map=null,weatherMap=null,routeLine=null,routeOutline=null,meMarker=null;
 let wxMarkers=[],riskLines=[],radarLayer=null,weatherRadarLayer=null,radarOn=true;
 let currentRoute=null,currentItems=[],watchId=null,lastHeading=0,lastPoint=null,followMode=true;
 let busy=false,lastCalcAt=0,lastCalcPos=null,lastSpeech="",lastVoiceKey="",lastVoiceAt=0;
@@ -994,7 +1062,9 @@ async function goHome(){
 function initMap(){
   if(map)return;
   map=L.map('map',{zoomControl:true});
-  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap'}).addTo(map);
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',{
+    maxZoom:20,subdomains:'abcd',attribution:'© OpenStreetMap · © CARTO'
+  }).addTo(map);
   map.on('dragstart',()=>{
     if(watchId!==null){followMode=false;$('navText').textContent='GPS · mappa libera · premi 🎯'}
   });
@@ -1043,10 +1113,12 @@ function updateMarker(){
 function drawMap(r,items){
   initMap();
   if(routeLine)map.removeLayer(routeLine);
+  if(routeOutline)map.removeLayer(routeOutline);
   wxMarkers.forEach(x=>map.removeLayer(x));wxMarkers=[];
   riskLines.forEach(x=>map.removeLayer(x));riskLines=[];
   const ll=r.geometry.coordinates.map(x=>[x[1],x[0]]);
-  routeLine=L.polyline(ll,{color:'#55c2ff',weight:6,opacity:.9}).addTo(map);
+  routeOutline=L.polyline(ll,{color:'#063766',weight:12,opacity:.9,lineCap:'round',lineJoin:'round'}).addTo(map);
+  routeLine=L.polyline(ll,{color:'#38a9ff',weight:7,opacity:1,lineCap:'round',lineJoin:'round'}).addTo(map);
   items.forEach((x,i)=>{
     const sev=severity(x.w),col=sev>=5?'#ff4d4d':sev>=2?'#ffd166':'#63d69b';
     const m=L.circleMarker([x.p.lat,x.p.lon],{radius:7,color:col,fillColor:col,fillOpacity:.95}).addTo(map)
@@ -1828,15 +1900,19 @@ function toggleNavNight(){
 
 $('whClose').onclick=()=>{if(radarAnimTimer){clearInterval(radarAnimTimer);radarAnimTimer=null} $('weatherHere').classList.add('hidden')};
 
-$('navStop').onclick=async()=>{if(watchId!==null)await startLive();closeNavDashboard()};
-$('navSummary').onclick=closeNavDashboard;
-$('navAvoidWeather').onclick=chooseWeatherSafeRoute;
-$('navSOS').onclick=openSOS;
-$('navHome').onclick=goHome;
-$('navRadar').onclick=()=>{$('radarBtn').click()};
-$('navFav').onclick=()=>{closeNavDashboard();setTimeout(()=>$('favSelect')?.focus(),120)};
-$('navVoiceBtn').onclick=()=>lastSpeech?speakNow(lastSpeech):st('Prima calcola un viaggio.');
-$('navNightBtn').onclick=toggleNavNight;
+// La schermata NAV si trova dopo questo script nell'HTML: collega i suoi
+// pulsanti soltanto quando il documento e stato costruito completamente.
+document.addEventListener('DOMContentLoaded',()=>{
+  $('navStop').onclick=async()=>{if(watchId!==null)await startLive();closeNavDashboard()};
+  $('navSummary').onclick=closeNavDashboard;
+  $('navAvoidWeather').onclick=chooseWeatherSafeRoute;
+  $('navSOS').onclick=openSOS;
+  $('navHome').onclick=goHome;
+  $('navRadar').onclick=()=>{$('radarBtn').click()};
+  $('navFav').onclick=()=>{closeNavDashboard();setTimeout(()=>$('favSelect')?.focus(),120)};
+  $('navVoiceBtn').onclick=()=>lastSpeech?speakNow(lastSpeech):st('Prima calcola un viaggio.');
+  $('navNightBtn').onclick=toggleNavNight;
+});
 
 setInterval(()=>{if(radarOn&&map)refreshRadar()},5*60*1000);
 </script>
@@ -1866,6 +1942,8 @@ setInterval(()=>{if(radarOn&&map)refreshRadar()},5*60*1000);
     </div>
   </div>
 
+  <div id="navMapSlot" class="nav-map-slot"></div>
+
   <div class="nav-metrics">
     <div class="navmetric"><small>Velocità</small><b id="navSpeed">0</b><span>km/h</span></div>
     <div class="navmetric"><small>Sicurezza</small><b id="navSafety">—</b><span id="navSafetyLabel">—</span></div>
@@ -1883,8 +1961,6 @@ setInterval(()=>{if(radarOn&&map)refreshRadar()},5*60*1000);
     <div><small>Zero termico</small><b id="navZero">—</b></div>
     <div><small>Grandine</small><b id="navHail">—</b></div>
   </div>
-
-  <div id="navMapSlot" class="nav-map-slot"></div>
 
   <div class="nav-actions">
     <button id="navAvoidWeather">🛡️<span>Evita<br>maltempo</span></button>
