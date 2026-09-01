@@ -161,33 +161,41 @@ body.drive .centerbtn{width:48px;height:48px;font-size:21px}
   body.drive #map{height:62vh;min-height:340px}
 }
 
-/* V7.4 - offset reale del contenuto Carlink, senza maschere */
+/* V7.5 - viewport Carlink separato dalla barra di stato */
 body.drive{
-  scroll-padding-top:78px;
+  overflow:hidden !important;
 }
 body.drive .wrap{
-  padding-top:78px !important;
+  position:fixed !important;
+  top:70px !important;
+  left:0 !important;
+  right:0 !important;
+  bottom:0 !important;
+  overflow-y:auto !important;
+  -webkit-overflow-scrolling:touch;
+  box-sizing:border-box;
+  padding:8px 10px 18px !important;
+  max-width:none !important;
+  overscroll-behavior-y:contain;
 }
 body.drive .top{
   position:relative !important;
   top:auto !important;
-  z-index:auto !important;
   margin-top:0 !important;
 }
-/* Mantiene il primo blocco sempre sotto la barra di stato */
 body.drive .tripstate{
-  margin-top:8px !important;
+  margin-top:7px !important;
 }
 @media(min-width:700px){
   body.drive .wrap{
-    padding-top:62px !important;
+    top:56px !important;
   }
 }
 </style>
 </head>
 <body>
 <div class="wrap">
-<div class="top"><div class="brand"><div class="logo">🌦️</div><div><h1>Meteo Viaggio</h1><div class="sub">Meteo lungo la strada</div></div></div><div class="pill">V7.4</div></div>
+<div class="top"><div class="brand"><div class="logo">🌦️</div><div><h1>Meteo Viaggio</h1><div class="sub">Meteo lungo la strada</div></div></div><div class="pill">V7.5</div></div>
 
 <section class="hero">
 <div class="form">
