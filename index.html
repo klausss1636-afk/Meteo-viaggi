@@ -143,13 +143,35 @@ body.drive .mapbar{display:none}
  .hudbottom{grid-template-columns:repeat(2,1fr)}
 }
 
+
+/* V12 - Sicurezza Stradale Meteo */
+.safetygrid{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin:9px 0}
+.safetyitem{background:#0d1a2c;border:1px solid #ffffff14;border-radius:13px;padding:9px;text-align:center;font-size:11px}
+.safetyitem b{display:block;font-size:16px;margin-top:3px}
+.pretrip{background:linear-gradient(145deg,#12233a,#0c1829);border:1px solid #ffffff18;border-radius:18px;padding:13px;margin:9px 0}
+.pretripgrid{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-top:9px}
+.pretripitem{background:#0d1a2c;border-radius:13px;padding:9px;text-align:center;font-size:11px}
+.pretripitem b{font-size:16px;display:block;margin-top:3px}
+.nowcast{display:flex;gap:7px;overflow-x:auto;margin-top:9px;scrollbar-width:none}.nowcast::-webkit-scrollbar{display:none}
+.nowchip{flex:0 0 auto;background:#0d1a2c;border:1px solid #ffffff18;border-radius:13px;padding:8px 10px;text-align:center;font-size:11px;min-width:92px}
+.nowchip.warn{border-color:#ffd16688}.nowchip.bad{border-color:#ff5b5b99}
+.radarcontrols{display:flex;gap:8px;align-items:center;margin-top:8px}.radarcontrols .btn{min-height:42px}
+.triphistory{display:grid;gap:7px;margin-top:9px}.historyitem{background:#0d1a2c;border-radius:13px;padding:9px;font-size:11px}
+.trafficbox{display:flex;align-items:center;gap:9px;background:#0d1a2c;border:1px solid #ffffff14;border-radius:13px;padding:10px;margin-top:8px}
+.trafficbox .ico{font-size:24px}
+body.nightAuto{filter:saturate(.9)}
+body.nightAuto .mapwrap,body.nightAuto .wcard{box-shadow:0 0 0 1px #ffffff08}
+@media(max-width:720px){
+ .safetygrid,.pretripgrid{grid-template-columns:repeat(2,1fr)}
+}
+
 </style>
 </head>
 <body>
 <div class="wrap">
   <div class="top">
     <div class="brand"><div class="logo">🌦️</div><div><h1>Meteo Viaggio</h1><div class="sub">Meteo lungo la strada</div></div></div>
-    <div class="ver">V11.1</div>
+    <div class="ver">V12.0</div>
   </div>
 
   <section class="hero">
@@ -164,6 +186,7 @@ body.drive .mapbar{display:none}
       <button id="speak" class="btn alt">🔊 Come sarà?</button>
       <button id="homeGo" class="btn alt">🏠 Vai a casa</button>
       <button id="homeSet" class="btn alt">📌 Imposta casa</button>
+      <button id="startNowBtn" class="btn">🚀 Parti ora</button>
     </div>
     <div class="favrow">
       <select id="favSelect" class="favsel"><option value="">⭐ Preferiti</option></select>
@@ -217,6 +240,38 @@ body.drive .mapbar{display:none}
       <div class="hwitem"><small>Quota</small><b id="altNow">—</b></div>
       <div class="hwitem"><small>Zero termico</small><b id="zeroAhead">—</b></div>
       <div class="hwitem"><small>Neve</small><b id="snowAhead">—</b></div>
+    </div>
+
+    <div class="safetygrid">
+      <div class="safetyitem"><small>Vento laterale</small><b id="crossWind">—</b></div>
+      <div class="safetyitem"><small>Visibilità</small><b id="visibilityRisk">—</b></div>
+      <div class="safetyitem"><small>Ghiaccio</small><b id="iceRisk">—</b></div>
+      <div class="safetyitem"><small>Temporali</small><b id="stormRisk">—</b></div>
+    </div>
+
+    <div class="pretrip">
+      <div class="smarttitle"><span>🚗 Riepilogo prima di partire</span><button id="nightAutoBtn" class="btn alt">🌙 Auto</button></div>
+      <div id="preTripText" class="muted">Calcola un viaggio per vedere il riepilogo.</div>
+      <div class="pretripgrid">
+        <div class="pretripitem"><small>Durata</small><b id="preDur">—</b></div>
+        <div class="pretripitem"><small>Arrivo</small><b id="preEta">—</b></div>
+        <div class="pretripitem"><small>Pioggia max</small><b id="preRain">—</b></div>
+        <div class="pretripitem"><small>Vento max</small><b id="preWind">—</b></div>
+      </div>
+      <div class="trafficbox">
+        <div class="ico">🚦</div>
+        <div><b>Traffico e incidenti</b><div id="trafficStatus" class="det">Non disponibile senza un servizio traffico dedicato.</div></div>
+      </div>
+    </div>
+
+    <div class="smartpanel">
+      <div class="smarttitle"><span>⏱️ Pioggia prossimi 90 min</span><span id="nowcastStatus" class="sub">—</span></div>
+      <div id="nowcast90" class="nowcast"></div>
+    </div>
+
+    <div class="smartpanel">
+      <div class="smarttitle"><span>🧾 Ultimi viaggi</span><button id="clearHistoryBtn" class="btn alt">Pulisci</button></div>
+      <div id="tripHistory" class="triphistory"></div>
     </div>
 
     <div class="drivebar">
@@ -288,7 +343,7 @@ body.drive .mapbar{display:none}
       </div>
     </div>
     <div class="wcard"><b>Prossime ore</b><div id="whHours" class="hours"></div></div>
-    <div class="wcard"><b>🌧️ Radar nella tua zona</b><div id="weatherRadarStatus" class="sub" style="margin-top:5px">Caricamento radar…</div><div id="weatherMap"></div></div>
+    <div class="wcard"><b>🌧️ Radar nella tua zona</b><div id="weatherRadarStatus" class="sub" style="margin-top:5px">Caricamento radar…</div><div class="radarcontrols"><button id="radarPlayBtn" class="btn alt">▶️ Anima radar</button><button id="radarLatestBtn" class="btn alt">⏭️ Ultimo</button></div><div id="weatherMap"></div></div>
   </div>
 </section>
 
@@ -336,6 +391,9 @@ let orientationEnabled=false,headingRaf=null,positionRaf=null,renderedPos=null;
 let favorites=[],lastOffRouteRecalc=0,lastTurnVoiceKey='',lastTurnVoiceAt=0;
 let routeAlternatives=[],activeRouteIndex=0,routeWeatherSummaries=[],lastWeatherEta=null;
 let lastAltitude=null,lastGpsUpdate=0,voiceRecognition=null,weatherAvoidMode=false;
+let radarFrames=[],radarFrameIndex=0,radarAnimTimer=null,radarHost='https://tilecache.rainviewer.com';
+let tripHistory=[],nightAuto=true,lastHistorySave=0;
+try{tripHistory=JSON.parse(localStorage.getItem('meteoViaggioHistory')||'[]')}catch(e){tripHistory=[]}
 try{favorites=JSON.parse(localStorage.getItem('meteoViaggioFavorites')||'[]')}catch(e){favorites=[]}
 let homeBase=null;
 try{homeBase=JSON.parse(localStorage.getItem('meteoViaggioHome')||'null')}catch(e){homeBase=null}
@@ -406,7 +464,7 @@ function sample(coords,km,max=12){
 async function weather(p,eta){
   const qs=new URLSearchParams({
     latitude:p.lat,longitude:p.lon,
-    hourly:'temperature_2m,apparent_temperature,relative_humidity_2m,visibility,precipitation_probability,precipitation,showers,weather_code,wind_gusts_10m,cape,freezing_level_height',
+    hourly:'temperature_2m,apparent_temperature,relative_humidity_2m,dew_point_2m,visibility,precipitation_probability,precipitation,showers,weather_code,wind_gusts_10m,wind_direction_10m,cape,freezing_level_height',
     daily:'sunrise,sunset',timezone:'auto',forecast_days:'3'
   });
   const r=await fetch('https://api.open-meteo.com/v1/forecast?'+qs),j=await r.json();
@@ -423,6 +481,8 @@ async function weather(p,eta){
     temp:j.hourly.temperature_2m[ix],
     feels:j.hourly.apparent_temperature?.[ix]??j.hourly.temperature_2m[ix],
     humidity:j.hourly.relative_humidity_2m?.[ix]??null,
+    dew:j.hourly.dew_point_2m?.[ix]??null,
+    windDir:j.hourly.wind_direction_10m?.[ix]??null,
     visibility:j.hourly.visibility?.[ix]??99999,
     rain:j.hourly.precipitation_probability?.[ix]??0,
     precip:j.hourly.precipitation?.[ix]??0,
@@ -822,6 +882,154 @@ function drawMap(r,items){
   updateMarker();
   setTimeout(()=>map.invalidateSize(),100);
 }
+function crosswindFor(x){
+  if(!x?.w||!Number.isFinite(x.w.windDir))return null;
+  const road=routeBearingAtPosition(x.p);
+  if(!Number.isFinite(road))return null;
+  const diff=Math.abs(angleDelta(road,x.w.windDir));
+  return Math.abs((x.w.gust||0)*Math.sin(diff*Math.PI/180));
+}
+function iceRiskFor(w){
+  const t=w?.temp??99,feels=w?.feels??t,prec=w?.precip??0,zero=w?.zero??9999;
+  let s=0;
+  if(t<=2)s+=2;if(t<=0)s+=2;if(feels<=0)s++;
+  if(prec>0)s+=2;if(zero<1200)s+=1;
+  return s>=5?'ALTO':s>=3?'MEDIO':s>=1?'BASSO':'NO';
+}
+function stormLightningRisk(w){
+  let s=0;
+  if([95,96,99].includes(w?.code))s+=4;
+  if((w?.cape||0)>=800)s+=2;if((w?.cape||0)>=1500)s+=2;
+  if((w?.showers||0)>1)s++;
+  return s>=6?'ALTO':s>=3?'MEDIO':s>=1?'BASSO':'NO';
+}
+function updateRoadSafety(items){
+  if(!items?.length)return;
+  const cross=items.map(crosswindFor).filter(Number.isFinite);
+  const maxCross=cross.length?Math.max(...cross):null;
+  $('crossWind').textContent=maxCross==null?'—':Math.round(maxCross)+' km/h';
+  const vis=Math.min(...items.map(x=>x.w.visibility||99999));
+  $('visibilityRisk').textContent=vis<1000?'🔴 '+Math.round(vis)+' m':vis<3000?'🟡 '+(vis/1000).toFixed(1)+' km':'🟢 Buona';
+  const iceLevels=items.map(x=>iceRiskFor(x.w)),ice=iceLevels.includes('ALTO')?'ALTO':iceLevels.includes('MEDIO')?'MEDIO':iceLevels.includes('BASSO')?'BASSO':'NO';
+  $('iceRisk').textContent=(ice==='ALTO'?'🔴 ':ice==='MEDIO'?'🟡 ':ice==='BASSO'?'🟢 ':'')+ice;
+  const storms=items.map(x=>stormLightningRisk(x.w)),st=storms.includes('ALTO')?'ALTO':storms.includes('MEDIO')?'MEDIO':storms.includes('BASSO')?'BASSO':'NO';
+  $('stormRisk').textContent=(st==='ALTO'?'🔴 ':st==='MEDIO'?'🟡 ':st==='BASSO'?'🟢 ':'')+st;
+}
+function updatePreTrip(r,items){
+  if(!r||!items?.length)return;
+  const maxRain=Math.max(...items.map(x=>x.w.rain||0));
+  const maxWind=Math.max(...items.map(x=>x.w.gust||0));
+  const s=journeySafety(items),bad=items.find(x=>severity(x.w)>=3);
+  $('preDur').textContent=durTxt(r.duration);
+  $('preEta').textContent=timeTxt(new Date(Date.now()+r.duration*1000));
+  $('preRain').textContent=Math.round(maxRain)+'%';
+  $('preWind').textContent=Math.round(maxWind)+' km/h';
+  $('preTripText').textContent=bad
+    ?`Sicurezza ${s}/100 · fenomeno peggiore: ${riskKind(bad.w)} tra circa ${Math.round((r.distance/1000)*bad.p.f)} km.`
+    :`Sicurezza ${s}/100 · nessun fenomeno importante rilevato lungo il percorso.`;
+}
+async function loadNowcast90(){
+  if(!here)return;
+  const box=$('nowcast90'),status=$('nowcastStatus');if(!box)return;
+  box.innerHTML='<div class="nowchip">Carico…</div>';
+  try{
+    const qs=new URLSearchParams({
+      latitude:here.lat,longitude:here.lon,timezone:'auto',
+      minutely_15:'precipitation,precipitation_probability,weather_code',
+      forecast_days:'1'
+    });
+    const r=await fetch('https://api.open-meteo.com/v1/forecast?'+qs);
+    if(!r.ok)throw Error('HTTP '+r.status);
+    const j=await r.json(),m=j.minutely_15;
+    if(!m?.time?.length)throw Error('dati non disponibili');
+    const now=Date.now();box.innerHTML='';
+    const rows=[];
+    m.time.forEach((t,i)=>{
+      const dt=new Date(t),mins=(dt.getTime()-now)/60000;
+      if(mins>=-8&&mins<=95)rows.push({dt,p:m.precipitation?.[i]||0,prob:m.precipitation_probability?.[i]||0,code:m.weather_code?.[i]||0});
+    });
+    rows.slice(0,7).forEach(x=>{
+      const d=document.createElement('div');
+      const sev=x.p>=5||x.prob>=80?'bad':x.p>=1||x.prob>=50?'warn':'';
+      d.className='nowchip '+sev;
+      d.innerHTML=`<b>${Math.abs(x.dt.getTime()-now)<8*60000?'Ora':timeTxt(x.dt)}</b><br>🌧️ ${x.prob}%<br>${x.p.toFixed(1)} mm`;
+      box.appendChild(d);
+    });
+    status.textContent=rows.length?'15 min':'—';
+  }catch(e){
+    box.innerHTML='<div class="nowchip">Dati non disponibili</div>';status.textContent='—';
+  }
+}
+function saveTripHistory(){
+  if(!currentRoute||!destObj||!currentItems.length)return;
+  if(Date.now()-lastHistorySave<60000)return;
+  lastHistorySave=Date.now();
+  const item={
+    when:new Date().toISOString(),
+    dest:destObj.label||$('dest').value||'Destinazione',
+    km:Math.round(currentRoute.distance/1000),
+    min:Math.round(currentRoute.duration/60),
+    score:journeySafety(currentItems),
+    risk:(currentItems.find(x=>severity(x.w)>=3)?riskKind(currentItems.find(x=>severity(x.w)>=3).w):'Tranquillo')
+  };
+  tripHistory=[item,...tripHistory].slice(0,8);
+  localStorage.setItem('meteoViaggioHistory',JSON.stringify(tripHistory));
+  renderTripHistory();
+}
+function renderTripHistory(){
+  const box=$('tripHistory');if(!box)return;box.innerHTML='';
+  if(!tripHistory.length){box.innerHTML='<div class="muted">Nessun viaggio salvato.</div>';return}
+  tripHistory.forEach(x=>{
+    const d=document.createElement('div');d.className='historyitem';
+    const dt=new Date(x.when);
+    d.innerHTML=`<b>${x.dest}</b><div class="det">${dt.toLocaleDateString('it-IT')} ${timeTxt(dt)} · ${x.km} km · ${x.min} min · sicurezza ${x.score}/100 · ${x.risk}</div>`;
+    box.appendChild(d);
+  });
+}
+function clearTripHistory(){
+  tripHistory=[];localStorage.removeItem('meteoViaggioHistory');renderTripHistory();
+}
+function applyNightAuto(){
+  if(!nightAuto){document.body.classList.remove('nightAuto');return}
+  const h=new Date().getHours();
+  document.body.classList.toggle('nightAuto',h>=20||h<7);
+}
+async function startNow(){
+  try{
+    if(!here){
+      st('Cerco la posizione…');
+      const p=await geoNow();here={lat:p.lat,lon:p.lon};
+      currentSpeedKmh=Number.isFinite(p.speed)?Math.max(0,p.speed*3.6):0;
+      lastAltitude=Number.isFinite(p.altitude)?p.altitude:lastAltitude;
+    }
+    if(!destObj){
+      const q=$('dest').value.trim();
+      if(!q){st('Scrivi prima una destinazione oppure usa Casa/Preferiti.');return}
+    }
+    await startLive();
+    document.body.classList.add('drive');
+    $('driveBtn').textContent='↩️ Vista completa';
+  }catch(e){st('Errore: '+e.message)}
+}
+function setRadarFrame(i){
+  if(!weatherMap||!radarFrames.length)return;
+  radarFrameIndex=(i+radarFrames.length)%radarFrames.length;
+  const f=radarFrames[radarFrameIndex];
+  if(weatherRadarLayer){try{weatherMap.removeLayer(weatherRadarLayer)}catch(e){}}
+  weatherRadarLayer=L.tileLayer(radarHost+f.path+'/256/{z}/{x}/{y}/2/1_1.png',{
+    opacity:.58,zIndex:350,maxNativeZoom:7,maxZoom:19,tileSize:256,crossOrigin:true
+  }).addTo(weatherMap);
+  const s=$('weatherRadarStatus');if(s)s.textContent='Radar '+timeTxt(new Date(f.time*1000))+' · fotogramma '+(radarFrameIndex+1)+'/'+radarFrames.length;
+}
+function toggleRadarAnimation(){
+  const b=$('radarPlayBtn');if(!b)return;
+  if(radarAnimTimer){
+    clearInterval(radarAnimTimer);radarAnimTimer=null;b.textContent='▶️ Anima radar';return;
+  }
+  if(!radarFrames.length){b.textContent='Radar non pronto';return}
+  b.textContent='⏸️ Pausa';
+  radarAnimTimer=setInterval(()=>setRadarFrame(radarFrameIndex+1),650);
+}
 function weatherRiskScore(w){
   let p=0;
   p+=Math.min(30,(w.rain||0)*0.3);
@@ -1064,6 +1272,8 @@ function render(r,ev){
   updateSafetyUI(items);
   updateHailAlert(items,km);
   updateHighwayInfo(items);
+  updateRoadSafety(items);
+  updatePreTrip(r,items);
   updateNextTurn();
   updateHUD();
   $('res').classList.remove('hidden');
@@ -1088,6 +1298,7 @@ async function calc(auto=false){
     st(`Percorso verso ${destObj.label} aggiornato.`);
     refreshRadar();
     updateRoadStrip();
+    loadNowcast90();
     if(!auto){
       evaluateAlternatives();
       departureWindows();
@@ -1151,7 +1362,7 @@ async function startLive(){
       if(Number.isFinite(p.coords.heading))lastHeading=p.coords.heading;
       else if(here&&hav(here,nuovo)>.006)lastHeading=bearing(here,nuovo);
       here=nuovo;
-      updateMarker();updateHUD();
+      updateMarker();updateHUD();updateHighwayInfo(currentItems);
 
       const off=nearestRouteProgress(here).dist;
       if(currentRoute&&off>0.15&&Date.now()-lastOffRouteRecalc>15000&&!busy){
@@ -1174,6 +1385,7 @@ async function startLive(){
     map.setView([here.lat,here.lon],17);
     updateMarker();
     const orientOk=await orientationPromise;
+    saveTripHistory();
     st(orientOk
       ?'Viaggio avviato: GPS, bussola e meteo in tempo reale attivi.'
       :'Viaggio avviato: GPS e meteo attivi. Bussola non autorizzata.');
@@ -1185,6 +1397,7 @@ async function startLive(){
 }
 async function openWeatherHere(){
   try{
+    if(radarAnimTimer){clearInterval(radarAnimTimer);radarAnimTimer=null;if($('radarPlayBtn'))$('radarPlayBtn').textContent='▶️ Anima radar'}
     $('weatherHere').classList.remove('hidden');
     const p=here||await geoNow();here={lat:p.lat,lon:p.lon};
     $('whPlace').textContent=await reverseName(here);
@@ -1240,9 +1453,11 @@ async function openWeatherHere(){
       const r=await fetch('https://api.rainviewer.com/public/weather-maps.json',{cache:'no-store'});
       if(!r.ok)throw Error('HTTP '+r.status);
       const j=await r.json();
-      const frames=j.radar?.past||[];
+      const past=j.radar?.past||[],nowcast=j.radar?.nowcast||[];
+      const frames=[...past,...nowcast];
       const f=frames.at(-1);
       const host=j.host||'https://tilecache.rainviewer.com';
+      radarFrames=frames.slice(-10);radarFrameIndex=Math.max(0,radarFrames.length-1);radarHost=host;
 
       if(!f)throw Error('nessun fotogramma radar');
 
@@ -1321,11 +1536,17 @@ $('avoidWeatherBtn').onclick=chooseWeatherSafeRoute;
 $('voiceAskBtn').onclick=startVoiceAsk;
 $('hudBtn').onclick=openHUD;
 $('hudClose').onclick=closeHUD;
+$('radarPlayBtn').onclick=toggleRadarAnimation;
+$('radarLatestBtn').onclick=()=>{if(radarFrames.length)setRadarFrame(radarFrames.length-1)};
+$('clearHistoryBtn').onclick=clearTripHistory;
+$('startNowBtn').onclick=startNow;
+$('nightAutoBtn').onclick=()=>{nightAuto=!nightAuto;$('nightAutoBtn').textContent=nightAuto?'🌙 Auto':'🌙 Manuale';applyNightAuto()};
+renderTripHistory();applyNightAuto();setInterval(applyNightAuto,5*60*1000);
 updateFavorites();
 $('homeSet').onclick=setHome;
 $('homeGo').onclick=goHome;
 updateHomeButtons();
-$('whClose').onclick=()=>$('weatherHere').classList.add('hidden');
+$('whClose').onclick=()=>{if(radarAnimTimer){clearInterval(radarAnimTimer);radarAnimTimer=null} $('weatherHere').classList.add('hidden')};
 setInterval(()=>{if(radarOn&&map)refreshRadar()},5*60*1000);
 </script>
 </body>
