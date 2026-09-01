@@ -7,6 +7,7 @@
 <meta name="apple-mobile-web-app-capable" content="yes">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@5/dist/maplibre-gl.css">
 <title>Meteo Viaggio</title>
 <style>
 :root{--bg:#07111f;--card:#101c2d;--card2:#13243a;--muted:#9fb0c5;--txt:#fff;--ok:#63d69b;--warn:#ffd166;--bad:#ff5b5b;--blue:#55c2ff}
@@ -247,6 +248,34 @@ body.nightAuto .mapwrap,body.nightAuto .wcard{box-shadow:0 0 0 1px #ffffff08}
   box-shadow:0 14px 36px #000a;
   min-height:520px;background:#0a121c;
 }
+.nav-map-slot #nav3dmap{height:64vh;min-height:560px;background:#071019}
+.nav3d-arrow{
+  position:absolute;z-index:850;left:50%;bottom:16%;transform:translateX(-50%);
+  width:78px;height:98px;background:#fff;
+  clip-path:polygon(50% 0,96% 100%,50% 78%,4% 100%);
+  filter:drop-shadow(0 12px 12px #000e) drop-shadow(0 0 12px #168cffcc);
+  pointer-events:none
+}
+.nav3d-arrow:after{
+  content:"";position:absolute;inset:7px 8px 10px;
+  background:linear-gradient(180deg,#78dcff,#0569f5 72%);
+  clip-path:polygon(50% 0,96% 100%,50% 77%,4% 100%)
+}
+.nav3d-gps{
+  position:absolute;z-index:860;left:50%;top:14px;transform:translateX(-50%);
+  padding:9px 15px;border-radius:999px;background:#03101be8;border:1px solid #53e39a;
+  color:#fff;font-weight:900;white-space:nowrap;box-shadow:0 8px 24px #000a;
+  backdrop-filter:blur(14px)
+}
+.nav3d-gps:before{content:"";display:inline-block;width:10px;height:10px;border-radius:50%;background:#59df99;margin-right:9px}
+.nav3d-center{
+  position:absolute;z-index:860;right:14px;top:14px;width:54px;height:54px;border-radius:50%;
+  border:1px solid #ffffff30;background:#03101be8;color:white;font-size:24px;box-shadow:0 8px 24px #000a
+}
+.nav3d-compass{
+  position:absolute;z-index:860;right:14px;bottom:14px;width:54px;height:54px;border-radius:50%;
+  border:1px solid #ffffff30;background:#03101be8;color:white;font-size:24px;box-shadow:0 8px 24px #000a
+}
 .nav-map-slot .mapwrap{margin:0;border-radius:0;border:0;background:#0a121c}
 .nav-map-slot .mapbar{display:none}
 .nav-map-slot #map{height:58vh;min-height:520px}
@@ -399,6 +428,7 @@ body.drive .wrap{display:none!important}
   .nav-speedline{margin-top:5px;padding-top:5px}
   .nav-map-slot{min-height:500px;border-radius:17px}
   .nav-map-slot #map{height:61vh;min-height:500px}
+  .nav-map-slot #nav3dmap{height:61vh;min-height:500px}
   .nav-metrics{overflow-x:auto;grid-template-columns:repeat(5,92px);scrollbar-width:none}
   .navmetric{min-height:65px}
   .nav-weather-strip{overflow-x:auto;grid-template-columns:repeat(7,78px);scrollbar-width:none}
@@ -430,7 +460,7 @@ body.drive .wrap{display:none!important}
 <div class="wrap">
   <div class="top">
     <div class="brand"><div class="logo">🌦️</div><div><h1>Meteo Viaggio</h1><div class="sub">Meteo lungo la strada</div></div></div>
-    <div class="ver">V15 PREMIUM</div>
+    <div class="ver">V16 NAV 3D</div>
   </div>
 
   <section class="hero">
@@ -639,8 +669,10 @@ body.drive .wrap{display:none!important}
 </section>
 
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="https://unpkg.com/maplibre-gl@5/dist/maplibre-gl.js"></script>
 <script>
 let here=null,destObj=null,map=null,weatherMap=null,routeLine=null,routeOutline=null,meMarker=null;
+let nav3dMap=null,nav3dReady=false;
 let wxMarkers=[],riskLines=[],radarLayer=null,weatherRadarLayer=null,radarOn=true;
 let currentRoute=null,currentItems=[],watchId=null,lastHeading=0,lastPoint=null,followMode=true;
 let busy=false,lastCalcAt=0,lastCalcPos=null,lastSpeech="",lastVoiceKey="",lastVoiceAt=0;
@@ -1148,6 +1180,7 @@ function updateMarker(){
       }
     },30);
   }
+  if(nav3dMap&&!$('navDashboard')?.classList.contains('hidden'))update3DNavMap();
 }
 function drawMap(r,items){
   initMap();
@@ -1158,6 +1191,7 @@ function drawMap(r,items){
   const ll=r.geometry.coordinates.map(x=>[x[1],x[0]]);
   routeOutline=L.polyline(ll,{color:'#0075ff',weight:15,opacity:.78,lineCap:'round',lineJoin:'round'}).addTo(map);
   routeLine=L.polyline(ll,{color:'#7de8ff',weight:6,opacity:1,lineCap:'round',lineJoin:'round'}).addTo(map);
+  update3DRoute();
   items.forEach((x,i)=>{
     const sev=severity(x.w),col=sev>=5?'#ff4d4d':sev>=2?'#ffd166':'#63d69b';
     const m=L.circleMarker([x.p.lat,x.p.lon],{radius:7,color:col,fillColor:col,fillOpacity:.95}).addTo(map)
@@ -1895,27 +1929,103 @@ function updateNavDashboard(){
   }
 }
 
+function nav3dStyle(){
+  return{
+    version:8,
+    sources:{
+      satellite:{
+        type:'raster',tileSize:256,maxzoom:19,
+        tiles:['https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'],
+        attribution:'Immagini © Esri'
+      },
+      openmaptiles:{type:'vector',url:'https://tiles.openfreemap.org/planet'},
+      terrain:{
+        type:'raster-dem',tileSize:256,maxzoom:15,encoding:'terrarium',
+        tiles:['https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png']
+      }
+    },
+    layers:[
+      {id:'background',type:'background',paint:{'background-color':'#06101a'}},
+      {id:'satellite',type:'raster',source:'satellite',paint:{'raster-saturation':.12,'raster-contrast':.12,'raster-brightness-max':.82}},
+      {
+        id:'buildings-3d',type:'fill-extrusion',source:'openmaptiles','source-layer':'building',minzoom:14,
+        paint:{
+          'fill-extrusion-color':['interpolate',['linear'],['zoom'],14,'#596673',18,'#a8b3bd'],
+          'fill-extrusion-height':['coalesce',['get','render_height'],['get','height'],8],
+          'fill-extrusion-base':['coalesce',['get','render_min_height'],['get','min_height'],0],
+          'fill-extrusion-opacity':.58
+        }
+      }
+    ]
+  };
+}
+
+function nav3dRouteData(){
+  return{
+    type:'FeatureCollection',
+    features:currentRoute?.geometry?.coordinates?.length?[{
+      type:'Feature',properties:{},geometry:{type:'LineString',coordinates:currentRoute.geometry.coordinates}
+    }]:[]
+  };
+}
+
+function update3DRoute(){
+  if(!nav3dReady||!nav3dMap)return;
+  const src=nav3dMap.getSource('active-route');
+  if(src)src.setData(nav3dRouteData());
+}
+
+function init3DNavMap(){
+  if(nav3dMap||typeof maplibregl==='undefined'||!$('nav3dmap'))return;
+  const p=here||{lat:43.77,lon:11.25};
+  nav3dMap=new maplibregl.Map({
+    container:'nav3dmap',style:nav3dStyle(),center:[p.lon,p.lat],zoom:16.8,
+    pitch:62,bearing:Number.isFinite(lastHeading)?lastHeading:0,
+    attributionControl:true,canvasContextAttributes:{antialias:true},dragRotate:true
+  });
+  nav3dMap.on('load',()=>{
+    nav3dReady=true;
+    try{nav3dMap.setTerrain({source:'terrain',exaggeration:1.15})}catch(e){}
+    nav3dMap.addSource('active-route',{type:'geojson',data:nav3dRouteData()});
+    nav3dMap.addLayer({
+      id:'route-shadow',type:'line',source:'active-route',
+      layout:{'line-cap':'round','line-join':'round'},
+      paint:{'line-color':'#006cff','line-width':15,'line-opacity':.72,'line-blur':4}
+    });
+    nav3dMap.addLayer({
+      id:'route-main',type:'line',source:'active-route',
+      layout:{'line-cap':'round','line-join':'round'},
+      paint:{'line-color':'#67e1ff','line-width':6,'line-opacity':1}
+    });
+    update3DNavMap(true);
+  });
+}
+
+function update3DNavMap(immediate=false){
+  if(!nav3dMap||!nav3dReady||!here)return;
+  const progress=currentRoute?nearestRouteProgress(here):null;
+  const p=progress?.point&&progress.dist<=.055?progress.point:here;
+  const h=chooseNavigationHeading();
+  update3DRoute();
+  nav3dMap.easeTo({
+    center:[p.lon,p.lat],bearing:Number.isFinite(h)?h:0,pitch:62,
+    zoom:currentSpeedKmh>90?16.2:currentSpeedKmh>50?16.8:17.35,
+    offset:[0,Math.round((nav3dMap.getContainer().clientHeight||500)*.18)],
+    duration:immediate?0:720,essential:true
+  });
+}
+
 function openNavDashboard(){
   if(!$('navDashboard'))return;
-
-  const mw=document.querySelector('.mapwrap');
-  const slot=$('navMapSlot');
-  if(mw&&slot&&mw.parentElement!==slot){
-    navMapOriginalParent=mw.parentElement;
-    navMapOriginalNext=mw.nextSibling;
-    slot.appendChild(mw);
-  }
 
   $('navDashboard').classList.remove('hidden');
   document.body.classList.add('drive');
   updateNavDashboard();
+  init3DNavMap();
 
   setTimeout(()=>{
     try{
-      if(map){
-        map.invalidateSize(true);
-        if(here){followMode=true;map.setView([here.lat,here.lon],17);updateMarker()}
-      }
+      if(nav3dMap){nav3dMap.resize();update3DNavMap(true)}
     }catch(e){}
   },180);
 }
@@ -1923,13 +2033,6 @@ function openNavDashboard(){
 function closeNavDashboard(){
   $('navDashboard').classList.add('hidden');
   document.body.classList.remove('drive');
-
-  const mw=$('navMapSlot')?.querySelector('.mapwrap');
-  const home=$('mapHomeSlot');
-  if(mw&&home&&home.parentElement){
-    home.parentElement.insertBefore(mw,home.nextSibling);
-  }
-
   setTimeout(()=>{try{if(map)map.invalidateSize(true)}catch(e){}},120);
 }
 
@@ -1951,6 +2054,8 @@ document.addEventListener('DOMContentLoaded',()=>{
   $('navFav').onclick=()=>{closeNavDashboard();setTimeout(()=>$('favSelect')?.focus(),120)};
   $('navVoiceBtn').onclick=()=>lastSpeech?speakNow(lastSpeech):st('Prima calcola un viaggio.');
   $('navNightBtn').onclick=toggleNavNight;
+  $('nav3dCenter').onclick=()=>update3DNavMap(true);
+  $('nav3dCompass').onclick=()=>{if(nav3dMap)nav3dMap.easeTo({bearing:0,pitch:55,duration:500})};
 });
 
 setInterval(()=>{if(radarOn&&map)refreshRadar()},5*60*1000);
@@ -1999,7 +2104,13 @@ setInterval(()=>{if(radarOn&&map)refreshRadar()},5*60*1000);
     <div><small>Grandine</small><b id="navHail">—</b></div>
   </div>
 
-  <div id="navMapSlot" class="nav-map-slot"></div>
+  <div id="navMapSlot" class="nav-map-slot">
+    <div id="nav3dmap"></div>
+    <div class="nav3d-gps">GPS · seguo la posizione</div>
+    <button id="nav3dCenter" class="nav3d-center" aria-label="Centra posizione">🎯</button>
+    <button id="nav3dCompass" class="nav3d-compass" aria-label="Orienta verso nord">🧭</button>
+    <div class="nav3d-arrow"></div>
+  </div>
 
   <div class="nav-actions">
     <button id="navAvoidWeather">🛡️<span>Evita<br>maltempo</span></button>
