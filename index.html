@@ -164,7 +164,7 @@ body.drive .centerbtn{width:48px;height:48px;font-size:21px}
 </head>
 <body>
 <div class="wrap">
-<div class="top"><div class="brand"><div class="logo">🌦️</div><div><h1>Meteo Viaggio</h1><div class="sub">Meteo lungo la strada</div></div></div><div class="pill">V6.8</div></div>
+<div class="top"><div class="brand"><div class="logo">🌦️</div><div><h1>Meteo Viaggio</h1><div class="sub">Meteo lungo la strada</div></div></div><div class="pill">V6.9</div></div>
 
 <section class="hero">
 <div class="form">
@@ -334,16 +334,33 @@ async function routeAlternatives(a,b){
 }
 function sample(c,km,max=10){let p=c.map(x=>({lon:x[0],lat:x[1]})),cum=[0];for(let i=1;i<p.length;i++)cum.push(cum[i-1]+hav(p[i-1],p[i]));let tot=cum.at(-1)||1,n=Math.min(max,Math.max(4,Math.ceil(km/55)+1)),out=[];for(let k=0;k<n;k++){let t=tot*k/(n-1),i=1;while(i<cum.length&&cum[i]<t)i++;out.push({...p[Math.min(i,p.length-1)],f:t/tot})}return out}
 async function weather(p,eta){
- let qs=new URLSearchParams({latitude:p.lat,longitude:p.lon,hourly:'temperature_2m,apparent_temperature,visibility,precipitation_probability,precipitation,showers,weather_code,wind_gusts_10m,cape,freezing_level_height',timezone:'auto',forecast_days:'3'});
+ let qs=new URLSearchParams({latitude:p.lat,longitude:p.lon,hourly:'temperature_2m,apparent_temperature,visibility,precipitation_probability,precipitation,showers,weather_code,wind_gusts_10m,cape,freezing_level_height',daily:'sunrise,sunset',timezone:'auto',forecast_days:'3'});
  let r=await fetch('https://api.open-meteo.com/v1/forecast?'+qs),j=await r.json(),t=j.hourly.time,target=eta.getTime(),ix=0,dd=1e99;
  for(let i=0;i<t.length;i++){let d=Math.abs(new Date(t[i]).getTime()-target);if(d<dd){dd=d;ix=i}}
- return{temp:j.hourly.temperature_2m[ix],feels:j.hourly.apparent_temperature?.[ix]??j.hourly.temperature_2m[ix],visibility:j.hourly.visibility?.[ix]??null,rain:j.hourly.precipitation_probability[ix],precip:j.hourly.precipitation?.[ix]||0,showers:j.hourly.showers?.[ix]||0,code:j.hourly.weather_code[ix],gust:j.hourly.wind_gusts_10m[ix],cape:j.hourly.cape?.[ix]||0,zero:j.hourly.freezing_level_height?.[ix]||null}
+ let dayIx=0;
+ if(j.daily?.time?.length){
+   let ymd=t[ix].slice(0,10),di=j.daily.time.indexOf(ymd);if(di>=0)dayIx=di;
+ }
+ let sunUp=true;
+ if(j.daily?.sunrise?.[dayIx]&&j.daily?.sunset?.[dayIx]){
+   let tt=new Date(t[ix]).getTime(),sr=new Date(j.daily.sunrise[dayIx]).getTime(),ss=new Date(j.daily.sunset[dayIx]).getTime();
+   sunUp=tt>=sr&&tt<ss;
+ }
+ return{temp:j.hourly.temperature_2m[ix],feels:j.hourly.apparent_temperature?.[ix]??j.hourly.temperature_2m[ix],visibility:j.hourly.visibility?.[ix]??null,rain:j.hourly.precipitation_probability[ix],precip:j.hourly.precipitation?.[ix]||0,showers:j.hourly.showers?.[ix]||0,code:j.hourly.weather_code[ix],gust:j.hourly.wind_gusts_10m[ix],cape:j.hourly.cape?.[ix]||0,zero:j.hourly.freezing_level_height?.[ix]||null,isDay:sunUp}
 }
 function dayIcon(c){
   if([45,48].includes(c))return'<span class="fogicon" aria-label="Nebbia"><i></i><i></i><i></i></span>';
-  return wi(c)[0]
+  return wi(c,true)[0]
 }
-function wi(c){if([95,96,99].includes(c))return['⛈️','Temporale'];if([80,81,82].includes(c))return['🌧️','Rovesci'];if([61,63,65,66,67].includes(c))return['🌧️','Pioggia'];if([71,73,75,77,85,86].includes(c))return['🌨️','Neve'];if([45,48].includes(c))return['🌫️','Nebbia'];if([1,2,3].includes(c))return['⛅','Nuvoloso'];return['☀️','Sereno']}
+function wi(c,isDay=true){
+ if([95,96,99].includes(c))return['⛈️','Temporale'];
+ if([80,81,82].includes(c))return['🌧️','Rovesci'];
+ if([61,63,65,66,67].includes(c))return['🌧️','Pioggia'];
+ if([71,73,75,77,85,86].includes(c))return['🌨️','Neve'];
+ if([45,48].includes(c))return['🌫️','Nebbia'];
+ if([1,2,3].includes(c))return[isDay?'⛅':'☁️','Nuvoloso'];
+ return[isDay?'☀️':'🌙','Sereno'];
+}
 function hail(w){
   const th=[95,96,99].includes(w.code);
   let s=0;
@@ -445,7 +462,7 @@ async function findSaferDiversion(mainEval){
  try{let routes=await routeAlternatives(here,destObj),best=null;for(let i=1;i<routes.length;i++){let rr=routes[i],extraMin=Math.round((rr.duration-mainEval.r.duration)/60);if(extraMin>45)continue;let ev=await evaluateRoute(rr,6);if(ev.score<=mainEval.score-3&&(!best||ev.score<best.ev.score)){let mid=rr.geometry.coordinates[Math.floor(rr.geometry.coordinates.length/2)];best={ev,extraMin,via:{lon:mid[0],lat:mid[1]}}}}return best}catch(e){return null}
 }
 function updateArrivalWeather(r,items){
- let a=items.at(-1),info=wi(a.w.code),hr=hail(a.w),eta=new Date(Date.now()+r.duration*1000);
+ let a=items.at(-1),info=wi(a.w.code,a.w.isDay),hr=hail(a.w),eta=new Date(Date.now()+r.duration*1000);
  $('arrTime').textContent=ti(eta);$('arrTemp').textContent=Math.round(a.w.temp)+'°C';$('arrRain').textContent=Math.round(a.w.rain)+'%';$('arrWind').textContent=Math.round(a.w.gust)+' km/h';$('arrHail').textContent=hr[0];
  $('arrStripTime').textContent=ti(eta);$('arrStripTemp').textContent=Math.round(a.w.temp)+'°';$('arrStripIcon').textContent=info[0];$('arrStripRain').textContent=Math.round(a.w.rain)+'%';$('arrStripWind').textContent=Math.round(a.w.gust)+'km/h';$('arrStripHail').textContent=hr[0];
  let parts=[info[1]];if(hr[0]=='MEDIO'||hr[0]=='ALTO')parts.push('grandine '+hr[0].toLowerCase());if(a.w.zero)parts.push('zero termico '+Math.round(a.w.zero)+' m');$('arrNote').textContent=parts.join(' · ')
@@ -453,7 +470,7 @@ function updateArrivalWeather(r,items){
 function updateDrivePanel(km,r,bad,nextKm,nextMin){
  $('driveEta').textContent=ti(new Date(Date.now()+r.duration*1000));$('driveKm').textContent=`${Math.round(km)} km · ${fd(r.duration)}`;
  if(bad){let hr=hail(bad.w),info=wi(bad.w.code),kind=hr[0]=='ALTO'?'Grandine forte':[95,96,99].includes(bad.w.code)?'Temporale':bad.w.gust>=70?'Vento forte':bad.w.rain>=70?'Pioggia intensa':info[1],severe=severity(bad.w)>=4;$('driveRiskMain').textContent=`${kind} · ${nextKm} km`;$('driveRiskSub').textContent=`Tra circa ${nextMin} min · grandine ${hr[0]} · raffiche ${Math.round(bad.w.gust)} km/h`;$('weatherChange').innerHTML=`Prossimo cambio meteo: <b>${nextKm} km</b>`;$('tripStateIcon').textContent=severe?'🔴':'🟡';$('tripStateText').textContent=severe?'Critico':'Attenzione';$('tripStateSub').textContent=`${kind} tra ${nextKm} km`}
- else{$('driveRiskMain').textContent='Nessuno';$('driveRiskSub').textContent='Percorso tranquillo';let change=currentEval?.items?.find((x,i,a)=>i>0&&wi(x.w.code)[1]!==wi(a[0].w.code)[1]),changeKm=change?Math.round(km*change.p.f):null;$('weatherChange').innerHTML=changeKm?`Cambio meteo tra <b>${changeKm} km</b>`:'Meteo stabile lungo il percorso';$('tripStateIcon').textContent='🟢';$('tripStateText').textContent='Tranquillo';$('tripStateSub').textContent=changeKm?`cambio meteo tra ${changeKm} km`:'meteo stabile · auto 5 min'}
+ else{$('driveRiskMain').textContent='Nessuno';$('driveRiskSub').textContent='Percorso tranquillo';let change=currentEval?.items?.find((x,i,a)=>i>0&&wi(x.w.code)[1]!==wi(a[0].w.code)[1]),changeKm=change?Math.round(km*change.p.f):null;$('weatherChange').innerHTML=changeKm?`Cambio condizioni tra <b>${changeKm} km</b>`:'Meteo stabile lungo il percorso';$('tripStateIcon').textContent='🟢';$('tripStateText').textContent='Tranquillo';$('tripStateSub').textContent=changeKm?`cambio condizioni tra ${changeKm} km`:'meteo stabile · auto 5 min'}
  $('driveDiversionBtn').classList.toggle('hidden',!bestDiversion)
 }
 function renderDiversion(d,mainRisk){
@@ -481,12 +498,12 @@ async function calc(auto=false){
   }
   $('dist').textContent=Math.round(km)+' km';$('dur').textContent=fd(r.duration);$('risk').textContent=risk;$('next').textContent=bad?nextKm+' km':'Nessuno';
   let aCard=$('nextAlert'),aIcon=$('alertIcon'),aMain=$('alertMain'),aSub=$('alertSub'),aDist=$('alertDist');
-  if(bad){let info=wi(bad.w.code),hr=hail(bad.w),sev=severity(bad.w),kind=hr[0]=='ALTO'?'Possibile grandine forte':[95,96,99].includes(bad.w.code)?'Temporale':bad.w.gust>=70?'Vento forte':bad.w.rain>=70?'Pioggia intensa':'Meteo da controllare';aCard.className='alertbig '+(sev>=5?'bad':'warn');aIcon.textContent=hr[0]=='ALTO'?'🧊':info[0];aMain.textContent=kind;aSub.textContent=`Tra circa ${nextMin} min · pioggia ${Math.round(bad.w.rain)}% · raffiche ${Math.round(bad.w.gust)} km/h · grandine ${hr[0]}`;aDist.innerHTML=`${nextKm} km<small>circa ${nextMin} min</small>`}
+  if(bad){let info=wi(bad.w.code,bad.w.isDay),hr=hail(bad.w),sev=severity(bad.w),kind=hr[0]=='ALTO'?'Possibile grandine forte':[95,96,99].includes(bad.w.code)?'Temporale':bad.w.gust>=70?'Vento forte':bad.w.rain>=70?'Pioggia intensa':'Meteo da controllare';aCard.className='alertbig '+(sev>=5?'bad':'warn');aIcon.textContent=hr[0]=='ALTO'?'🧊':info[0];aMain.textContent=kind;aSub.textContent=`Tra circa ${nextMin} min · pioggia ${Math.round(bad.w.rain)}% · raffiche ${Math.round(bad.w.gust)} km/h · grandine ${hr[0]}`;aDist.innerHTML=`${nextKm} km<small>circa ${nextMin} min</small>`}
   else{aCard.className='alertbig ok';aIcon.textContent='✅';aMain.textContent='Nessun rischio rilevante';aSub.textContent='Il percorso risulta tranquillo nei punti controllati.';aDist.innerHTML='—<small>distanza</small>'}
   let b=$('banner');b.className='banner '+(risk=='ALTO'?'bad':risk=='MEDIO'?'warn':'ok');$('bt').textContent=risk=='ALTO'?'Attenzione lungo il viaggio':risk=='MEDIO'?'Qualche tratto da controllare':'Viaggio tranquillo';$('bd').textContent=bad?`Fenomeni da controllare tra circa ${nextKm} km.`:'Nessun fenomeno importante nei punti controllati.';
-  let tl=$('timeline');tl.innerHTML='';items.forEach((x,i)=>{let info=wi(x.w.code),hr=hail(x.w),sev=severity(x.w),d=document.createElement('div');d.className='stop '+(sev>=5?'bad':sev>=2?'warn':'');d.innerHTML=`<div class="small">${ti(x.eta)}</div><div><div class="place">${i==0?'Partenza':i==items.length-1?destObj.label:'Percorso '+Math.round(x.p.f*100)+'%'}</div><div class="det">${info[1]} · ${Math.round(x.w.temp)}°C · Pioggia ${Math.round(x.w.rain)}%<br>Raffiche ${Math.round(x.w.gust)} km/h${x.w.zero?` · Zero termico ${Math.round(x.w.zero)} m`:''}</div><span class="chip">🧊 Grandine: ${hr[0]}</span></div><div class="ico">${info[0]}</div>`;tl.appendChild(d)});
+  let tl=$('timeline');tl.innerHTML='';items.forEach((x,i)=>{let info=wi(x.w.code,x.w.isDay),hr=hail(x.w),sev=severity(x.w),d=document.createElement('div');d.className='stop '+(sev>=5?'bad':sev>=2?'warn':'');d.innerHTML=`<div class="small">${ti(x.eta)}</div><div><div class="place">${i==0?'Partenza':i==items.length-1?destObj.label:'Percorso '+Math.round(x.p.f*100)+'%'}</div><div class="det">${info[1]} · ${Math.round(x.w.temp)}°C · Pioggia ${Math.round(x.w.rain)}%<br>Raffiche ${Math.round(x.w.gust)} km/h${x.w.zero?` · Zero termico ${Math.round(x.w.zero)} m`:''}</div><span class="chip">🧊 Grandine: ${hr[0]}</span></div><div class="ico">${info[0]}</div>`;tl.appendChild(d)});
   $('res').classList.remove('hidden');drawMap(r,items);refreshRadar();$('upd').textContent='Aggiornato '+ti(new Date());$('mapstate').textContent=watch?'Guida attiva':viaPoint?'Deviazione meteo attiva':'Percorso calcolato';
-  let arr=items.at(-1),ai=wi(arr.w.code);lastSpeech=bad?`Viaggio di ${Math.round(km)} chilometri. Attenzione: prossimo fenomeno tra circa ${nextKm} chilometri. All'arrivo ${ai[1].toLowerCase()}, ${Math.round(arr.w.temp)} gradi.`:`Viaggio di ${Math.round(km)} chilometri. Nessun fenomeno importante lungo il percorso. All'arrivo ${ai[1].toLowerCase()}, ${Math.round(arr.w.temp)} gradi.`;
+  let arr=items.at(-1),ai=wi(arr.w.code,arr.w.isDay);lastSpeech=bad?`Viaggio di ${Math.round(km)} chilometri. Attenzione: prossimo fenomeno tra circa ${nextKm} chilometri. All'arrivo ${ai[1].toLowerCase()}, ${Math.round(arr.w.temp)} gradi.`:`Viaggio di ${Math.round(km)} chilometri. Nessun fenomeno importante lungo il percorso. All'arrivo ${ai[1].toLowerCase()}, ${Math.round(arr.w.temp)} gradi.`;
   if(watch!==null&&worst&&worst.score>=3&&worst.km<=40){
     let key=`${worst.kind}-${Math.round(worst.km/5)*5}`;
     if(key!==lastVoiceWarnKey){lastVoiceWarnKey=key;speakNow(`Attenzione. ${worst.kind} previsto tra circa ${worst.km} chilometri, fra circa ${worst.min} minuti.`)}
@@ -547,10 +564,10 @@ async function openWeatherHere(){
  try{
   $('weatherHere').classList.remove('hidden');
   let p=here||await geoNow(); here=p; $('whPlace').textContent='Cerco la località…'; let placeName=await reversePlaceName(p); $('whPlace').textContent=placeName;
-  let qs=new URLSearchParams({latitude:p.lat,longitude:p.lon,current:'temperature_2m,apparent_temperature,surface_pressure,weather_code,wind_gusts_10m',hourly:'temperature_2m,apparent_temperature,visibility,precipitation_probability,precipitation,showers,weather_code,wind_gusts_10m,cape,freezing_level_height',daily:'weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,wind_gusts_10m_max,sunrise,sunset',timezone:'auto',forecast_days:'7'});
+  let qs=new URLSearchParams({latitude:p.lat,longitude:p.lon,current:'temperature_2m,apparent_temperature,surface_pressure,is_day,weather_code,wind_gusts_10m',hourly:'temperature_2m,apparent_temperature,visibility,precipitation_probability,precipitation,showers,weather_code,wind_gusts_10m,cape,freezing_level_height',daily:'weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max,wind_gusts_10m_max,sunrise,sunset',timezone:'auto',forecast_days:'7'});
   let r=await fetch('https://api.open-meteo.com/v1/forecast?'+qs),j=await r.json(),now=Date.now(),ix=0,dd=1e99;
   j.hourly.time.forEach((t,i)=>{let d=Math.abs(new Date(t).getTime()-now);if(d<dd){dd=d;ix=i}});
-  let w={temp:j.current?.temperature_2m??j.hourly.temperature_2m[ix],feels:j.current?.apparent_temperature??j.hourly.apparent_temperature?.[ix]??j.hourly.temperature_2m[ix],pressure:j.current?.surface_pressure??null,visibility:j.hourly.visibility?.[ix]??null,code:j.current?.weather_code??j.hourly.weather_code[ix],gust:j.current?.wind_gusts_10m??j.hourly.wind_gusts_10m[ix],rain:j.hourly.precipitation_probability[ix],precip:j.hourly.precipitation?.[ix]||0,showers:j.hourly.showers?.[ix]||0,cape:j.hourly.cape?.[ix]||0,zero:j.hourly.freezing_level_height?.[ix]||null},info=wi(w.code),hr=hail(w);
+  let w={temp:j.current?.temperature_2m??j.hourly.temperature_2m[ix],feels:j.current?.apparent_temperature??j.hourly.apparent_temperature?.[ix]??j.hourly.temperature_2m[ix],pressure:j.current?.surface_pressure??null,visibility:j.hourly.visibility?.[ix]??null,code:j.current?.weather_code??j.hourly.weather_code[ix],gust:j.current?.wind_gusts_10m??j.hourly.wind_gusts_10m[ix],rain:j.hourly.precipitation_probability[ix],precip:j.hourly.precipitation?.[ix]||0,showers:j.hourly.showers?.[ix]||0,cape:j.hourly.cape?.[ix]||0,zero:j.hourly.freezing_level_height?.[ix]||null,isDay:(j.current?.is_day??1)===1},info=wi(w.code,w.isDay),hr=hail(w);
   $('whIcon').textContent=info[0];$('whTemp').textContent=Math.round(w.temp)+'°C';$('whDesc').textContent=info[1];$('whRain').textContent=Math.round(w.rain)+'%';$('whWind').textContent=Math.round(w.gust)+' km/h';$('whHail').textContent=hr[0];$('whZero').textContent=w.zero?Math.round(w.zero)+' m':'—';
   $('whFeels').textContent=Math.round(w.feels)+'°C';
   $('whPressure').textContent=w.pressure?Math.round(w.pressure)+' hPa':'—';
@@ -567,7 +584,7 @@ async function openWeatherHere(){
   at.textContent=serious?'🔴 Avvisi meteo':alerts.length?'⚠️ Avvisi meteo':'✅ Avvisi meteo';
   ab.innerHTML=alerts.length?`<b>${alerts.length} avviso${alerts.length>1?'i':''} da controllare</b><div>${alerts.join('<br>')}</div>`:`<b>✅ Nessun avviso importante</b><div>Condizioni tranquille nella zona. Avvisi elaborati dall’app, non sostituiscono quelli ufficiali.</div>`;
 
-  $('whHours').innerHTML='';for(let n=0;n<8;n+=2){let i=Math.min(ix+n,j.hourly.time.length-1),inf=wi(j.hourly.weather_code[i]),hh=hail({code:j.hourly.weather_code[i],cape:j.hourly.cape?.[i]||0,rain:j.hourly.precipitation_probability[i],precip:j.hourly.precipitation?.[i]||0,showers:j.hourly.showers?.[i]||0,gust:j.hourly.wind_gusts_10m[i],visibility:j.hourly.visibility?.[i]||null,zero:j.hourly.freezing_level_height?.[i]||null}),d=document.createElement('div');d.className='weatherhere-hour';d.innerHTML=`${ti(new Date(j.hourly.time[i]))}<br><b>${inf[0]} ${Math.round(j.hourly.temperature_2m[i])}°</b><div class="hourmeta"><span>💧 ${Math.round(j.hourly.precipitation_probability[i])}%</span><span>·</span><span>🧊 ${hh[0]}</span></div>`;$('whHours').appendChild(d)}
+  $('whHours').innerHTML='';for(let n=0;n<8;n+=2){let i=Math.min(ix+n,j.hourly.time.length-1),ht=new Date(j.hourly.time[i]),di=0;if(j.daily?.time?.length){let q=j.daily.time.indexOf(j.hourly.time[i].slice(0,10));if(q>=0)di=q}let isDayH=true;if(j.daily?.sunrise?.[di]&&j.daily?.sunset?.[di]){isDayH=ht>=new Date(j.daily.sunrise[di])&&ht<new Date(j.daily.sunset[di])}let inf=wi(j.hourly.weather_code[i],isDayH),hh=hail({code:j.hourly.weather_code[i],cape:j.hourly.cape?.[i]||0,rain:j.hourly.precipitation_probability[i],precip:j.hourly.precipitation?.[i]||0,showers:j.hourly.showers?.[i]||0,gust:j.hourly.wind_gusts_10m[i],visibility:j.hourly.visibility?.[i]||null,zero:j.hourly.freezing_level_height?.[i]||null}),d=document.createElement('div');d.className='weatherhere-hour';d.innerHTML=`${ti(new Date(j.hourly.time[i]))}<br><b>${inf[0]} ${Math.round(j.hourly.temperature_2m[i])}°</b><div class="hourmeta"><span>💧 ${Math.round(j.hourly.precipitation_probability[i])}%</span><span>·</span><span>🧊 ${hh[0]}</span></div>`;$('whHours').appendChild(d)}
   
   let days=$('whDays');days.innerHTML='';
   if(j.daily?.time?.length){
