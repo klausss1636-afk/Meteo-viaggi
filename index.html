@@ -250,7 +250,7 @@ body.nightAuto .mapwrap,body.nightAuto .wcard{box-shadow:0 0 0 1px #ffffff08}
 }
 .nav-map-slot #nav3dmap{height:64vh;min-height:560px;background:#071019}
 .nav3d-arrow{
-  position:absolute;z-index:1000;left:50%;bottom:35%;transform:translateX(-50%);
+  position:absolute;z-index:2000;left:50%;top:58%;transform:translate(-50%,-50%);
   width:78px;height:98px;background:#fff;
   clip-path:polygon(50% 0,96% 100%,50% 78%,4% 100%);
   filter:drop-shadow(0 12px 12px #000e) drop-shadow(0 0 12px #168cffcc);
@@ -439,6 +439,67 @@ body.drive .wrap{display:none!important}
   .nav-actions button{min-height:64px}
 }
 
+/* V17 - durante la guida la mappa occupa tutto lo schermo */
+body.drive{overflow:hidden!important;background:#020509}
+body.drive .navdash{position:fixed;inset:0;overflow:hidden;padding:0;max-width:none;background:#020509}
+body.drive .nav-map-slot{
+  position:fixed;inset:0;z-index:0;width:100%;height:100dvh;min-height:100dvh;
+  max-width:none;margin:0;border:0;border-radius:0;box-shadow:none;background:#071019
+}
+body.drive .nav-map-slot #nav3dmap{position:absolute;inset:0;width:100%;height:100dvh;min-height:100dvh}
+body.drive .navdash-head{
+  position:fixed;z-index:5200;left:8px;right:8px;top:max(6px,env(safe-area-inset-top));
+  max-width:none;margin:0;min-height:42px;padding:3px 5px;border-radius:16px;
+  background:linear-gradient(180deg,#02080ee8,#02080eaa);backdrop-filter:blur(14px)
+}
+body.drive .navdash-top{
+  position:fixed;z-index:5100;left:8px;right:8px;top:54px;
+  max-width:none;margin:0;grid-template-columns:minmax(0,1fr) 130px;gap:6px
+}
+body.drive .nav-turn-card{min-height:104px;background:#06101be8;backdrop-filter:blur(16px)}
+body.drive .nav-arrival-card{min-height:104px;background:#06101be8;backdrop-filter:blur(16px)}
+body.drive .nav-metrics,body.drive .nav-weather-strip{display:none!important}
+body.drive .nav-map-slot:before{top:174px;left:12px}
+body.drive .nav3d-gps{top:174px}
+body.drive .nav3d-center{top:174px}
+body.drive .nav3d-compass{bottom:178px}
+body.drive .nav3d-arrow{top:62%;z-index:5000}
+body.drive .nav-actions{
+  position:fixed;z-index:5100;left:8px;right:8px;bottom:92px;
+  max-width:none;margin:0;display:grid;grid-template-columns:repeat(5,1fr);gap:5px
+}
+body.drive .nav-actions button{
+  min-height:62px;border-radius:14px;padding:5px;font-size:20px;background:#04101bdd;backdrop-filter:blur(15px)
+}
+body.drive .nav-actions button span{font-size:9px;margin-top:2px}
+body.drive .nav-tripbar{
+  position:fixed;z-index:5300;left:8px;right:8px;bottom:max(6px,env(safe-area-inset-bottom));
+  max-width:none;margin:0;min-height:80px;border-radius:18px;background:#03101bed;backdrop-filter:blur(18px)
+}
+
+@media(max-width:760px){
+  body.drive .nav-active{font-size:11px;padding-left:3px}
+  body.drive .navpill{min-height:34px;padding:0 8px;font-size:11px}
+  body.drive .navdash-top{top:50px;grid-template-columns:minmax(0,1fr) 112px}
+  body.drive .nav-turn-card{min-height:96px;grid-template-columns:54px minmax(0,1fr) auto;padding:7px}
+  body.drive .nav-turn-icon{width:52px;height:52px;font-size:38px;border-radius:14px}
+  body.drive .nav-turn-main{font-size:17px}
+  body.drive .nav-turn-street{font-size:13px}
+  body.drive .nav-turn-dist{font-size:17px}
+  body.drive .nav-arrival-card{min-height:96px;padding:7px}
+  body.drive .nav-arrival-card>b{font-size:22px}
+  body.drive .nav-map-slot:before,body.drive .nav3d-gps,body.drive .nav3d-center{top:155px}
+  body.drive .nav3d-gps{font-size:11px;padding:8px 11px}
+  body.drive .nav-map-slot:before{width:40px;height:52px;font-size:13px}
+  body.drive .nav3d-center{width:48px;height:48px;font-size:20px}
+  body.drive .nav3d-arrow{width:68px;height:86px;top:60%}
+  body.drive .nav-actions{bottom:82px}
+  body.drive .nav-actions button{min-height:54px;font-size:17px}
+  body.drive .nav-tripbar{grid-template-columns:82px repeat(3,1fr) 88px;min-height:70px;padding:5px}
+  body.drive .nav-tripbar b{font-size:15px}
+  body.drive .nav-stop,body.drive .nav-summary{min-height:58px;font-size:10px}
+}
+
 </style>
 
 <script>
@@ -463,7 +524,7 @@ body.drive .wrap{display:none!important}
 <div class="wrap">
   <div class="top">
     <div class="brand"><div class="logo">🌦️</div><div><h1>Meteo Viaggio</h1><div class="sub">Meteo lungo la strada</div></div></div>
-    <div class="ver">V16.1 NAV 3D</div>
+    <div class="ver">V17 FULL MAP</div>
   </div>
 
   <section class="hero">
@@ -1942,6 +2003,7 @@ function nav3dStyle(){
         attribution:'Immagini © Esri'
       },
       openmaptiles:{type:'vector',url:'https://tiles.openfreemap.org/planet'},
+      'active-route':{type:'geojson',data:nav3dRouteData()},
       terrain:{
         type:'raster-dem',tileSize:256,maxzoom:15,encoding:'terrarium',
         tiles:['https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png']
@@ -1958,6 +2020,16 @@ function nav3dStyle(){
           'fill-extrusion-base':['coalesce',['get','render_min_height'],['get','min_height'],0],
           'fill-extrusion-opacity':.58
         }
+      },
+      {
+        id:'route-shadow',type:'line',source:'active-route',
+        layout:{'line-cap':'round','line-join':'round'},
+        paint:{'line-color':'#006cff','line-width':24,'line-opacity':.95,'line-blur':5}
+      },
+      {
+        id:'route-main',type:'line',source:'active-route',
+        layout:{'line-cap':'round','line-join':'round'},
+        paint:{'line-color':'#b8f7ff','line-width':9,'line-opacity':1}
       }
     ]
   };
@@ -1990,18 +2062,6 @@ function init3DNavMap(){
   });
   nav3dMap.on('load',()=>{
     nav3dReady=true;
-    try{nav3dMap.setTerrain({source:'terrain',exaggeration:1.15})}catch(e){}
-    nav3dMap.addSource('active-route',{type:'geojson',data:nav3dRouteData()});
-    nav3dMap.addLayer({
-      id:'route-shadow',type:'line',source:'active-route',
-      layout:{'line-cap':'round','line-join':'round'},
-      paint:{'line-color':'#006cff','line-width':24,'line-opacity':.95,'line-blur':5}
-    });
-    nav3dMap.addLayer({
-      id:'route-main',type:'line',source:'active-route',
-      layout:{'line-cap':'round','line-join':'round'},
-      paint:{'line-color':'#9ff3ff','line-width':9,'line-opacity':1}
-    });
     update3DNavMap(true);
   });
 }
