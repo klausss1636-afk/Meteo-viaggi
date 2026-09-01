@@ -481,7 +481,7 @@ body.drive .nav-ahead-weather small{display:block;color:#9fb0c5;font-size:7px}
 body.drive .nav-ahead-weather b{display:block;font-size:10px;margin-top:1px;white-space:nowrap}
 body.drive .navpill.voice-off{border-color:#ff6b6b88;color:#ff9b9b;background:#240b12dd}
 body.drive .voice-panel{
-  position:fixed;z-index:6800;right:88px;
+  position:absolute;z-index:6800;right:88px;
   top:calc(max(6px,env(safe-area-inset-top)) + 48px);
   width:210px;padding:7px;display:grid;gap:6px;border-radius:15px;
   background:#03101bf5;border:1px solid #55c2ff66;box-shadow:0 12px 32px #000b;
@@ -496,7 +496,7 @@ body.drive .voice-panel button.off{border-color:#ff6b6b70;background:#260d15;col
 body:not(.drive) > .voice-panel{display:none!important}
 body.drive .sosbox{z-index:7000}
 body.drive .nav-actions{
-  position:fixed;z-index:5400;left:8px;right:8px;bottom:84px;
+  position:absolute;z-index:5400;left:8px;right:8px;bottom:70px;
   max-width:none;margin:0;display:grid;grid-template-columns:repeat(3,1fr);gap:5px;
   opacity:0;pointer-events:none;transform:translateY(16px);transition:.18s ease
 }
@@ -508,7 +508,7 @@ body.drive .nav-actions button{
 }
 body.drive .nav-actions button span{font-size:9px;margin-top:2px}
 body.drive .nav-tripbar{
-  position:fixed!important;z-index:6500!important;left:8px;right:8px;bottom:8px;
+  position:absolute!important;z-index:6500!important;left:8px;right:8px;bottom:8px;
   bottom:calc(8px + env(safe-area-inset-bottom));
   max-width:none;margin:0;min-height:58px;border-radius:16px;padding:4px;
   display:grid!important;visibility:visible!important;opacity:1!important;
@@ -570,7 +570,7 @@ body.drive .maplibregl-ctrl-attrib{font-size:9px}
 <div class="wrap">
   <div class="top">
     <div class="brand"><div class="logo">🌦️</div><div><h1>Meteo Viaggio</h1><div class="sub">Meteo lungo la strada</div></div></div>
-    <div class="ver">V18.1 DESTINAZIONI</div>
+    <div class="ver">V18.2 CONTROLLI VISIBILI</div>
   </div>
 
   <section class="hero">
@@ -2323,11 +2323,9 @@ document.addEventListener('DOMContentLoaded',()=>{
   $('navHotel').onclick=goHotel;
   $('navRadar').onclick=()=>{$('radarBtn').click()};
   $('navFav').onclick=()=>{closeNavDashboard();setTimeout(()=>$('favSelect')?.focus(),120)};
-  $('navVoiceBtn').onclick=toggleVoicePanel;
   $('navGuideVoiceBtn').onclick=toggleNavGuideVoice;
   $('weatherAlertVoiceBtn').onclick=toggleWeatherAlertVoice;
   updateVoiceButtons();
-  $('navMenuBtn').onclick=toggleNavMenu;
   $('navNightBtn').onclick=toggleNavNight;
   $('nav3dCenter').onclick=()=>update3DNavMap(true);
   $('nav3dCompass').onclick=()=>{if(nav3dMap)nav3dMap.easeTo({bearing:0,pitch:55,duration:500})};
@@ -2340,8 +2338,8 @@ setInterval(()=>{if(radarOn&&map)refreshRadar()},5*60*1000);
 <section id="navDashboard" class="navdash hidden">
   <div class="navdash-head">
     <div class="nav-active">● NAV ATTIVA</div>
-    <button id="navVoiceBtn" class="navpill" aria-expanded="false">🔊 Voci</button>
-    <button id="navMenuBtn" class="navpill" aria-expanded="false">☰ Menu</button>
+    <button id="navVoiceBtn" type="button" class="navpill" aria-expanded="false" onclick="toggleVoicePanel()">🔊 Voci</button>
+    <button id="navMenuBtn" type="button" class="navpill" aria-expanded="false" onclick="toggleNavMenu()">☰ Menu</button>
   </div>
 
   <div class="navdash-top">
@@ -2387,34 +2385,34 @@ setInterval(()=>{if(radarOn&&map)refreshRadar()},5*60*1000);
     <button id="nav3dCompass" class="nav3d-compass" aria-label="Orienta verso nord">🧭</button>
     <button id="navAheadWeather" class="nav-ahead-weather" aria-label="Apri meteo lungo il viaggio"></button>
     <div class="nav3d-arrow"></div>
+
+    <!-- Controlli dentro il livello mappa: Safari non può nasconderli dietro il 3D. -->
+    <div class="voice-panel" aria-label="Impostazioni voci">
+      <button id="navGuideVoiceBtn">☑️ Navigatore</button>
+      <button id="weatherAlertVoiceBtn">☑️ Avvisi meteo</button>
+    </div>
+
+    <div class="nav-actions">
+      <button id="navNightBtn">🌙<span>Modalità<br>notte</span></button>
+      <button id="navAvoidWeather">🛡️<span>Evita<br>maltempo</span></button>
+      <button id="navSOS">⛈️<span>SOS<br>meteo</span></button>
+      <button id="navFav">⭐<span>Preferiti</span></button>
+      <button id="navHome">🏠<span>Casa</span></button>
+      <button id="navWork">💼<span>Lavoro</span></button>
+      <button id="navHotel">🏨<span>Hotel</span></button>
+      <button id="navRadar">📡<span>Radar</span></button>
+    </div>
+
+    <div class="nav-tripbar">
+      <button id="navStop" class="nav-stop">Termina<br>viaggio</button>
+      <div><small>Distanza</small><b id="navDistance">—</b></div>
+      <div><small>Tempo rimanente</small><b id="navRemaining">—</b></div>
+      <div><small>Arrivo alle</small><b id="navArrivalBottom">—</b></div>
+      <button id="navSummary" class="nav-summary">Riepilogo<br>viaggio</button>
+    </div>
   </div>
 
 </section>
-
-<!-- Fuori dal pannello NAV: su iPhone menu e barra restano sopra alla mappa. -->
-<div class="voice-panel" aria-label="Impostazioni voci">
-  <button id="navGuideVoiceBtn">☑️ Navigatore</button>
-  <button id="weatherAlertVoiceBtn">☑️ Avvisi meteo</button>
-</div>
-
-<div class="nav-actions">
-  <button id="navNightBtn">🌙<span>Modalità<br>notte</span></button>
-  <button id="navAvoidWeather">🛡️<span>Evita<br>maltempo</span></button>
-  <button id="navSOS">⛈️<span>SOS<br>meteo</span></button>
-  <button id="navFav">⭐<span>Preferiti</span></button>
-  <button id="navHome">🏠<span>Casa</span></button>
-  <button id="navWork">💼<span>Lavoro</span></button>
-  <button id="navHotel">🏨<span>Hotel</span></button>
-  <button id="navRadar">📡<span>Radar</span></button>
-</div>
-
-<div class="nav-tripbar">
-  <button id="navStop" class="nav-stop">Termina<br>viaggio</button>
-  <div><small>Distanza</small><b id="navDistance">—</b></div>
-  <div><small>Tempo rimanente</small><b id="navRemaining">—</b></div>
-  <div><small>Arrivo alle</small><b id="navArrivalBottom">—</b></div>
-  <button id="navSummary" class="nav-summary">Riepilogo<br>viaggio</button>
-</div>
 
 </body>
 </html>
