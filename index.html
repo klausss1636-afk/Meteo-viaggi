@@ -164,7 +164,7 @@ body.drive .centerbtn{width:48px;height:48px;font-size:21px}
 </head>
 <body>
 <div class="wrap">
-<div class="top"><div class="brand"><div class="logo">🌦️</div><div><h1>Meteo Viaggio</h1><div class="sub">Meteo lungo la strada</div></div></div><div class="pill">V6.9</div></div>
+<div class="top"><div class="brand"><div class="logo">🌦️</div><div><h1>Meteo Viaggio</h1><div class="sub">Meteo lungo la strada</div></div></div><div class="pill">V7.0</div></div>
 
 <section class="hero">
 <div class="form">
@@ -274,7 +274,7 @@ body.drive .centerbtn{width:48px;height:48px;font-size:21px}
 </div></div></section>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-let here=null,destObj=null,map,weatherHereMap,weatherHereRadar,routeLine,meMarker,wxMarkers=[],riskLines=[],watch=null,lastSpeech='',busy=false,lastRefresh=0,lastRefreshPos=null,radarLayer=null,radarOn=true,radarTimestamp=null,currentEval=null,lastHeading=null,viaPoint=null,bestDiversion=null,lastVoiceWarnKey='',routeRadarFrames=[],routeRadarTimer=null,routeRadarIx=0,weatherRadarFrames=[],weatherRadarTimer=null,weatherRadarIx=0,radarAnimating=true,currentAltitude=null,currentAltitudeSource='',routeMaxAltitude=null;
+let here=null,destObj=null,map,weatherHereMap,weatherHereRadar,routeLine,meMarker,wxMarkers=[],riskLines=[],watch=null,lastSpeech='',busy=false,lastRefresh=0,lastRefreshPos=null,radarLayer=null,radarOn=true,radarTimestamp=null,currentEval=null,lastHeading=null,viaPoint=null,bestDiversion=null,lastVoiceWarnKey='',lastVoiceRiskKind='',lastVoiceRiskLevel=0,lastVoiceRiskKm=null,lastVoiceWarnAt=0,routeRadarFrames=[],routeRadarTimer=null,routeRadarIx=0,weatherRadarFrames=[],weatherRadarTimer=null,weatherRadarIx=0,radarAnimating=true,currentAltitude=null,currentAltitudeSource='',routeMaxAltitude=null;
 const $=x=>document.getElementById(x);
 function st(x){$('status').textContent=x}
 function hav(a,b){const R=6371,r=x=>x*Math.PI/180,d1=r(b.lat-a.lat),d2=r(b.lon-a.lon),q=Math.sin(d1/2)**2+Math.cos(r(a.lat))*Math.cos(r(b.lat))*Math.sin(d2/2)**2;return 2*R*Math.asin(Math.sqrt(q))}
@@ -380,6 +380,46 @@ function hail(w){
 function severity(w){let s=0;if([95,96,99].includes(w.code))s+=4;if(w.rain>=70)s+=2;if(w.gust>=70)s+=3;else if(w.gust>=50)s++;if((w.visibility||99999)<1000)s+=3;else if((w.visibility||99999)<3000)s+=1;if(hail(w)[0]=='ALTO')s+=4;return s}
 function riskLabel(score){return score>=8?'ALTO':score>=3?'MEDIO':'BASSO'}
 function speakNow(msg){if('speechSynthesis'in window){speechSynthesis.cancel();let u=new SpeechSynthesisUtterance(msg);u.lang='it-IT';speechSynthesis.speak(u)}}
+function voiceRiskLevel(w){
+  let s=severity(w);
+  if(s>=5)return 3;
+  if(s>=3)return 2;
+  if(s>=1)return 1;
+  return 0;
+}
+function shouldSpeakRisk(kind,level,km){
+  let now=Date.now();
+  if(level<=0)return false;
+
+  // Sempre avvisa se compare un rischio nuovo o peggiora.
+  if(kind!==lastVoiceRiskKind || level>lastVoiceRiskLevel)return true;
+
+  // Se è lo stesso rischio, parla solo quando si è avvicinato abbastanza.
+  if(lastVoiceRiskKm==null)return true;
+  let delta=lastVoiceRiskKm-km;
+
+  // Più vicino = soglia più stretta.
+  let threshold=km<=10?3:km<=25?5:10;
+
+  // Evita comunque due messaggi troppo ravvicinati.
+  if(now-lastVoiceWarnAt<90*1000)return false;
+
+  return delta>=threshold;
+}
+function rememberSpokenRisk(kind,level,km){
+  lastVoiceRiskKind=kind;
+  lastVoiceRiskLevel=level;
+  lastVoiceRiskKm=km;
+  lastVoiceWarnAt=Date.now();
+}
+function resetVoiceRisk(){
+  lastVoiceWarnKey='';
+  lastVoiceRiskKind='';
+  lastVoiceRiskLevel=0;
+  lastVoiceRiskKm=null;
+  lastVoiceWarnAt=0;
+}
+
 
 function riskKind(w){
   let hr=hail(w);
@@ -470,7 +510,7 @@ function updateArrivalWeather(r,items){
 function updateDrivePanel(km,r,bad,nextKm,nextMin){
  $('driveEta').textContent=ti(new Date(Date.now()+r.duration*1000));$('driveKm').textContent=`${Math.round(km)} km · ${fd(r.duration)}`;
  if(bad){let hr=hail(bad.w),info=wi(bad.w.code),kind=hr[0]=='ALTO'?'Grandine forte':[95,96,99].includes(bad.w.code)?'Temporale':bad.w.gust>=70?'Vento forte':bad.w.rain>=70?'Pioggia intensa':info[1],severe=severity(bad.w)>=4;$('driveRiskMain').textContent=`${kind} · ${nextKm} km`;$('driveRiskSub').textContent=`Tra circa ${nextMin} min · grandine ${hr[0]} · raffiche ${Math.round(bad.w.gust)} km/h`;$('weatherChange').innerHTML=`Prossimo cambio meteo: <b>${nextKm} km</b>`;$('tripStateIcon').textContent=severe?'🔴':'🟡';$('tripStateText').textContent=severe?'Critico':'Attenzione';$('tripStateSub').textContent=`${kind} tra ${nextKm} km`}
- else{$('driveRiskMain').textContent='Nessuno';$('driveRiskSub').textContent='Percorso tranquillo';let change=currentEval?.items?.find((x,i,a)=>i>0&&wi(x.w.code)[1]!==wi(a[0].w.code)[1]),changeKm=change?Math.round(km*change.p.f):null;$('weatherChange').innerHTML=changeKm?`Cambio condizioni tra <b>${changeKm} km</b>`:'Meteo stabile lungo il percorso';$('tripStateIcon').textContent='🟢';$('tripStateText').textContent='Tranquillo';$('tripStateSub').textContent=changeKm?`cambio condizioni tra ${changeKm} km`:'meteo stabile · auto 5 min'}
+ else{$('driveRiskMain').textContent='Nessuno';$('driveRiskSub').textContent='Percorso tranquillo';let change=currentEval?.items?.find((x,i,a)=>i>0&&wi(x.w.code)[1]!==wi(a[0].w.code)[1]),changeKm=change?Math.round(km*change.p.f):null;$('weatherChange').innerHTML=changeKm?`Cambio condizioni tra <b>${changeKm} km</b>`:'Meteo stabile lungo il percorso';$('tripStateIcon').textContent='🟢';$('tripStateText').textContent='Tranquillo';$('tripStateSub').textContent=changeKm?`cambio condizioni tra ${changeKm} km`:'meteo stabile · auto 5 min · voce intelligente'}
  $('driveDiversionBtn').classList.toggle('hidden',!bestDiversion)
 }
 function renderDiversion(d,mainRisk){
@@ -505,21 +545,29 @@ async function calc(auto=false){
   $('res').classList.remove('hidden');drawMap(r,items);refreshRadar();$('upd').textContent='Aggiornato '+ti(new Date());$('mapstate').textContent=watch?'Guida attiva':viaPoint?'Deviazione meteo attiva':'Percorso calcolato';
   let arr=items.at(-1),ai=wi(arr.w.code,arr.w.isDay);lastSpeech=bad?`Viaggio di ${Math.round(km)} chilometri. Attenzione: prossimo fenomeno tra circa ${nextKm} chilometri. All'arrivo ${ai[1].toLowerCase()}, ${Math.round(arr.w.temp)} gradi.`:`Viaggio di ${Math.round(km)} chilometri. Nessun fenomeno importante lungo il percorso. All'arrivo ${ai[1].toLowerCase()}, ${Math.round(arr.w.temp)} gradi.`;
   if(watch!==null&&worst&&worst.score>=3&&worst.km<=40){
-    let key=`${worst.kind}-${Math.round(worst.km/5)*5}`;
-    if(key!==lastVoiceWarnKey){lastVoiceWarnKey=key;speakNow(`Attenzione. ${worst.kind} previsto tra circa ${worst.km} chilometri, fra circa ${worst.min} minuti.`)}
+    let level=voiceRiskLevel(worst.item.w);
+    if(shouldSpeakRisk(worst.kind,level,worst.km)){
+      let prefix=level>=3?'Attenzione, rischio importante.':'Attenzione.';
+      let extra=worst.km<=10?' Il fenomeno è ormai vicino.':'';
+      speakNow(`${prefix} ${worst.kind} previsto tra circa ${worst.km} chilometri, fra circa ${worst.min} minuti.${extra}`);
+      rememberSpokenRisk(worst.kind,level,worst.km);
+    }
+  }else if(watch!==null&&(!worst||worst.score<2)){
+    // Se il rischio è davvero rientrato, azzera lo stato dopo un po'
+    if(lastVoiceRiskLevel>0 && Date.now()-lastVoiceWarnAt>5*60*1000)resetVoiceRisk();
   }
   if(!viaPoint&&bad){st('Controllo una deviazione più favorevole…');renderDiversion(await findSaferDiversion(ev),risk)}else renderDiversion(null,risk);
   st(`Percorso verso ${destObj.label} aggiornato.`);lastRefresh=Date.now();lastRefreshPos={...here}
  }catch(e){st('Errore: '+e.message)}finally{busy=false}
 }
 async function toggleLive(){
- if(watch!==null){navigator.geolocation.clearWatch(watch);watch=null;$('live').classList.remove('live');$('live').textContent='🚗 Avvia viaggio';$('mapstate').textContent='Aggiornamento fermato';return}
+ if(watch!==null){navigator.geolocation.clearWatch(watch);watch=null;resetVoiceRisk();$('live').classList.remove('live');$('live').textContent='🚗 Avvia viaggio';$('mapstate').textContent='Aggiornamento fermato';return}
  if(!destObj){st('Prima calcola un viaggio.');return}
  watch=navigator.geolocation.watchPosition(async p=>{here={lat:p.coords.latitude,lon:p.coords.longitude,alt:Number.isFinite(p.coords.altitude)?p.coords.altitude:null,altAcc:Number.isFinite(p.coords.altitudeAccuracy)?p.coords.altitudeAccuracy:null};if(p.coords.heading!=null&&!isNaN(p.coords.heading))lastHeading=p.coords.heading;updateMarker();let moved=!lastRefreshPos||hav(here,lastRefreshPos)>=5,time=Date.now()-lastRefresh>=5*60*1000;if(moved||time)await calc(true)},()=>st('Posizione non disponibile durante il viaggio.'),{enableHighAccuracy:true,maximumAge:15000,timeout:20000});
  $('live').classList.add('live');$('live').textContent='⏹ Ferma viaggio';$('mapstate').textContent='Aggiornamento in viaggio attivo'
 }
 $('pos').onclick=async()=>{try{st('Cerco la tua posizione…');here=await geoNow();updateMarker();st('Posizione acquisita. Ora inserisci la destinazione.')}catch(e){st('Non riesco ad accedere alla posizione. Controlla i permessi.')}};
-$('calc').onclick=()=>{destObj=null;viaPoint=null;bestDiversion=null;$('diversion').classList.add('hidden');calc(false)};
+$('calc').onclick=()=>{destObj=null;viaPoint=null;bestDiversion=null;resetVoiceRisk();$('diversion').classList.add('hidden');calc(false)};
 $('dest').onkeydown=e=>{if(e.key=='Enter')$('calc').click()};$('live').onclick=toggleLive;
 $('speak').onclick=()=>{if(!lastSpeech){st('Prima calcola un viaggio.');return}speakNow(lastSpeech)};
 $('driveModeBtn').onclick=()=>{document.body.classList.toggle('drive');let on=document.body.classList.contains('drive');$('driveModeBtn').textContent=on?'↩️ Vista completa':'🚘 Modalità Carlink';if(currentEval){let km=currentEval.km,r=currentEval.r,items=currentEval.items,bad=items.find(x=>severity(x.w)>=3),nextKm=bad?Math.round(km*bad.p.f):null,nextMin=bad?Math.round((r.duration*bad.p.f)/60):null;updateDrivePanel(km,r,bad,nextKm,nextMin)}setTimeout(()=>{if(map){map.invalidateSize();if(on&&here)map.setView([here.lat,here.lon],13)}},150)};
