@@ -49,7 +49,7 @@ h1{font-size:23px;margin:0}.sub{font-size:12px;color:var(--muted)}
 .centerbtn{position:absolute;z-index:750;right:12px;top:50px;width:50px;height:50px;border-radius:50%;border:1px solid #ffffff35;background:#07111fe8;color:white;font-size:23px;box-shadow:0 5px 18px #0008}
 .navbadge{position:absolute;z-index:740;left:50%;top:51px;transform:translateX(-50%);display:none;align-items:center;gap:7px;padding:7px 11px;border-radius:999px;background:#07111fe8;border:1px solid #63d69b80;font-size:11px;font-weight:900;white-space:nowrap;pointer-events:none}
 .navbadge.on{display:flex}.pulse{width:8px;height:8px;border-radius:50%;background:var(--ok)}
-.navarrow{width:40px;height:40px;display:grid;place-items:center;border-radius:50%;background:#268cff;border:3px solid white;box-shadow:0 4px 12px #0009;color:white;font-size:24px;line-height:1}
+.navarrow{width:58px;height:58px;display:grid;place-items:center;border-radius:50%;background:#268cff;border:4px solid white;box-shadow:0 6px 20px #000b;color:white;font-size:35px;line-height:1;transform-origin:center}
 .legend{position:absolute;z-index:500;left:10px;bottom:10px;background:#07111fbd;border:1px solid #ffffff20;border-radius:9px;padding:5px 7px;font-size:9px}
 .risklegend{bottom:auto;top:82px}
 .timeline{display:grid;gap:8px;margin-top:10px}
@@ -85,7 +85,7 @@ body.drive .alert.ok{display:none}
 <div class="wrap">
   <div class="top">
     <div class="brand"><div class="logo">🌦️</div><div><h1>Meteo Viaggio</h1><div class="sub">Meteo lungo la strada</div></div></div>
-    <div class="ver">V9.2</div>
+    <div class="ver">V9.3</div>
   </div>
 
   <section class="hero">
@@ -98,6 +98,8 @@ body.drive .alert.ok{display:none}
       <button id="weatherHereBtn" class="btn alt">🌦️ Meteo qui</button>
       <button id="live" class="btn alt">🚗 Avvia viaggio</button>
       <button id="speak" class="btn alt">🔊 Come sarà?</button>
+      <button id="homeGo" class="btn alt">🏠 Vai a casa</button>
+      <button id="homeSet" class="btn alt">📌 Imposta casa</button>
     </div>
     <div id="status" class="status">Acquisisci la posizione e inserisci la destinazione.</div>
   </section>
@@ -185,6 +187,8 @@ let wxMarkers=[],riskLines=[],radarLayer=null,weatherRadarLayer=null,radarOn=tru
 let currentRoute=null,currentItems=[],watchId=null,lastHeading=0,lastPoint=null,followMode=true;
 let busy=false,lastCalcAt=0,lastCalcPos=null,lastSpeech="",lastVoiceKey="",lastVoiceAt=0;
 let radarTimer=null,weatherRadarTimer=null;
+let homeBase=null;
+try{homeBase=JSON.parse(localStorage.getItem('meteoViaggioHome')||'null')}catch(e){homeBase=null}
 
 const $=id=>document.getElementById(id);
 const st=t=>$('status').textContent=t;
@@ -312,6 +316,51 @@ function riskKind(w){
   if(w.rain>=70||w.precip>=5)return'Pioggia intensa';
   return wi(w.code,w.isDay)[1];
 }
+function routeBearingAtPosition(pos){
+  if(!currentRoute?.geometry?.coordinates?.length||!pos)return null;
+  const c=currentRoute.geometry.coordinates;
+  let best=Infinity,bestI=0;
+  for(let i=0;i<c.length;i++){
+    const d=hav(pos,{lat:c[i][1],lon:c[i][0]});
+    if(d<best){best=d;bestI=i}
+  }
+  const look=Math.min(c.length-1,bestI+Math.max(2,Math.floor(c.length/350)));
+  const back=Math.max(0,bestI-2);
+  return bearing({lat:c[back][1],lon:c[back][0]},{lat:c[look][1],lon:c[look][0]});
+}
+function updateHomeButtons(){
+  if(!$('homeGo')||!$('homeSet'))return;
+  $('homeGo').textContent=homeBase?'🏠 Vai a casa':'🏠 Casa non impostata';
+  $('homeSet').textContent=homeBase?'📌 Cambia casa':'📌 Imposta casa';
+}
+async function setHome(){
+  try{
+    let p=here;
+    if(!p){
+      st('Cerco la posizione per impostare Casa…');
+      const g=await geoNow();
+      p={lat:g.lat,lon:g.lon};
+      here=p;
+    }
+    const name=await reverseName(p);
+    homeBase={lat:p.lat,lon:p.lon,label:'Casa · '+name};
+    localStorage.setItem('meteoViaggioHome',JSON.stringify(homeBase));
+    updateHomeButtons();
+    st('Casa salvata. Rimarrà memorizzata su questo dispositivo.');
+  }catch(e){st('Non riesco a impostare Casa. Controlla il GPS.')}
+}
+async function goHome(){
+  if(!homeBase){st('Casa non è ancora impostata. Premi “Imposta casa”.');return}
+  try{
+    if(!here){
+      const g=await geoNow();
+      here={lat:g.lat,lon:g.lon};
+    }
+    destObj={lat:homeBase.lat,lon:homeBase.lon,label:'Casa'};
+    $('dest').value='Casa';
+    await calc(false);
+  }catch(e){st('Errore: '+e.message)}
+}
 function initMap(){
   if(map)return;
   map=L.map('map',{zoomControl:true});
@@ -322,15 +371,28 @@ function initMap(){
 }
 function updateMarker(){
   if(!map||!here)return;
-  if(lastPoint&&hav(lastPoint,here)>.006 && (!Number.isFinite(lastHeading)||lastHeading===0))lastHeading=bearing(lastPoint,here);
+  const snapped=routeBearingAtPosition(here);
+  if(Number.isFinite(snapped))lastHeading=snapped;
+  else if(lastPoint&&hav(lastPoint,here)>.006&&(!Number.isFinite(lastHeading)||lastHeading===0))lastHeading=bearing(lastPoint,here);
   if(!lastPoint||hav(lastPoint,here)>.004)lastPoint={lat:here.lat,lon:here.lon};
   const h=Number.isFinite(lastHeading)?lastHeading:0;
-  const icon=L.divIcon({html:`<div class="navarrow" style="transform:rotate(${h}deg)">➤</div>`,className:'',iconSize:[40,40],iconAnchor:[20,20]});
+  const icon=L.divIcon({
+    html:`<div class="navarrow" style="transform:rotate(${h}deg)">➤</div>`,
+    className:'',
+    iconSize:[58,58],
+    iconAnchor:[29,29]
+  });
   if(meMarker){meMarker.setLatLng([here.lat,here.lon]);meMarker.setIcon(icon)}
   else meMarker=L.marker([here.lat,here.lon],{icon,zIndexOffset:1000}).addTo(map);
   if(watchId!==null&&followMode){
-    if(map.getZoom()<14)map.setZoom(15,{animate:false});
-    map.panTo([here.lat,here.lon],{animate:true,duration:.3,noMoveStart:true});
+    if(map.getZoom()<16)map.setZoom(17,{animate:false});
+    map.panTo([here.lat,here.lon],{animate:true,duration:.25,noMoveStart:true});
+    setTimeout(()=>{
+      if(map&&followMode){
+        const hpx=map.getSize().y;
+        map.panBy([0,-Math.round(hpx*0.16)],{animate:false});
+      }
+    },30);
   }
 }
 function drawMap(r,items){
@@ -506,7 +568,7 @@ async function startLive(){
     $('live').classList.add('live');
     $('live').textContent='⏹ Ferma viaggio';
     if($('mapstate'))$('mapstate').textContent='Guida GPS · meteo in tempo reale';
-    map.setView([here.lat,here.lon],15);
+    map.setView([here.lat,here.lon],17);
     updateMarker();
     st('Viaggio avviato: GPS e meteo in tempo reale attivi.');
   }catch(e){
@@ -564,7 +626,7 @@ $('driveBtn').onclick=()=>{
   setTimeout(()=>{if(map){map.invalidateSize();if(here&&watchId!==null){followMode=true;map.setView([here.lat,here.lon],15)}}},150);
 };
 function recenter(){
-  if(map&&here){followMode=true;$('navText').textContent='GPS · seguo la posizione';map.setView([here.lat,here.lon],15);updateMarker()}
+  if(map&&here){followMode=true;$('navText').textContent='GPS · seguo la posizione';map.setView([here.lat,here.lon],17);updateMarker()}
 }
 $('centerBtn').onclick=recenter;$('recenterBtn').onclick=recenter;
 $('radarBtn').onclick=()=>{
@@ -574,6 +636,9 @@ $('radarBtn').onclick=()=>{
   if(radarOn)refreshRadar();
 };
 $('weatherHereBtn').onclick=openWeatherHere;
+$('homeSet').onclick=setHome;
+$('homeGo').onclick=goHome;
+updateHomeButtons();
 $('whClose').onclick=()=>$('weatherHere').classList.add('hidden');
 setInterval(()=>{if(radarOn&&map)refreshRadar()},5*60*1000);
 </script>
