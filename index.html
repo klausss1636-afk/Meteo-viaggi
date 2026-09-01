@@ -161,23 +161,38 @@ body.drive .centerbtn{width:48px;height:48px;font-size:21px}
   body.drive #map{height:62vh;min-height:340px}
 }
 
-/* V7.2 - margine superiore fisso per Safari/iPhone in Modalità Carlink */
+/* V7.3 - fascia fissa per la barra di stato Safari/iPhone */
 body.drive .wrap{
-  padding-top:72px !important;
+  padding-top:82px !important;
 }
 body.drive .top{
   padding-top:0 !important;
 }
+body.drive::before{
+  content:"";
+  position:fixed;
+  top:0;
+  left:0;
+  right:0;
+  height:72px;
+  background:#07111f;
+  z-index:1600;
+  pointer-events:none;
+  box-shadow:0 8px 18px #07111f;
+}
 @media(min-width:700px){
   body.drive .wrap{
-    padding-top:58px !important;
+    padding-top:68px !important;
+  }
+  body.drive::before{
+    height:58px;
   }
 }
 </style>
 </head>
 <body>
 <div class="wrap">
-<div class="top"><div class="brand"><div class="logo">🌦️</div><div><h1>Meteo Viaggio</h1><div class="sub">Meteo lungo la strada</div></div></div><div class="pill">V7.2</div></div>
+<div class="top"><div class="brand"><div class="logo">🌦️</div><div><h1>Meteo Viaggio</h1><div class="sub">Meteo lungo la strada</div></div></div><div class="pill">V7.3</div></div>
 
 <section class="hero">
 <div class="form">
