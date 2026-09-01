@@ -458,32 +458,36 @@ body.drive .navdash-head{
 body.drive .navdash-top{
   position:fixed;z-index:5100;left:8px;right:8px;
   top:calc(max(6px,env(safe-area-inset-top)) + 48px);
-  max-width:none;margin:0;grid-template-columns:minmax(0,1fr) 130px;gap:6px
+  max-width:none;margin:0;grid-template-columns:1fr;gap:0
 }
-body.drive .nav-turn-card{min-height:104px;background:#06101be8;backdrop-filter:blur(16px)}
-body.drive .nav-arrival-card{min-height:104px;background:#06101be8;backdrop-filter:blur(16px)}
+body.drive .nav-turn-card{min-height:86px;background:#06101be8;backdrop-filter:blur(16px)}
+body.drive .nav-arrival-card{display:none!important}
 body.drive .nav-metrics,body.drive .nav-weather-strip{display:none!important}
-body.drive .nav-map-slot:before{top:174px;left:12px}
-body.drive .nav3d-gps{top:174px}
-body.drive .nav3d-center{top:174px}
+body.drive .nav-map-slot:before{top:calc(max(6px,env(safe-area-inset-top)) + 188px);left:12px}
+body.drive .nav3d-gps{top:calc(max(6px,env(safe-area-inset-top)) + 188px)}
+body.drive .nav3d-center{top:calc(max(6px,env(safe-area-inset-top)) + 188px)}
 body.drive .nav3d-compass{bottom:178px}
 body.drive .nav3d-arrow{top:62%;z-index:5000}
 body.drive .nav-ahead-weather{
-  position:fixed;z-index:5050;left:12px;right:12px;top:234px;
-  display:grid;grid-template-columns:repeat(4,1fr);gap:1px;padding:5px;
+  position:fixed;z-index:5050;left:12px;right:12px;
+  top:calc(max(6px,env(safe-area-inset-top)) + 140px);
+  display:grid;grid-template-columns:repeat(4,1fr);gap:1px;padding:3px;
   border:1px solid #55c2ff66;border-radius:15px;background:#03101be8;color:white;
   backdrop-filter:blur(16px);box-shadow:0 8px 24px #0009
 }
-body.drive .nav-ahead-weather>span{text-align:center;padding:3px;border-right:1px solid #ffffff18;min-width:0}
+body.drive .nav-ahead-weather>span{text-align:center;padding:1px 3px;border-right:1px solid #ffffff18;min-width:0}
 body.drive .nav-ahead-weather>span:last-child{border-right:0}
-body.drive .nav-ahead-weather small{display:block;color:#9fb0c5;font-size:8px}
-body.drive .nav-ahead-weather b{display:block;font-size:12px;margin-top:2px;white-space:nowrap}
+body.drive .nav-ahead-weather small{display:block;color:#9fb0c5;font-size:7px}
+body.drive .nav-ahead-weather b{display:block;font-size:10px;margin-top:1px;white-space:nowrap}
 body.drive .navpill.voice-off{border-color:#ff6b6b88;color:#ff9b9b;background:#240b12dd}
 body.drive .sosbox{z-index:7000}
 body.drive .nav-actions{
-  position:fixed;z-index:5100;left:8px;right:8px;bottom:92px;
-  max-width:none;margin:0;display:grid;grid-template-columns:repeat(5,1fr);gap:5px
+  position:fixed;z-index:5400;left:8px;right:8px;bottom:84px;
+  max-width:none;margin:0;display:grid;grid-template-columns:repeat(3,1fr);gap:5px;
+  opacity:0;pointer-events:none;transform:translateY(16px);transition:.18s ease
 }
+body.drive.nav-menu-open .nav-actions{opacity:1;pointer-events:auto;transform:translateY(0)}
+body.drive.nav-menu-open #navMenuBtn{border-color:#55c2ff;color:#8ed8ff}
 body.drive .nav-actions button{
   min-height:62px;border-radius:14px;padding:5px;font-size:20px;background:#04101bdd;backdrop-filter:blur(15px)
 }
@@ -496,21 +500,21 @@ body.drive .nav-tripbar{
 @media(max-width:760px){
   body.drive .nav-active{font-size:11px;padding-left:3px}
   body.drive .navpill{min-height:34px;padding:0 8px;font-size:11px}
-  body.drive .navdash-top{top:calc(max(6px,env(safe-area-inset-top)) + 48px);grid-template-columns:minmax(0,1fr) 112px}
-  body.drive .nav-turn-card{min-height:96px;grid-template-columns:54px minmax(0,1fr) auto;padding:7px}
+  body.drive .navdash-top{top:calc(max(6px,env(safe-area-inset-top)) + 48px);grid-template-columns:1fr}
+  body.drive .nav-turn-card{min-height:84px;grid-template-columns:54px minmax(0,1fr) auto;padding:7px}
   body.drive .nav-turn-icon{width:52px;height:52px;font-size:38px;border-radius:14px}
   body.drive .nav-turn-main{font-size:17px}
   body.drive .nav-turn-street{font-size:13px}
   body.drive .nav-turn-dist{font-size:17px}
   body.drive .nav-arrival-card{min-height:96px;padding:7px}
   body.drive .nav-arrival-card>b{font-size:22px}
-  body.drive .nav-map-slot:before,body.drive .nav3d-gps,body.drive .nav3d-center{top:155px}
+  body.drive .nav-map-slot:before,body.drive .nav3d-gps,body.drive .nav3d-center{top:calc(max(6px,env(safe-area-inset-top)) + 184px)}
   body.drive .nav3d-gps{font-size:11px;padding:8px 11px}
   body.drive .nav-map-slot:before{width:40px;height:52px;font-size:13px}
   body.drive .nav3d-center{width:48px;height:48px;font-size:20px}
   body.drive .nav3d-arrow{width:68px;height:86px;top:60%}
-  body.drive .nav-ahead-weather{top:212px;left:8px;right:8px}
-  body.drive .nav-actions{bottom:82px}
+  body.drive .nav-ahead-weather{top:calc(max(6px,env(safe-area-inset-top)) + 136px);left:8px;right:8px}
+  body.drive .nav-actions{bottom:78px}
   body.drive .nav-actions button{min-height:54px;font-size:17px}
   body.drive .nav-tripbar{grid-template-columns:82px repeat(3,1fr) 88px;min-height:70px;padding:5px}
   body.drive .nav-tripbar b{font-size:15px}
@@ -541,7 +545,7 @@ body.drive .nav-tripbar{
 <div class="wrap">
   <div class="top">
     <div class="brand"><div class="logo">🌦️</div><div><h1>Meteo Viaggio</h1><div class="sub">Meteo lungo la strada</div></div></div>
-    <div class="ver">V17.4 VOCE</div>
+    <div class="ver">V17.5 PULITA</div>
   </div>
 
   <section class="hero">
@@ -2132,6 +2136,7 @@ function openNavDashboard(){
 
   $('navDashboard').classList.remove('hidden');
   document.body.classList.add('drive');
+  setNavMenu(false);
   updateNavDashboard();
   init3DNavMap();
 
@@ -2145,12 +2150,20 @@ function openNavDashboard(){
 function closeNavDashboard(){
   $('navDashboard').classList.add('hidden');
   document.body.classList.remove('drive');
+  setNavMenu(false);
   setTimeout(()=>{try{if(map)map.invalidateSize(true)}catch(e){}},120);
 }
 
 function toggleNavNight(){
   document.body.classList.toggle('nightAuto');
 }
+
+function setNavMenu(open){
+  document.body.classList.toggle('nav-menu-open',open);
+  const b=$('navMenuBtn');
+  if(b){b.textContent=open?'✕ Chiudi':'☰ Menu';b.setAttribute('aria-expanded',open?'true':'false')}
+}
+function toggleNavMenu(){setNavMenu(!document.body.classList.contains('nav-menu-open'))}
 
 $('whClose').onclick=()=>{if(radarAnimTimer){clearInterval(radarAnimTimer);radarAnimTimer=null} $('weatherHere').classList.add('hidden')};
 
@@ -2166,6 +2179,7 @@ document.addEventListener('DOMContentLoaded',()=>{
   $('navFav').onclick=()=>{closeNavDashboard();setTimeout(()=>$('favSelect')?.focus(),120)};
   $('navVoiceBtn').onclick=toggleVoice;
   updateVoiceButton();
+  $('navMenuBtn').onclick=toggleNavMenu;
   $('navNightBtn').onclick=toggleNavNight;
   $('nav3dCenter').onclick=()=>update3DNavMap(true);
   $('nav3dCompass').onclick=()=>{if(nav3dMap)nav3dMap.easeTo({bearing:0,pitch:55,duration:500})};
@@ -2177,9 +2191,9 @@ setInterval(()=>{if(radarOn&&map)refreshRadar()},5*60*1000);
 
 <section id="navDashboard" class="navdash hidden">
   <div class="navdash-head">
-    <div class="nav-active">● NAVIGAZIONE ATTIVA</div>
+    <div class="nav-active">● NAV ATTIVA</div>
     <button id="navVoiceBtn" class="navpill" aria-pressed="true">☑️ Voce</button>
-    <button id="navNightBtn" class="navpill">🌙 Notte</button>
+    <button id="navMenuBtn" class="navpill" aria-expanded="false">☰ Menu</button>
   </div>
 
   <div class="navdash-top">
@@ -2228,6 +2242,7 @@ setInterval(()=>{if(radarOn&&map)refreshRadar()},5*60*1000);
   </div>
 
   <div class="nav-actions">
+    <button id="navNightBtn">🌙<span>Modalità<br>notte</span></button>
     <button id="navAvoidWeather">🛡️<span>Evita<br>maltempo</span></button>
     <button id="navSOS">⛈️<span>SOS<br>meteo</span></button>
     <button id="navFav">⭐<span>Preferiti</span></button>
