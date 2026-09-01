@@ -166,269 +166,140 @@ body.nightAuto .mapwrap,body.nightAuto .wcard{box-shadow:0 0 0 1px #ffffff08}
 }
 
 
-/* V13.3 NAV - solo grafica, motore invariato */
-:root{
-  --navGlass:#07111ff0;
-  --navPanel:#0b1729f2;
-  --navBlue:#2b8cff;
-  --navLine:#55c2ff;
+/* V13.4 NAV UI */
+.navdash{
+  position:fixed; inset:0; z-index:5000;
+  background:#04090f; color:#fff;
+  overflow:auto; padding:12px 10px 18px;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
 }
-
-body.drive{
-  background:#050b13;
+.navdash.hidden{display:none!important}
+.navdash-head{
+  display:grid;grid-template-columns:1fr auto auto;gap:8px;align-items:center;
+  max-width:1100px;margin:0 auto 8px;
 }
-
-body.drive .wrap{
-  padding:6px 8px 12px;
-  background:#050b13;
+.nav-active{color:#5ce36f;font-weight:900;letter-spacing:.08em;text-align:center}
+.navpill{
+  border:1px solid #ffffff26;background:#09131e;color:white;border-radius:999px;
+  min-height:38px;padding:0 13px;font-weight:800
 }
-
-body.drive .nextturn{
-  display:grid!important;
-  position:sticky;
-  top:4px;
-  z-index:1400;
-  grid-template-columns:64px 1fr auto;
-  gap:12px;
-  align-items:center;
-  padding:12px 14px;
-  margin:0 0 7px;
-  border-radius:20px;
-  background:linear-gradient(145deg,#0b2038f7,#081522f7);
-  border:1px solid #55c2ff70;
-  box-shadow:0 10px 30px #0009,inset 5px 0 #55c2ff;
+.navdash-top{
+  display:grid;grid-template-columns:1fr 230px;gap:10px;
+  max-width:1100px;margin:0 auto 10px
 }
-
-body.drive .turnico{
-  width:58px;height:58px;
-  display:grid;place-items:center;
-  font-size:42px;
-  border-radius:16px;
-  background:#11263f;
-  border:1px solid #ffffff18;
+.nav-turn-card,.nav-arrival-card,.navmetric,.nav-weather-strip,.nav-tripbar,.nav-actions button{
+  background:linear-gradient(145deg,#0a1725,#07111b);
+  border:1px solid #ffffff1d;
+  box-shadow:0 8px 28px #0007;
 }
-
-body.drive .turnmain{
-  font-size:22px;
-  line-height:1.05;
-  font-weight:1000;
+.nav-turn-card{
+  min-height:150px;border-radius:20px;padding:15px;
+  display:grid;grid-template-columns:115px 1fr auto;align-items:center;gap:14px
 }
-
-body.drive .turnsub{
-  font-size:13px;
-  margin-top:5px;
+.nav-turn-icon{
+  font-size:78px;line-height:1;text-align:center;color:#2f95ff
 }
-
-body.drive .turndist{
-  font-size:27px;
-  font-weight:1000;
-  min-width:72px;
+.nav-turn-main{font-size:30px;font-weight:1000;line-height:1.05}
+.nav-turn-street{font-size:23px;font-weight:900;color:#2f95ff;margin-top:7px}
+.nav-turn-dist{font-size:30px;font-weight:1000;color:#2f95ff;align-self:end;padding-bottom:8px}
+.nav-arrival-card{
+  border-radius:20px;padding:16px;display:flex;flex-direction:column;justify-content:center
 }
+.nav-arrival-card small{color:#aab7c7;font-size:14px}
+.nav-arrival-card>b{font-size:34px;line-height:1.05;margin:4px 0}
+.nav-arrival-card>span{font-size:16px}
+.nav-speedline{border-top:1px solid #ffffff1a;margin-top:10px;padding-top:10px;display:flex;gap:8px;align-items:center}
+.nav-speedline b{font-size:20px}
 
-body.drive .arrival{
-  position:sticky;
-  top:91px;
-  z-index:1320;
-  display:grid;
-  grid-template-columns:repeat(4,1fr);
-  gap:5px;
-  padding:8px 9px;
-  margin:0 0 7px;
-  border-radius:16px;
-  background:#07111fed;
-  border:1px solid #ffffff20;
-  box-shadow:0 7px 22px #0008;
-  backdrop-filter:blur(10px);
+.nav-metrics{
+  display:grid;grid-template-columns:repeat(5,1fr);gap:8px;
+  max-width:1100px;margin:0 auto 8px
 }
+.navmetric{border-radius:16px;padding:11px;text-align:center;min-height:95px}
+.navmetric small{display:block;color:#aab7c7}
+.navmetric b{display:block;font-size:27px;margin:5px 0 2px}
+.navmetric span{font-size:12px;color:#c7d2df}
 
-body.drive .arrival span{
-  display:flex;
-  align-items:center;
-  justify-content:center;
-  gap:3px;
-  min-height:28px;
+.nav-weather-strip{
+  max-width:1100px;margin:0 auto 8px;border-radius:16px;padding:8px;
+  display:grid;grid-template-columns:repeat(7,1fr);gap:4px
 }
+.nav-weather-strip>div{text-align:center;padding:7px 4px;border-right:1px solid #ffffff12}
+.nav-weather-strip>div:last-child{border-right:0}
+.nav-weather-strip small{display:block;color:#aab7c7;font-size:11px}
+.nav-weather-strip b{display:block;font-size:18px;margin-top:4px}
 
-body.drive .cockpitline{
-  display:grid!important;
-  grid-template-columns:repeat(3,1fr);
-  gap:7px;
-  margin:0 0 7px;
+.nav-map-slot{
+  max-width:1100px;margin:0 auto 8px;
+  border-radius:24px;overflow:hidden;border:1px solid #ffffff22;
+  box-shadow:0 14px 36px #000a;
+  min-height:520px;background:#0a121c;
 }
+.nav-map-slot .mapwrap{margin:0;border-radius:0;border:0;background:#0a121c}
+.nav-map-slot .mapbar{display:none}
+.nav-map-slot #map{height:58vh;min-height:520px}
+.nav-map-slot .navbadge{top:14px;background:#07111ff0;border-color:#63d69baa;font-size:13px}
+.nav-map-slot .centerbtn{top:14px}
+.nav-map-slot .hudbtn{bottom:80px}
+.nav-map-slot .drivequick{display:none!important}
 
-body.drive .cockpititem{
-  background:linear-gradient(145deg,#0c1b2f,#091522);
-  border:1px solid #ffffff16;
-  border-radius:15px;
-  padding:8px 7px;
-  text-align:center;
-  box-shadow:0 5px 16px #0005;
+.nav-actions{
+  max-width:1100px;margin:0 auto 8px;
+  display:grid;grid-template-columns:repeat(5,1fr);gap:8px
 }
-
-body.drive .cockpititem small{
-  display:block;
-  color:#9fb0c5;
-  font-size:10px;
-  text-transform:uppercase;
-  letter-spacing:.04em;
+.nav-actions button{
+  min-height:95px;border-radius:17px;color:white;border:1px solid #ffffff1d;
+  font-weight:900;font-size:26px;padding:10px
 }
+.nav-actions button span{display:block;font-size:14px;margin-top:7px}
 
-body.drive .cockpititem b{
-  display:block;
-  margin-top:3px;
-  font-size:18px;
-  line-height:1.05;
+.nav-tripbar{
+  max-width:1100px;margin:0 auto;border-radius:18px;padding:10px;
+  display:grid;grid-template-columns:160px repeat(3,1fr) 170px;gap:8px;align-items:center
 }
-
-body.drive .mapwrap{
-  margin:0;
-  border-radius:24px;
-  overflow:hidden;
-  border:1px solid #ffffff24;
-  background:#0a1420;
-  box-shadow:0 12px 34px #000a;
+.nav-tripbar>div{text-align:center;border-left:1px solid #ffffff14}
+.nav-tripbar small{display:block;color:#aab7c7;font-size:11px}
+.nav-tripbar b{display:block;font-size:24px;margin-top:3px}
+.nav-stop,.nav-summary{
+  min-height:68px;border-radius:14px;font-weight:900;font-size:16px
 }
+.nav-stop{background:#351012;color:#ff6666;border:1px solid #ff4d4d77}
+.nav-summary{background:#07306a;color:#69a8ff;border:1px solid #268cff88}
 
-body.drive #map{
-  height:70vh;
-  min-height:520px;
-}
+body.drive .wrap{display:none!important}
 
-body.drive .mapbar{
-  display:none;
-}
-
-body.drive .navbadge{
-  top:14px;
-  left:50%;
-  transform:translateX(-50%);
-  background:#07111ff2;
-  border:1px solid #63d69ba0;
-  padding:8px 13px;
-  font-size:12px;
-  box-shadow:0 5px 18px #0008;
-}
-
-body.drive .centerbtn{
-  top:16px;
-  right:12px;
-  width:48px;
-  height:48px;
-  font-size:21px;
-  background:#07111ff0;
-}
-
-body.drive .hudbtn{
-  right:12px;
-  bottom:80px;
-  width:50px;
-  height:50px;
-  background:#07111ff0;
-}
-
-body.drive .risklegend{
-  top:auto;
-  left:12px;
-  bottom:82px;
-  border-radius:10px;
-  padding:6px 8px;
-  background:#07111fdd;
-}
-
-body.drive #radarLegend{
-  left:12px;
-  bottom:52px;
-  border-radius:10px;
-  padding:6px 8px;
-  background:#07111fdd;
-}
-
-body.drive .drivequick{
-  display:grid!important;
-  grid-template-columns:repeat(3,1fr);
-  gap:7px;
-  left:0;
-  right:0;
-  bottom:0;
-  padding:18px 10px 9px;
-  background:linear-gradient(transparent,#050b13ee 40%);
-}
-
-body.drive .drivequick .btn{
-  min-height:48px;
-  border-radius:14px;
-  background:#0a1727ee;
-  border:1px solid #ffffff2a;
-  box-shadow:0 4px 14px #0007;
-}
-
-body.drive .navarrow{
-  width:74px!important;
-  height:74px!important;
-  border-radius:50%!important;
-  border:4px solid white!important;
-  background:linear-gradient(145deg,#3197ff,#1268d8)!important;
-  color:white!important;
-  font-size:47px!important;
-  box-shadow:
-    0 0 0 8px #2c91ff25,
-    0 10px 26px #000b!important;
-  transform-origin:center!important;
-}
-
-body.drive .navarrow::after{
-  content:'';
-  position:absolute;
-  width:10px;
-  height:10px;
-  border-radius:50%;
-  background:#ffffff;
-  bottom:10px;
-  left:50%;
-  transform:translateX(-50%);
-  opacity:.9;
-}
-
-body.drive .smartpanel,
-body.drive .safetygrid,
-body.drive .pretrip,
-body.drive .highwaybar,
-body.drive #routeChoices,
-body.drive #aheadBar,
-body.drive #hailAlert{
-  display:none!important;
-}
-
-/* Mantiene il meteo principale leggibile fuori dalla modalità viaggio */
-.navigator-tip{
-  display:none;
-}
-
-@media(max-width:720px){
-  body.drive .nextturn{
-    grid-template-columns:56px 1fr auto;
-    padding:10px 11px;
-  }
-  body.drive .turnico{
-    width:52px;height:52px;font-size:36px;
-  }
-  body.drive .turnmain{font-size:19px}
-  body.drive .turndist{font-size:22px;min-width:62px}
-  body.drive .arrival{
-    top:82px;
-    grid-template-columns:repeat(4,1fr);
-    font-size:10px;
-  }
-  body.drive #map{
-    height:68vh;
-    min-height:500px;
-  }
-  body.drive .cockpititem b{font-size:16px}
-  body.drive .navarrow{
-    width:70px!important;
-    height:70px!important;
-    font-size:44px!important;
-  }
+@media(max-width:760px){
+  .navdash{padding:8px 6px 14px}
+  .navdash-head{grid-template-columns:1fr auto auto}
+  .nav-active{font-size:12px}
+  .navpill{min-height:34px;padding:0 9px;font-size:12px}
+  .navdash-top{grid-template-columns:1fr 145px;gap:6px}
+  .nav-turn-card{min-height:122px;grid-template-columns:72px 1fr auto;padding:10px;gap:8px}
+  .nav-turn-icon{font-size:56px}
+  .nav-turn-main{font-size:20px}
+  .nav-turn-street{font-size:17px;margin-top:4px}
+  .nav-turn-dist{font-size:20px}
+  .nav-arrival-card{padding:10px}
+  .nav-arrival-card>b{font-size:25px}
+  .nav-arrival-card>span{font-size:12px}
+  .nav-speedline b{font-size:15px}
+  .nav-metrics{grid-template-columns:repeat(5,1fr);gap:5px}
+  .navmetric{padding:7px 3px;min-height:78px}
+  .navmetric small{font-size:9px}
+  .navmetric b{font-size:18px}
+  .navmetric span{font-size:9px}
+  .nav-weather-strip{gap:0;padding:5px 2px}
+  .nav-weather-strip small{font-size:8px}
+  .nav-weather-strip b{font-size:13px}
+  .nav-map-slot{min-height:440px;border-radius:18px}
+  .nav-map-slot #map{height:52vh;min-height:440px}
+  .nav-actions{gap:5px}
+  .nav-actions button{min-height:78px;font-size:22px;padding:6px}
+  .nav-actions button span{font-size:11px;margin-top:4px}
+  .nav-tripbar{grid-template-columns:100px repeat(3,1fr) 105px;gap:4px;padding:6px}
+  .nav-tripbar b{font-size:17px}
+  .nav-tripbar small{font-size:8px}
+  .nav-stop,.nav-summary{min-height:58px;font-size:12px}
 }
 
 </style>
@@ -455,7 +326,7 @@ body.drive #hailAlert{
 <div class="wrap">
   <div class="top">
     <div class="brand"><div class="logo">🌦️</div><div><h1>Meteo Viaggio</h1><div class="sub">Meteo lungo la strada</div></div></div>
-    <div class="ver">V13.3 NAV</div>
+    <div class="ver">V13.4 NAV UI</div>
   </div>
 
   <section class="hero">
@@ -588,12 +459,8 @@ body.drive #hailAlert{
       <span>🌡️ Percepita <span id="arrFeels">—</span></span>
     </div>
 
-    <div class="cockpitline">
-      <div class="cockpititem"><small>Velocità</small><b id="cockpitSpeed">—</b></div>
-      <div class="cockpititem"><small>Sicurezza</small><b id="cockpitScore">—</b></div>
-      <div class="cockpititem"><small>Meteo</small><b id="cockpitWeather">—</b></div>
-    </div>
     <h2>Mappa del viaggio</h2>
+    <div id="mapHomeSlot"></div>
     <div class="mapwrap">
       <div class="mapbar"><span id="mapstate">Percorso calcolato</span><span id="updated">—</span></div>
       <div id="map"></div>
@@ -1457,17 +1324,6 @@ function updateHighwayInfo(items){
   const snow=items?.find(x=>[71,73,75,77,85,86].includes(x.w.code));
   $('snowAhead').textContent=snow?'Possibile':'No';
 }
-function updateCockpit(){
-  if(!$('cockpitSpeed'))return;
-  $('cockpitSpeed').textContent=Math.round(currentSpeedKmh||0)+' km/h';
-  $('cockpitScore').textContent=currentItems?.length?journeySafety(currentItems)+'/100':'—';
-  if(currentItems?.length){
-    const prog=nearestRouteProgress(here||currentItems[0].p).f;
-    const ahead=currentItems.find(x=>x.p.f>=Math.min(1,prog+.08))||currentItems.at(-1);
-    const inf=wi(ahead.w.code,ahead.w.isDay);
-    $('cockpitWeather').textContent=inf[0]+' '+Math.round(ahead.w.temp)+'°';
-  }else $('cockpitWeather').textContent='—';
-}
 function updateHUD(){
   const n=nextManeuver(),inf=n?turnInfo(n.step):{icon:'⬆️',txt:'Prosegui',sub:'Percorso'};
   $('hudTurnIcon').textContent=inf.icon;$('hudTurnMain').textContent=inf.txt;$('hudTurnSub').textContent=inf.sub;
@@ -1576,7 +1432,7 @@ function render(r,ev){
   updateRoadSafety(items);
   updatePreTrip(r,items);
   updateNextTurn();
-  updateHUD();updateCockpit();
+  updateHUD();updateNavDashboard();
   $('res').classList.remove('hidden');
   $('updated').textContent='Aggiornato '+timeTxt(new Date());
   $('mapstate').textContent=watchId!==null?'Guida GPS · meteo in tempo reale':'Percorso calcolato';
@@ -1663,7 +1519,7 @@ async function startLive(){
       if(Number.isFinite(p.coords.heading))lastHeading=p.coords.heading;
       else if(here&&hav(here,nuovo)>.006)lastHeading=bearing(here,nuovo);
       here=nuovo;
-      updateMarker();updateHUD();updateCockpit();updateHighwayInfo(currentItems);
+      updateMarker();updateHUD();updateNavDashboard();updateHighwayInfo(currentItems);
 
       const off=nearestRouteProgress(here).dist;
       if(currentRoute&&off>0.15&&Date.now()-lastOffRouteRecalc>15000&&!busy){
@@ -1687,6 +1543,7 @@ async function startLive(){
     updateMarker();
     const orientOk=await orientationPromise;
     saveTripHistory();
+    openNavDashboard();
     st(orientOk
       ?'Viaggio avviato: GPS, bussola e meteo in tempo reale attivi.'
       :'Viaggio avviato: GPS e meteo attivi. Bussola non autorizzata.');
@@ -1810,11 +1667,7 @@ $('calc').onclick=()=>{destObj=null;calc(false)};
 $('dest').onkeydown=e=>{if(e.key==='Enter')$('calc').click()};
 $('live').onclick=startLive;
 $('speak').onclick=()=>lastSpeech?speakNow(lastSpeech):st('Prima calcola un viaggio.');
-$('driveBtn').onclick=()=>{
-  document.body.classList.toggle('drive');if(!document.body.classList.contains('drive')&&map&&false)
-  $('driveBtn').textContent=document.body.classList.contains('drive')?'↩️ Vista completa':'🚘 Modalità Carlink';
-  setTimeout(()=>{if(map){map.invalidateSize();if(here&&watchId!==null){followMode=true;map.setView([here.lat,here.lon],15)}}},150);
-};
+$('driveBtn').onclick=openNavDashboard;
 function recenter(){
   if(map&&here){followMode=true;$('navText').textContent='GPS · seguo la posizione';startHeadingAnimation();updateMapBearing();map.setView([here.lat,here.lon],desiredZoom());updateMarker()}
 }
@@ -1847,8 +1700,185 @@ updateFavorites();
 $('homeSet').onclick=setHome;
 $('homeGo').onclick=goHome;
 updateHomeButtons();
+
+let navMapOriginalParent=null,navMapOriginalNext=null;
+
+function navFmtDist(km){
+  if(!Number.isFinite(km))return '—';
+  return km<1?Math.round(km*1000)+' m':(km<10?km.toFixed(1):Math.round(km))+' km';
+}
+
+function navCurrentWeather(){
+  if(!currentItems?.length)return null;
+  const prog=here?nearestRouteProgress(here).f:0;
+  return currentItems.reduce((best,x)=>Math.abs(x.p.f-prog)<Math.abs(best.p.f-prog)?x:best,currentItems[0]);
+}
+
+function updateNavDashboard(){
+  if(!$('navDashboard'))return;
+
+  const n=nextManeuver();
+  const inf=n?turnInfo(n.step):{icon:'⬆️',txt:'Prosegui',sub:'Percorso'};
+  $('navTurnIcon').textContent=inf.icon;
+  $('navTurnMain').textContent=inf.txt;
+  $('navTurnStreet').textContent=inf.sub.replace(/^su\s+/i,'');
+  $('navTurnDist').textContent=n?navFmtDist(n.dist):'—';
+
+  const km=currentRoute?currentRoute.distance/1000:NaN;
+  const eta=currentRoute?new Date(Date.now()+currentRoute.duration*1000):null;
+  $('navArrivalTime').textContent=eta?timeTxt(eta):'—';
+  $('navArrivalBottom').textContent=eta?timeTxt(eta):'—';
+  $('navArrivalInfo').textContent=currentRoute?`${Math.round(km)} km · ${durTxt(currentRoute.duration)}`:'—';
+  $('navDistance').textContent=Number.isFinite(km)?Math.round(km)+' km':'—';
+  $('navRemaining').textContent=currentRoute?durTxt(currentRoute.duration):'—';
+
+  const sp=Math.round(currentSpeedKmh||0);
+  $('navSpeed').textContent=sp;
+  $('navSpeedTop').textContent=sp+' km/h';
+
+  const score=currentItems?.length?journeySafety(currentItems):null;
+  $('navSafety').textContent=score==null?'—':score+'/100';
+  $('navSafetyLabel').textContent=score==null?'—':safetyLabel(score)[1];
+
+  const cur=navCurrentWeather();
+  if(cur){
+    const w=cur.w, wi0=wi(w.code,w.isDay);
+    $('navWeather').textContent=wi0[0]+' '+Math.round(w.temp)+'°';
+    $('navFeels').textContent='Percepita '+Math.round(w.feels)+'°';
+    $('navTemp').textContent=wi0[0]+' '+Math.round(w.temp)+'°';
+    $('navHum').textContent=(w.humidity==null?'—':Math.round(w.humidity)+'%');
+    $('navFeels2').textContent=Math.round(w.feels)+'°';
+    $('navGust').textContent=Math.round(w.gust)+' km/h';
+    $('navRain').textContent=Math.round(w.rain)+'%';
+    $('navZero').textContent=w.zero?Math.round(w.zero)+' m':'—';
+    $('navHail').textContent=hail(w);
+
+    const cw=crosswindFor(cur);
+    $('navCrossWind').textContent=Number.isFinite(cw)?Math.round(cw):'—';
+    const vis=w.visibility||99999;
+    $('navVisibility').textContent=vis>=10000?'10+ km':vis>=1000?(vis/1000).toFixed(1)+' km':Math.round(vis)+' m';
+    $('navVisibilityLabel').textContent=vis>=5000?'Ottima':vis>=2000?'Buona':vis>=1000?'Ridotta':'Scarsa';
+  }
+}
+
+function openNavDashboard(){
+  if(!$('navDashboard'))return;
+
+  const mw=document.querySelector('.mapwrap');
+  const slot=$('navMapSlot');
+  if(mw&&slot&&mw.parentElement!==slot){
+    navMapOriginalParent=mw.parentElement;
+    navMapOriginalNext=mw.nextSibling;
+    slot.appendChild(mw);
+  }
+
+  $('navDashboard').classList.remove('hidden');
+  document.body.classList.add('drive');
+  updateNavDashboard();
+
+  setTimeout(()=>{
+    try{
+      if(map){
+        map.invalidateSize(true);
+        if(here){followMode=true;map.setView([here.lat,here.lon],17);updateMarker()}
+      }
+    }catch(e){}
+  },180);
+}
+
+function closeNavDashboard(){
+  $('navDashboard').classList.add('hidden');
+  document.body.classList.remove('drive');
+
+  const mw=$('navMapSlot')?.querySelector('.mapwrap');
+  const home=$('mapHomeSlot');
+  if(mw&&home&&home.parentElement){
+    home.parentElement.insertBefore(mw,home.nextSibling);
+  }
+
+  setTimeout(()=>{try{if(map)map.invalidateSize(true)}catch(e){}},120);
+}
+
+function toggleNavNight(){
+  document.body.classList.toggle('nightAuto');
+}
+
 $('whClose').onclick=()=>{if(radarAnimTimer){clearInterval(radarAnimTimer);radarAnimTimer=null} $('weatherHere').classList.add('hidden')};
+
+$('navStop').onclick=async()=>{if(watchId!==null)await startLive();closeNavDashboard()};
+$('navSummary').onclick=closeNavDashboard;
+$('navAvoidWeather').onclick=chooseWeatherSafeRoute;
+$('navSOS').onclick=openSOS;
+$('navHome').onclick=goHome;
+$('navRadar').onclick=()=>{$('radarBtn').click()};
+$('navFav').onclick=()=>{closeNavDashboard();setTimeout(()=>$('favSelect')?.focus(),120)};
+$('navVoiceBtn').onclick=()=>lastSpeech?speakNow(lastSpeech):st('Prima calcola un viaggio.');
+$('navNightBtn').onclick=toggleNavNight;
+
 setInterval(()=>{if(radarOn&&map)refreshRadar()},5*60*1000);
 </script>
+
+<section id="navDashboard" class="navdash hidden">
+  <div class="navdash-head">
+    <div class="nav-active">● NAVIGAZIONE ATTIVA</div>
+    <button id="navVoiceBtn" class="navpill">🔊 Voce</button>
+    <button id="navNightBtn" class="navpill">🌙 Notte</button>
+  </div>
+
+  <div class="navdash-top">
+    <div class="nav-turn-card">
+      <div id="navTurnIcon" class="nav-turn-icon">⬆️</div>
+      <div class="nav-turn-copy">
+        <div id="navTurnMain" class="nav-turn-main">Prosegui</div>
+        <div id="navTurnStreet" class="nav-turn-street">Percorso</div>
+      </div>
+      <div id="navTurnDist" class="nav-turn-dist">—</div>
+    </div>
+
+    <div class="nav-arrival-card">
+      <small>Arrivo</small>
+      <b id="navArrivalTime">—</b>
+      <span id="navArrivalInfo">—</span>
+      <div class="nav-speedline"><span>🚗</span><b id="navSpeedTop">0 km/h</b></div>
+    </div>
+  </div>
+
+  <div class="nav-metrics">
+    <div class="navmetric"><small>Velocità</small><b id="navSpeed">0</b><span>km/h</span></div>
+    <div class="navmetric"><small>Sicurezza</small><b id="navSafety">—</b><span id="navSafetyLabel">—</span></div>
+    <div class="navmetric"><small>Meteo attuale</small><b id="navWeather">—</b><span id="navFeels">—</span></div>
+    <div class="navmetric"><small>Vento laterale</small><b id="navCrossWind">—</b><span>km/h</span></div>
+    <div class="navmetric"><small>Visibilità</small><b id="navVisibility">—</b><span id="navVisibilityLabel">—</span></div>
+  </div>
+
+  <div class="nav-weather-strip">
+    <div><small>Ora</small><b id="navTemp">—</b></div>
+    <div><small>Umidità</small><b id="navHum">—</b></div>
+    <div><small>Percepita</small><b id="navFeels2">—</b></div>
+    <div><small>Raffiche</small><b id="navGust">—</b></div>
+    <div><small>Pioggia</small><b id="navRain">—</b></div>
+    <div><small>Zero termico</small><b id="navZero">—</b></div>
+    <div><small>Grandine</small><b id="navHail">—</b></div>
+  </div>
+
+  <div id="navMapSlot" class="nav-map-slot"></div>
+
+  <div class="nav-actions">
+    <button id="navAvoidWeather">🛡️<span>Evita<br>maltempo</span></button>
+    <button id="navSOS">⛈️<span>SOS<br>meteo</span></button>
+    <button id="navFav">⭐<span>Preferiti</span></button>
+    <button id="navHome">🏠<span>Casa</span></button>
+    <button id="navRadar">📡<span>Radar</span></button>
+  </div>
+
+  <div class="nav-tripbar">
+    <button id="navStop" class="nav-stop">Termina<br>viaggio</button>
+    <div><small>Distanza</small><b id="navDistance">—</b></div>
+    <div><small>Tempo rimanente</small><b id="navRemaining">—</b></div>
+    <div><small>Arrivo alle</small><b id="navArrivalBottom">—</b></div>
+    <button id="navSummary" class="nav-summary">Riepilogo<br>viaggio</button>
+  </div>
+</section>
+
 </body>
 </html>
