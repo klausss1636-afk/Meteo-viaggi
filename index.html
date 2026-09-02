@@ -144,17 +144,25 @@ document.querySelector('.sub').textContent='Meteo reale qui e lungo il viaggio �
   geocodeDest=async function(query){
     const q=String(query||'').trim();
     if(!q)throw Error('Inserisci una destinazione');
-    try{
-      const url='https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&countrycodes=it&accept-language=it&q='+encodeURIComponent(q);
-      const list=await fetchJSON(url);
-      if(list&&list[0])return{lat:Number(list[0].lat),lon:Number(list[0].lon),name:list[0].display_name||q};
-    }catch(e){}
+    const cleaned=q.replace(/\s*,\s*/g,', ').replace(/([a-zà-ù])([0-9])/gi,'$1 $2').replace(/\s+/g,' ').trim();
+    const street=cleaned.match(/\b(?:via|viale|piazza|piazzale|corso|largo|strada|vicolo|località)\b[\s\S]*/i);
+    const candidates=[cleaned];
+    if(street&&street[0]!==cleaned)candidates.push(street[0]);
+    const postal=cleaned.match(/\b\d{5}\s+[A-Za-zÀ-ÿ' -]+(?:\s+(?:MI|PT|FI|RM|TO|BO|NA))?$/i);
+    if(postal)candidates.push(postal[0]);
+    for(const candidate of [...new Set(candidates)]){
+      try{
+        const url='https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&countrycodes=it&accept-language=it&addressdetails=1&q='+encodeURIComponent(candidate);
+        const list=await fetchJSON(url);
+        if(list&&list[0])return{lat:Number(list[0].lat),lon:Number(list[0].lon),name:list[0].display_name||candidate};
+      }catch(e){}
+    }
     try{
       const url='https://geocoding-api.open-meteo.com/v1/search?name='+encodeURIComponent(q)+'&count=1&language=it&format=json';
       const data=await fetchJSON(url),x=data.results&&data.results[0];
       if(x)return{lat:x.latitude,lon:x.longitude,name:[x.name,x.admin1].filter(Boolean).join(', ')};
     }catch(e){}
-    throw Error('Destinazione non trovata. Controlla indirizzo, numero civico e città.');
+    throw Error('Destinazione non trovata. Prova a salvare solo via, numero civico, CAP e città.');
   };
   function selectFavorite(key,label){
     const value=String((favs&&favs[key])||'').trim();
@@ -206,14 +214,14 @@ document.querySelector('.sub').textContent='Meteo reale qui e lungo il viaggio �
     const result=$('tripresult');if(result){result.innerHTML='';result.classList.add('hidden')}
     st(label+' selezionata. Avvio il meteo del viaggio…');
     button.classList.add('loading');
-    setTimeout(async()=>{if(input.value!==value)input.value=value;input.scrollIntoView({behavior:'smooth',block:'center'});try{await tripSmart();showArrivalWeather(label)}finally{button.classList.remove('loading')}},80);
+    setTimeout(async()=>{if(input.value!==value)input.value=value;input.scrollIntoView({behavior:'smooth',block:'center'});lastTrip=null;result.classList.remove('hidden');result.innerHTML='<div class="favorite-progress">⏳ Cerco '+label+', il percorso e il meteo all’arrivo…</div>';try{await tripSmart();if(lastTrip){showArrivalWeather(label);result.scrollIntoView({behavior:'smooth',block:'start'})}else{result.classList.remove('hidden');result.innerHTML='<div class="favorite-error">⚠️ Non riesco a trovare questa destinazione.<br><small>Salvala come: Via, numero civico, CAP e città.</small></div>';result.scrollIntoView({behavior:'smooth',block:'center'})}}finally{button.classList.remove('loading')}},80);
   }
   document.addEventListener('click',choose,true);
 })();
 </script>
-<style>.favbuttons,.favbuttons *{-webkit-user-select:none;user-select:none}.favbuttons .btn{touch-action:manipulation;-webkit-tap-highlight-color:transparent}.favbuttons small span{pointer-events:none}.favbuttons .btn.loading{opacity:.78;pointer-events:none}.favbuttons .btn.loading small b:after{content:' · controllo…';color:#fff}.favorite-arrival{display:grid;grid-template-columns:auto minmax(0,1fr);gap:11px;align-items:center;margin:10px 0;padding:13px;border-radius:16px;background:linear-gradient(135deg,#124d6a,#183d72);border:1px solid #65c9ff77}.favorite-arrival .arrival-icon{font-size:38px}.favorite-arrival strong,.favorite-arrival span{display:block}.favorite-arrival strong{font-size:17px}.favorite-arrival span{margin-top:4px;color:#d8efff;font-size:12px;line-height:1.5}</style>
+<style>.favbuttons,.favbuttons *{-webkit-user-select:none;user-select:none}.favbuttons .btn{touch-action:manipulation;-webkit-tap-highlight-color:transparent}.favbuttons small span{pointer-events:none}.favbuttons .btn.loading{opacity:.78;pointer-events:none}.favbuttons .btn.loading small b:after{content:' · controllo…';color:#fff}.favorite-arrival{display:grid;grid-template-columns:auto minmax(0,1fr);gap:11px;align-items:center;margin:10px 0;padding:13px;border-radius:16px;background:linear-gradient(135deg,#124d6a,#183d72);border:1px solid #65c9ff77}.favorite-arrival .arrival-icon{font-size:38px}.favorite-arrival strong,.favorite-arrival span{display:block}.favorite-arrival strong{font-size:17px}.favorite-arrival span{margin-top:4px;color:#d8efff;font-size:12px;line-height:1.5}.favorite-progress,.favorite-error{margin:11px 0;padding:14px;border-radius:15px;font-weight:850;line-height:1.45}.favorite-progress{background:#123b61;border:1px solid #55c7ff66}.favorite-error{background:#54242b;border:1px solid #ff626277}.favorite-error small{color:#ffd9dc;font-weight:600}</style>
 <script>
-document.querySelector('.sub').textContent='Meteo reale qui e lungo il viaggio · v10.11-preferiti-viaggio';
+document.querySelector('.sub').textContent='Meteo reale qui e lungo il viaggio · v10.12-indirizzi';
 (function stopIphoneZoom(){
   const saveButton=$('favsave');
   function closeKeyboard(){const active=document.activeElement;if(active&&typeof active.blur==='function')active.blur()}
