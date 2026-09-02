@@ -23,6 +23,7 @@ h1{font-size:23px;margin:0}.sub{font-size:12px;color:var(--muted)}
 .hero{padding:14px;margin:14px 0}
 .form{display:grid;grid-template-columns:1fr auto;gap:9px}
 .routeprefs{display:grid;grid-template-columns:1fr auto;gap:9px;margin-top:9px}.routeprefs select{min-height:48px;border-radius:14px;border:1px solid #ffffff20;background:#0d1a2c;color:#fff;padding:0 12px;font-weight:800}.unpaved{min-height:48px;display:flex;align-items:center;gap:8px;padding:0 12px;border:1px solid #ffffff20;border-radius:14px;background:#13243a;font-weight:800}.unpaved input{width:20px;height:20px}body.scenicMode .hero{background:radial-gradient(circle at 82% 12%,#ffd16632 0 8%,transparent 9%),linear-gradient(155deg,transparent 0 48%,#28594388 49% 60%,#173b3888 61%),linear-gradient(#173757,#101c2d)}
+.voiceprefs{display:flex;flex-wrap:wrap;gap:8px;margin-top:9px}.voicecheck{min-height:44px;display:flex;align-items:center;gap:8px;padding:0 12px;border:1px solid #ffffff20;border-radius:14px;background:#13243a;font-weight:800}.voicecheck input{width:20px;height:20px}
 .inp,.btn{min-height:50px;border-radius:14px}
 .inp{border:1px solid #ffffff20;background:#0d1a2c;color:white;padding:0 13px;outline:none}
 .btn{border:0;padding:0 15px;background:linear-gradient(135deg,#55c2ff,#6a7cff);color:white;font-weight:900;cursor:pointer}
@@ -458,7 +459,7 @@ body.drive #hailAlert{
 <div class="wrap">
   <div class="top">
     <div class="brand"><div class="logo">🌦️</div><div><h1>Meteo Viaggio</h1><div class="sub">Meteo lungo la strada</div></div></div>
-    <div class="ver">V13.9 NAV</div>
+    <div class="ver">V14.0 NAV</div>
   </div>
 
   <section class="hero">
@@ -474,6 +475,10 @@ body.drive #hailAlert{
         <option value="scenic">🏞️ Percorso panoramico</option>
       </select>
       <label class="unpaved"><input id="avoidUnpaved" type="checkbox"> Evita strade sterrate</label>
+    </div>
+    <div class="voiceprefs">
+      <label class="voicecheck"><input id="navVoiceEnabled" type="checkbox" checked> 🔊 Voce navigatore</label>
+      <label class="voicecheck"><input id="weatherVoiceEnabled" type="checkbox" checked> 🌦️ Avvisi meteo vocali</label>
     </div>
     <div class="actions">
       <button id="weatherHereBtn" class="btn alt">🌦️ Meteo qui</button>
@@ -695,6 +700,8 @@ let nearestProgressCache=null,speechTimer=null,italianVoice=null;
 let lastSpeedCameraVoiceId=null,lastSpeedCameraVoiceAt=0;
 let routePreferences={mode:'fast',avoidUnpaved:false};
 try{routePreferences={...routePreferences,...JSON.parse(localStorage.getItem('meteoViaggioRoutePreferences')||'{}')}}catch(e){}
+let voicePreferences={navigation:true,weather:true};
+try{voicePreferences={...voicePreferences,...JSON.parse(localStorage.getItem('meteoViaggioVoicePreferences')||'{}')}}catch(e){}
 try{tripHistory=JSON.parse(localStorage.getItem('meteoViaggioHistory')||'[]')}catch(e){tripHistory=[]}
 try{favorites=JSON.parse(localStorage.getItem('meteoViaggioFavorites')||'[]')}catch(e){favorites=[]}
 let homeBase=null;
@@ -1036,7 +1043,7 @@ function updateNextTurn(){
     const key=`${n.step.maneuver?.type}-${n.step.maneuver?.modifier}-${Math.round(meters/100)}`;
     if(key!==lastTurnVoiceKey&&Date.now()-lastTurnVoiceAt>25000){
       lastTurnVoiceKey=key;lastTurnVoiceAt=Date.now();
-      speakNow(`${inf.txt} ${meters<1000?'tra circa '+Math.round(meters/50)*50+' metri':'tra circa '+n.dist.toFixed(1)+' chilometri'}${n.step.name?' su '+n.step.name:''}.`);
+      speakNow(`${inf.txt} ${meters<1000?'tra circa '+Math.round(meters/50)*50+' metri':'tra circa '+n.dist.toFixed(1)+' chilometri'}${n.step.name?' su '+n.step.name:''}.`,'navigation');
     }
   }
 }
@@ -1253,7 +1260,7 @@ async function loadSpeedCameras(r){
   }
 }
 function checkSpeedCameraAhead(){
-  if(watchId===null||!here||!speedCameras.length)return;
+  if(!voicePreferences.navigation||watchId===null||!here||!speedCameras.length)return;
   const routeIndex=nearestRouteProgress(here).index;
   let best=null,bestKm=Infinity;
   for(const c of speedCameras){
@@ -1263,7 +1270,7 @@ function checkSpeedCameraAhead(){
   if(!best||bestKm>.9)return;
   if(lastSpeedCameraVoiceId===best.id&&Date.now()-lastSpeedCameraVoiceAt<5*60*1000)return;
   lastSpeedCameraVoiceId=best.id;lastSpeedCameraVoiceAt=Date.now();
-  speakNow(`Attenzione, autovelox tra circa ${Math.max(100,Math.round(bestKm*1000/100)*100)} metri${best.maxspeed?`, limite indicato ${best.maxspeed}`:''}.`);
+  speakNow(`Attenzione, autovelox tra circa ${Math.max(100,Math.round(bestKm*1000/100)*100)} metri${best.maxspeed?`, limite indicato ${best.maxspeed}`:''}.`,'navigation');
 }
 function drawMap(r,items){
   initMap();
@@ -1616,8 +1623,10 @@ async function evaluateRoute(r){
   }
   return{km,items};
 }
-function speakNow(msg){
+function speakNow(msg,kind='manual'){
   if(!('speechSynthesis'in window))return;
+  if(kind==='navigation'&&!voicePreferences.navigation)return;
+  if(kind==='weather'&&!voicePreferences.weather)return;
   if(speechTimer)clearTimeout(speechTimer);
   speechSynthesis.cancel();
   speechTimer=setTimeout(()=>{
@@ -1645,7 +1654,7 @@ function maybeVoice(kind,km,min,sev,riskLen=0){
   const key=`${kind}-${Math.ceil(km/5)}`;
   if(key===lastVoiceKey&&Date.now()-lastVoiceAt<2*60*1000)return;
   lastVoiceKey=key;lastVoiceAt=Date.now();
-  speakNow(`Attenzione. ${kind} previsto tra circa ${km} chilometri, fra circa ${min} minuti${riskLen?`, per un tratto di circa ${riskLen} chilometri`:''}.`);
+  speakNow(`Attenzione. ${kind} previsto tra circa ${km} chilometri, fra circa ${min} minuti${riskLen?`, per un tratto di circa ${riskLen} chilometri`:''}.`,'weather');
 }
 function render(r,ev){
   currentRoute=r;currentItems=ev.items;
@@ -1979,6 +1988,17 @@ $('avoidUnpaved').checked=!!routePreferences.avoidUnpaved;
 $('routeMode').onchange=applyRoutePreferences;
 $('avoidUnpaved').onchange=applyRoutePreferences;
 applyRoutePreferences();
+function applyVoicePreferences(){
+  voicePreferences.navigation=$('navVoiceEnabled').checked;
+  voicePreferences.weather=$('weatherVoiceEnabled').checked;
+  localStorage.setItem('meteoViaggioVoicePreferences',JSON.stringify(voicePreferences));
+  if(!voicePreferences.navigation&&!voicePreferences.weather&&'speechSynthesis'in window)speechSynthesis.cancel();
+}
+$('navVoiceEnabled').checked=voicePreferences.navigation!==false;
+$('weatherVoiceEnabled').checked=voicePreferences.weather!==false;
+$('navVoiceEnabled').onchange=applyVoicePreferences;
+$('weatherVoiceEnabled').onchange=applyVoicePreferences;
+applyVoicePreferences();
 autoLocate();
 $('whClose').onclick=()=>{if(radarAnimTimer){clearInterval(radarAnimTimer);radarAnimTimer=null} $('weatherHere').classList.add('hidden')};
 setInterval(()=>{if(radarOn&&map)refreshRadar()},5*60*1000);
