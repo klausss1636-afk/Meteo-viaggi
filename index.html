@@ -793,7 +793,7 @@ let busy=false,lastCalcAt=0,lastCalcPos=null,lastSpeech="",lastVoiceKey="",lastV
 let radarTimer=null,weatherRadarTimer=null;
 let deviceHeading=null,targetHeading=0,smoothHeading=0,currentSpeedKmh=0;
 let orientationEnabled=false,headingRaf=null,positionRaf=null,renderedPos=null;
-let favorites=[],lastOffRouteRecalc=0,lastTurnVoiceKey='',lastTurnVoiceAt=0;
+let favorites=[],lastOffRouteRecalc=0,offRouteSamples=0,offRouteSince=0,lastTurnVoiceKey='',lastTurnVoiceAt=0;
 let routeAlternatives=[],activeRouteIndex=0,routeWeatherSummaries=[],lastWeatherEta=null;
 let lastAltitude=null,lastGpsUpdate=0,voiceRecognition=null,weatherAvoidMode=false;
 const oldVoiceEnabled=localStorage.getItem('meteoViaggioVoice')!=='false';
@@ -896,7 +896,7 @@ async function weather(p,eta){
     const tt=new Date(j.hourly.time[ix]).getTime();
     isDay=tt>=new Date(j.daily.sunrise[day]).getTime()&&tt<new Date(j.daily.sunset[day]).getTime();
   }
-  return{
+  const result={
     temp:j.hourly.temperature_2m[ix],
     feels:j.hourly.apparent_temperature?.[ix]??j.hourly.temperature_2m[ix],
     humidity:j.hourly.relative_humidity_2m?.[ix]??null,
@@ -907,11 +907,27 @@ async function weather(p,eta){
     precip:j.hourly.precipitation?.[ix]??0,
     showers:j.hourly.showers?.[ix]??0,
     code:j.hourly.weather_code[ix],
+    rawCode:j.hourly.weather_code[ix],
     gust:j.hourly.wind_gusts_10m?.[ix]??0,
     cape:j.hourly.cape?.[ix]??0,
     zero:j.hourly.freezing_level_height?.[ix]??null,
     isDay
   };
+  // Un codice di nebbia, da solo, puo descrivere una foschia locale prevista
+  // sull'intera cella meteo. Lo confermiamo con i valori misurabili.
+  if([45,48].includes(result.code)&&!isConfirmedFog(result))result.code=3;
+  return result;
+}
+function isConfirmedFog(w){
+  if(!w)return false;
+  const vis=Number.isFinite(w.visibility)?w.visibility:99999;
+  const hum=Number.isFinite(w.humidity)?w.humidity:0;
+  const spread=Number.isFinite(w.temp)&&Number.isFinite(w.dew)?Math.abs(w.temp-w.dew):99;
+  return vis<1000&&hum>=92&&spread<=2.5;
+}
+function reliableVisibility(w){
+  const vis=Number.isFinite(w?.visibility)?w.visibility:99999;
+  return [45,48].includes(w?.rawCode)&&!isConfirmedFog(w)?Math.max(10000,vis):vis;
 }
 function wi(c,isDay=true){
   if([95,96,99].includes(c))return['⛈️','Temporale'];
@@ -935,14 +951,14 @@ function severity(w){
   if([95,96,99].includes(w.code))s+=4;
   if(w.rain>=70)s+=2;
   if(w.gust>=70)s+=3;else if(w.gust>=50)s++;
-  if(w.visibility<1000)s+=3;else if(w.visibility<3000)s++;
+  if(isConfirmedFog(w))s+=w.visibility<500?4:3;
   if(hail(w)==='ALTO')s+=4;
   return s;
 }
 function riskKind(w){
   if(hail(w)==='ALTO')return'Grandine';
   if([95,96,99].includes(w.code))return'Temporale';
-  if(w.visibility<1000)return'Nebbia fitta';
+  if(isConfirmedFog(w))return w.visibility<500?'Nebbia fitta':'Nebbia';
   if(w.gust>=70)return'Vento forte';
   if(w.rain>=70||w.precip>=5)return'Pioggia intensa';
   return wi(w.code,w.isDay)[1];
@@ -1432,7 +1448,7 @@ function updateRoadSafety(items){
   const cross=items.map(crosswindFor).filter(Number.isFinite);
   const maxCross=cross.length?Math.max(...cross):null;
   $('crossWind').textContent=maxCross==null?'—':Math.round(maxCross)+' km/h';
-  const vis=Math.min(...items.map(x=>x.w.visibility||99999));
+  const vis=Math.min(...items.map(x=>reliableVisibility(x.w)));
   $('visibilityRisk').textContent=vis<1000?'🔴 '+Math.round(vis)+' m':vis<3000?'🟡 '+(vis/1000).toFixed(1)+' km':'🟢 Buona';
   const iceLevels=items.map(x=>iceRiskFor(x.w)),ice=iceLevels.includes('ALTO')?'ALTO':iceLevels.includes('MEDIO')?'MEDIO':iceLevels.includes('BASSO')?'BASSO':'NO';
   $('iceRisk').textContent=(ice==='ALTO'?'🔴 ':ice==='MEDIO'?'🟡 ':ice==='BASSO'?'🟢 ':'')+ice;
@@ -1560,7 +1576,7 @@ function weatherRiskScore(w){
   p+=Math.min(18,(w.gust||0)*0.22);
   if([95,96,99].includes(w.code))p+=25;
   if(hail(w)==='ALTO')p+=25;else if(hail(w)==='MEDIO')p+=12;
-  if((w.visibility||99999)<1000)p+=18;else if((w.visibility||99999)<3000)p+=8;
+  if(isConfirmedFog(w))p+=(w.visibility||99999)<500?22:18;
   if([71,73,75,77,85,86].includes(w.code))p+=15;
   return Math.min(100,p);
 }
@@ -1578,11 +1594,11 @@ function safetyLabel(s){
   return['🔴','Sconsigliato'];
 }
 async function evaluateRouteAtOffset(r,offsetMin=0,maxPts=9){
-  const km=r.distance/1000,pts=sample(r.geometry.coordinates,km,maxPts),now=Date.now()+offsetMin*60000,items=[];
-  for(const p of pts){
+  const km=r.distance/1000,pts=sample(r.geometry.coordinates,km,maxPts),now=Date.now()+offsetMin*60000;
+  const items=await Promise.all(pts.map(async p=>{
     const eta=new Date(now+r.duration*1000*p.f);
-    items.push({p,eta,w:await weather(p,eta)});
-  }
+    return{p,eta,w:await weather(p,eta)};
+  }));
   return{km,items,score:journeySafety(items),offsetMin};
 }
 async function evaluateAlternatives(){
@@ -1731,12 +1747,27 @@ function startVoiceAsk(){
   r.start();
 }
 async function evaluateRoute(r){
-  const km=r.distance/1000,pts=sample(r.geometry.coordinates,km),now=Date.now(),items=[];
-  for(const p of pts){
+  const km=r.distance/1000,pts=sample(r.geometry.coordinates,km),now=Date.now();
+  const items=await Promise.all(pts.map(async p=>{
     const eta=new Date(now+r.duration*1000*p.f);
-    items.push({p,eta,w:await weather(p,eta)});
-  }
+    return{p,eta,w:await weather(p,eta)};
+  }));
   return{km,items};
+}
+
+// In caso di deviazione aggiorna subito linea, svolte e tempi. Il controllo
+// meteo prosegue immediatamente dopo, senza rallentare il navigatore.
+function applyRouteImmediately(r){
+  currentRoute=r;
+  drawMap(r,[]);
+  const km=r.distance/1000,eta=new Date(Date.now()+r.duration*1000);
+  $('eta').textContent=timeTxt(eta);
+  $('km').textContent=`${Math.round(km)} km · ${durTxt(r.duration)}`;
+  $('arrTime').textContent=timeTxt(eta);
+  updateNextTurn();
+  updateHUD();
+  updateNavDashboard();
+  $('mapstate').textContent='Nuovo percorso pronto · aggiorno il meteo';
 }
 function speakNow(msg,channel='general'){
   if(channel==='nav'&&!navVoiceEnabled)return;
@@ -1830,7 +1861,7 @@ function render(r,ev){
     ?`Viaggio di ${Math.round(km)} chilometri. Attenzione: ${riskKind(bad.w)} tra circa ${nextKm} chilometri, per un tratto stimato di circa ${riskLen} chilometri. All'arrivo ${arrInfo[1].toLowerCase()}, ${Math.round(arr.w.temp)} gradi.`
     :`Viaggio di ${Math.round(km)} chilometri. Nessun fenomeno importante lungo il percorso. All'arrivo ${arrInfo[1].toLowerCase()}, ${Math.round(arr.w.temp)} gradi.`;
 }
-async function calc(auto=false){
+async function calc(auto=false,fastReroute=false){
   if(busy)return;
   if(!here){st('Prima premi “Usa la mia posizione”.');return}
   try{
@@ -1839,7 +1870,12 @@ async function calc(auto=false){
       const q=$('dest').value.trim();if(!q)throw Error('Scrivi una destinazione');
       destObj=await geocode(q);
     }
-    const r=await route(here,destObj),ev=await evaluateRoute(r);
+    const r=await route(here,destObj);
+    if(fastReroute){
+      applyRouteImmediately(r);
+      st('Nuovo percorso pronto. Aggiorno il meteo…');
+    }
+    const ev=await evaluateRoute(r);
     render(r,ev);
     lastCalcAt=Date.now();lastCalcPos={lat:here.lat,lon:here.lon};
     st(`Percorso verso ${destObj.label} aggiornato.`);
@@ -1911,11 +1947,23 @@ async function startLive(){
       here=nuovo;
       updateMarker();updateHUD();updateNavDashboard();updateHighwayInfo(currentItems);
 
-      const off=nearestRouteProgress(here).dist;
-      if(currentRoute&&off>0.15&&Date.now()-lastOffRouteRecalc>15000&&!busy){
+      const progress=currentRoute?nearestRouteProgress(here):null;
+      const off=progress?.dist??0;
+      const accuracyKm=Number.isFinite(p.coords.accuracy)?Math.min(.12,p.coords.accuracy/1000):.025;
+      const offThreshold=Math.max(.06,accuracyKm*1.6);
+      if(currentRoute&&off>offThreshold){
+        if(!offRouteSince)offRouteSince=Date.now();
+        offRouteSamples++;
+      }else{
+        offRouteSince=0;offRouteSamples=0;
+      }
+      const clearlyOff=off>Math.max(.12,offThreshold*1.8);
+      const sustainedOff=offRouteSamples>=2&&Date.now()-offRouteSince>=1000;
+      if(currentRoute&&(clearlyOff||sustainedOff)&&Date.now()-lastOffRouteRecalc>6000&&!busy){
         lastOffRouteRecalc=Date.now();
+        offRouteSince=0;offRouteSamples=0;
         st('Fuori percorso: ricalcolo…');
-        await calc(true);
+        await calc(true,true);
         return;
       }
 
@@ -1924,7 +1972,7 @@ async function startLive(){
       if((moved||timed)&&!busy)await calc(true);
     },err=>{
       st('GPS non disponibile. Controlla il permesso Posizione del browser.');
-    },{enableHighAccuracy:true,maximumAge:3000,timeout:20000});
+    },{enableHighAccuracy:true,maximumAge:1000,timeout:15000});
 
     $('live').classList.add('live');
     $('live').textContent='⏹ Ferma viaggio';
@@ -2165,7 +2213,7 @@ function updateNavDashboard(){
 
     const cw=crosswindFor(cur);
     $('navCrossWind').textContent=Number.isFinite(cw)?Math.round(cw):'—';
-    const vis=w.visibility||99999;
+    const vis=reliableVisibility(w);
     $('navVisibility').textContent=vis>=10000?'10+ km':vis>=1000?(vis/1000).toFixed(1)+' km':Math.round(vis)+' m';
     $('navVisibilityLabel').textContent=vis>=5000?'Ottima':vis>=2000?'Buona':vis>=1000?'Ridotta':'Scarsa';
   }
