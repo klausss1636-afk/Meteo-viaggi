@@ -175,4 +175,33 @@ document.querySelector('.sub').textContent='Meteo reale qui e lungo il viaggio Â
   $('tripgo').onclick=()=>{document.querySelectorAll('.favbuttons .btn').forEach(b=>b.classList.remove('selected'));tripSmart()};
 })();
 </script>
-<style>.favbuttons .btn.selected{border-color:#61dfa3!important;box-shadow:inset 4px 0 #61dfa3;background:#123629}.favbuttons .btn.selected small b{color:#8ff0bd}</style></body></html>
+<style>.favbuttons .btn.selected{border-color:#61dfa3!important;box-shadow:inset 4px 0 #61dfa3;background:#123629}.favbuttons .btn.selected small b{color:#8ff0bd}</style>
+<script>
+document.querySelector('.sub').textContent='Meteo reale qui e lungo il viaggio Â· v10.9-preferiti-fix';
+(function finalFavoritesFix(){
+  const ids={favhome:['home','Casa'],fav1:['one','Preferita 1'],fav2:['two','Preferita 2']};
+  Object.keys(ids).forEach(id=>{const b=$(id);if(b){b.type='button';b.dataset.favoriteKey=ids[id][0];b.dataset.favoriteLabel=ids[id][1];b.onclick=null}});
+  function freshFavorites(){try{return JSON.parse(localStorage.getItem('meteoViaggioPreferite')||'{}')}catch(e){return{}}}
+  function choose(event){
+    const button=event.target.closest&&event.target.closest('[data-favorite-key]');
+    if(!button)return;
+    event.preventDefault();event.stopPropagation();event.stopImmediatePropagation();
+    const saved=freshFavorites(),key=button.dataset.favoriteKey,value=String(saved[key]||'').trim(),label=button.dataset.favoriteLabel;
+    if(!value){openFavs();return}
+    const input=document.getElementById('tripdest');
+    input.focus({preventScroll:true});
+    input.value=value;
+    input.setAttribute('value',value);
+    input.dispatchEvent(new Event('input',{bubbles:true}));
+    input.dispatchEvent(new Event('change',{bubbles:true}));
+    input.blur();
+    document.querySelectorAll('[data-favorite-key]').forEach(b=>b.classList.toggle('selected',b===button));
+    const result=$('tripresult');if(result){result.innerHTML='';result.classList.add('hidden')}
+    st(label+' inserita come destinazione. Ora premi il pulsante blu.');
+    setTimeout(()=>{if(input.value!==value)input.value=value;input.scrollIntoView({behavior:'smooth',block:'center'})},50);
+  }
+  document.addEventListener('click',choose,true);
+  document.addEventListener('touchend',function(e){const b=e.target.closest&&e.target.closest('[data-favorite-key]');if(b)choose(e)},{capture:true,passive:false});
+})();
+</script>
+<style>.favbuttons,.favbuttons *{-webkit-user-select:none;user-select:none}.favbuttons .btn{touch-action:manipulation;-webkit-tap-highlight-color:transparent}.favbuttons small span{pointer-events:none}</style></body></html>
