@@ -182,6 +182,13 @@ document.querySelector('.sub').textContent='Meteo reale qui e lungo il viaggio �
   const ids={favhome:['home','Casa'],fav1:['one','Preferita 1'],fav2:['two','Preferita 2']};
   Object.keys(ids).forEach(id=>{const b=$(id);if(b){b.type='button';b.dataset.favoriteKey=ids[id][0];b.dataset.favoriteLabel=ids[id][1];b.onclick=null}});
   function freshFavorites(){try{return JSON.parse(localStorage.getItem('meteoViaggioPreferite')||'{}')}catch(e){return{}}}
+  function showArrivalWeather(label){
+    if(!lastTrip||!lastTrip.best||!lastTrip.best.pts||!lastTrip.best.pts.length)return;
+    const point=lastTrip.best.pts[lastTrip.best.pts.length-1],w=point.w,info=inf(w.code),box=$('tripresult');
+    const old=box.querySelector('.favorite-arrival');if(old)old.remove();
+    const feel=w.feels!=null?' · percepita '+Math.round(w.feels)+'°':'';
+    box.insertAdjacentHTML('afterbegin','<div class="favorite-arrival"><div class="arrival-icon">'+info[0]+'</div><div><strong>Meteo a '+label+'</strong><span>'+info[1]+' · '+Math.round(w.temp)+'°'+feel+'<br>Pioggia '+Math.round(w.rain||0)+'% · vento '+Math.round(w.gust||0)+' km/h</span></div></div>');
+  }
   function choose(event){
     const button=event.target.closest&&event.target.closest('[data-favorite-key]');
     if(!button)return;
@@ -197,16 +204,16 @@ document.querySelector('.sub').textContent='Meteo reale qui e lungo il viaggio �
     input.blur();
     document.querySelectorAll('[data-favorite-key]').forEach(b=>b.classList.toggle('selected',b===button));
     const result=$('tripresult');if(result){result.innerHTML='';result.classList.add('hidden')}
-    st(label+' inserita come destinazione. Ora premi il pulsante blu.');
-    setTimeout(()=>{if(input.value!==value)input.value=value;input.scrollIntoView({behavior:'smooth',block:'center'})},50);
+    st(label+' selezionata. Avvio il meteo del viaggio…');
+    button.classList.add('loading');
+    setTimeout(async()=>{if(input.value!==value)input.value=value;input.scrollIntoView({behavior:'smooth',block:'center'});try{await tripSmart();showArrivalWeather(label)}finally{button.classList.remove('loading')}},80);
   }
   document.addEventListener('click',choose,true);
-  document.addEventListener('touchend',function(e){const b=e.target.closest&&e.target.closest('[data-favorite-key]');if(b)choose(e)},{capture:true,passive:false});
 })();
 </script>
-<style>.favbuttons,.favbuttons *{-webkit-user-select:none;user-select:none}.favbuttons .btn{touch-action:manipulation;-webkit-tap-highlight-color:transparent}.favbuttons small span{pointer-events:none}</style>
+<style>.favbuttons,.favbuttons *{-webkit-user-select:none;user-select:none}.favbuttons .btn{touch-action:manipulation;-webkit-tap-highlight-color:transparent}.favbuttons small span{pointer-events:none}.favbuttons .btn.loading{opacity:.78;pointer-events:none}.favbuttons .btn.loading small b:after{content:' · controllo…';color:#fff}.favorite-arrival{display:grid;grid-template-columns:auto minmax(0,1fr);gap:11px;align-items:center;margin:10px 0;padding:13px;border-radius:16px;background:linear-gradient(135deg,#124d6a,#183d72);border:1px solid #65c9ff77}.favorite-arrival .arrival-icon{font-size:38px}.favorite-arrival strong,.favorite-arrival span{display:block}.favorite-arrival strong{font-size:17px}.favorite-arrival span{margin-top:4px;color:#d8efff;font-size:12px;line-height:1.5}</style>
 <script>
-document.querySelector('.sub').textContent='Meteo reale qui e lungo il viaggio · v10.10-zoom-iphone';
+document.querySelector('.sub').textContent='Meteo reale qui e lungo il viaggio · v10.11-preferiti-viaggio';
 (function stopIphoneZoom(){
   const saveButton=$('favsave');
   function closeKeyboard(){const active=document.activeElement;if(active&&typeof active.blur==='function')active.blur()}
