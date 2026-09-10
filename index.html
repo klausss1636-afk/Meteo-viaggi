@@ -3,183 +3,60 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#071522">
 <title>Meteo Viaggio</title>
 <style>
-html,body{margin:0;background:#071522;color:#fff;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}
+html,body{margin:0;min-height:100%;background:#071522;color:#fff;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif}
 #boot{min-height:100vh;display:grid;place-items:center;padding:24px;text-align:center}
+#boot .small{font-size:13px;color:#abc0d2;margin-top:8px}
 </style>
 </head>
 <body>
-<div id="boot">Caricamento Meteo Viaggio…</div>
+<div id="boot"><div><div>Caricamento Meteo Viaggio…</div><div class="small">Avvio versione iPhone</div></div></div>
 <script>
 (async function(){
+  const boot = document.getElementById('boot');
   try {
-    const original = await fetch('https://raw.githubusercontent.com/klausss1636-afk/Meteo-viaggi/cf0d67a54e0d7c11dea6b85893ddacf5095e323d/index.html', {cache:'no-store'});
-    if(!original.ok) throw new Error('Impossibile caricare la versione base');
-    let html = await original.text();
-    const patch = `<script>
-/* Meteo Viaggio iPhone/PWA
-   Patch ricerca destinazioni v11.0
-   Supporta hotel, ristoranti, negozi, POI, indirizzi, città e paesi.
-   Da inserire in index.html DOPO gli script esistenti e PRIMA di </body>.
-*/
-(function(){
-  const input = document.getElementById('tripdest');
-  if (input) input.placeholder = 'Hotel, luogo, indirizzo o città';
-
-  async function fetchJSON(url, timeout=12000){
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), timeout);
-    try{
-      const response = await fetch(url, {
-        signal: controller.signal,
-        headers: {'Accept':'application/json'}
-      });
-      if(!response.ok) throw new Error('Servizio di ricerca non disponibile');
-      return await response.json();
-    } finally {
-      clearTimeout(timer);
-    }
-  }
-
-  function resultName(x, fallback){
-    if (x.display_name) return x.display_name;
-    const a = x.address || {};
-    const parts = [
-      x.name,
-      a.hotel || a.motel || a.hostel || a.restaurant || a.cafe ||
-      a.shop || a.attraction || a.amenity || a.tourism,
-      a.road,
-      a.house_number,
-      a.city || a.town || a.village || a.municipality,
-      a.province || a.county,
-      a.state
-    ].filter(Boolean);
-    return [...new Set(parts)].join(', ') || fallback;
-  }
-
-  async function searchNominatim(query){
-    const params = new URLSearchParams({
-      format: 'jsonv2',
-      q: query,
-      limit: '5',
-      countrycodes: 'it',
-      'accept-language': 'it',
-      addressdetails: '1',
-      namedetails: '1'
-    });
-
-    // Se il GPS è disponibile, preferisce risultati ragionevoli rispetto alla posizione,
-    // senza impedire ricerche in altre città.
-    if (typeof gpsPoint !== 'undefined' && gpsPoint &&
-        Number.isFinite(Number(gpsPoint.lat)) && Number.isFinite(Number(gpsPoint.lon))) {
-      const lat = Number(gpsPoint.lat), lon = Number(gpsPoint.lon);
-      const dLat = 3.5, dLon = 5.0;
-      params.set('viewbox', `${lon-dLon},${lat+dLat},${lon+dLon},${lat-dLat}`);
-      params.set('bounded', '0');
-    }
-
-    return await fetchJSON(
-      'https://nominatim.openstreetmap.org/search?' + params.toString()
-    );
-  }
-
-  async function searchOpenMeteo(query){
-    const data = await fetchJSON(
-      'https://geocoding-api.open-meteo.com/v1/search?name=' +
-      encodeURIComponent(query) +
-      '&count=5&language=it&format=json'
-    );
-    return (data.results || []).map(x => ({
-      lat: x.latitude,
-      lon: x.longitude,
-      name: [x.name, x.admin2, x.admin1].filter(Boolean).join(', ')
-    }));
-  }
-
-  geocodeDest = async function(query){
-    const q = String(query || '').trim();
-    if(!q) throw new Error('Inserisci una destinazione');
-
-    const cleaned = q
-      .replace(/\s*,\s*/g, ', ')
-      .replace(/([a-zà-ù])([0-9])/gi, '$1 $2')
-      .replace(/\s+/g, ' ')
-      .trim();
-
-    // 1) Ricerca libera: hotel, ristoranti, negozi, ospedali, centri commerciali,
-    //    monumenti, attività, vie, numeri civici, città, ecc.
-    try{
-      const list = await searchNominatim(cleaned);
-      if(list && list.length){
-        // Preferisce un risultato nominato/POI quando l'utente inserisce un nome struttura.
-        const exact = list.find(x => {
-          const n = String(x.name || x.namedetails?.name || '').toLowerCase();
-          return n && cleaned.toLowerCase().includes(n);
-        }) || list[0];
-
-        return {
-          lat: Number(exact.lat),
-          lon: Number(exact.lon),
-          name: resultName(exact, cleaned)
-        };
+    // Evita vecchie copie PWA bloccate.
+    try {
+      if ('serviceWorker' in navigator) {
+        const regs = await navigator.serviceWorker.getRegistrations();
+        await Promise.all(regs.map(r => r.unregister()));
       }
-    } catch(e){}
+      if ('caches' in window) {
+        const names = await caches.keys();
+        await Promise.all(names.map(n => caches.delete(n)));
+      }
+    } catch(e) {}
 
-    // 2) Secondo tentativo più tollerante per indirizzi.
-    const simplified = cleaned
-      .replace(/\b(hotel|albergo|ristorante|trattoria|pizzeria|bar|centro commerciale)\b/ig, '')
-      .replace(/\s+/g, ' ')
-      .trim();
+    const response = await fetch("https://raw.githubusercontent.com/klausss1636-afk/Meteo-viaggi/cf0d67a54e0d7c11dea6b85893ddacf5095e323d/index.html", {cache:'no-store'});
+    if (!response.ok) throw new Error('Base HTTP ' + response.status);
 
-    if(simplified && simplified !== cleaned){
-      try{
-        const list = await searchNominatim(simplified);
-        if(list && list[0]){
-          return {
-            lat: Number(list[0].lat),
-            lon: Number(list[0].lon),
-            name: resultName(list[0], cleaned)
-          };
-        }
-      } catch(e){}
+    let original = await response.text();
+
+    const patchText = decodeURIComponent(
+      Array.prototype.map.call(
+        atob("Ci8qIE1ldGVvIFZpYWdnaW8gaVBob25lL1BXQQogICBQYXRjaCByaWNlcmNhIGRlc3RpbmF6aW9uaSB2MTEuMAogICBTdXBwb3J0YSBob3RlbCwgcmlzdG9yYW50aSwgbmVnb3ppLCBQT0ksIGluZGlyaXp6aSwgY2l0dMOgIGUgcGFlc2kuCiAgIERhIGluc2VyaXJlIGluIGluZGV4Lmh0bWwgRE9QTyBnbGkgc2NyaXB0IGVzaXN0ZW50aSBlIFBSSU1BIGRpIDwvYm9keT4uCiovCihmdW5jdGlvbigpewogIGNvbnN0IGlucHV0ID0gZG9jdW1lbnQuZ2V0RWxlbWVudEJ5SWQoJ3RyaXBkZXN0Jyk7CiAgaWYgKGlucHV0KSBpbnB1dC5wbGFjZWhvbGRlciA9ICdIb3RlbCwgbHVvZ28sIGluZGlyaXp6byBvIGNpdHTDoCc7CgogIGFzeW5jIGZ1bmN0aW9uIGZldGNoSlNPTih1cmwsIHRpbWVvdXQ9MTIwMDApewogICAgY29uc3QgY29udHJvbGxlciA9IG5ldyBBYm9ydENvbnRyb2xsZXIoKTsKICAgIGNvbnN0IHRpbWVyID0gc2V0VGltZW91dCgoKSA9PiBjb250cm9sbGVyLmFib3J0KCksIHRpbWVvdXQpOwogICAgdHJ5ewogICAgICBjb25zdCByZXNwb25zZSA9IGF3YWl0IGZldGNoKHVybCwgewogICAgICAgIHNpZ25hbDogY29udHJvbGxlci5zaWduYWwsCiAgICAgICAgaGVhZGVyczogeydBY2NlcHQnOidhcHBsaWNhdGlvbi9qc29uJ30KICAgICAgfSk7CiAgICAgIGlmKCFyZXNwb25zZS5vaykgdGhyb3cgbmV3IEVycm9yKCdTZXJ2aXppbyBkaSByaWNlcmNhIG5vbiBkaXNwb25pYmlsZScpOwogICAgICByZXR1cm4gYXdhaXQgcmVzcG9uc2UuanNvbigpOwogICAgfSBmaW5hbGx5IHsKICAgICAgY2xlYXJUaW1lb3V0KHRpbWVyKTsKICAgIH0KICB9CgogIGZ1bmN0aW9uIHJlc3VsdE5hbWUoeCwgZmFsbGJhY2spewogICAgaWYgKHguZGlzcGxheV9uYW1lKSByZXR1cm4geC5kaXNwbGF5X25hbWU7CiAgICBjb25zdCBhID0geC5hZGRyZXNzIHx8IHt9OwogICAgY29uc3QgcGFydHMgPSBbCiAgICAgIHgubmFtZSwKICAgICAgYS5ob3RlbCB8fCBhLm1vdGVsIHx8IGEuaG9zdGVsIHx8IGEucmVzdGF1cmFudCB8fCBhLmNhZmUgfHwKICAgICAgYS5zaG9wIHx8IGEuYXR0cmFjdGlvbiB8fCBhLmFtZW5pdHkgfHwgYS50b3VyaXNtLAogICAgICBhLnJvYWQsCiAgICAgIGEuaG91c2VfbnVtYmVyLAogICAgICBhLmNpdHkgfHwgYS50b3duIHx8IGEudmlsbGFnZSB8fCBhLm11bmljaXBhbGl0eSwKICAgICAgYS5wcm92aW5jZSB8fCBhLmNvdW50eSwKICAgICAgYS5zdGF0ZQogICAgXS5maWx0ZXIoQm9vbGVhbik7CiAgICByZXR1cm4gWy4uLm5ldyBTZXQocGFydHMpXS5qb2luKCcsICcpIHx8IGZhbGxiYWNrOwogIH0KCiAgYXN5bmMgZnVuY3Rpb24gc2VhcmNoTm9taW5hdGltKHF1ZXJ5KXsKICAgIGNvbnN0IHBhcmFtcyA9IG5ldyBVUkxTZWFyY2hQYXJhbXMoewogICAgICBmb3JtYXQ6ICdqc29udjInLAogICAgICBxOiBxdWVyeSwKICAgICAgbGltaXQ6ICc1JywKICAgICAgY291bnRyeWNvZGVzOiAnaXQnLAogICAgICAnYWNjZXB0LWxhbmd1YWdlJzogJ2l0JywKICAgICAgYWRkcmVzc2RldGFpbHM6ICcxJywKICAgICAgbmFtZWRldGFpbHM6ICcxJwogICAgfSk7CgogICAgLy8gU2UgaWwgR1BTIMOoIGRpc3BvbmliaWxlLCBwcmVmZXJpc2NlIHJpc3VsdGF0aSByYWdpb25ldm9saSByaXNwZXR0byBhbGxhIHBvc2l6aW9uZSwKICAgIC8vIHNlbnphIGltcGVkaXJlIHJpY2VyY2hlIGluIGFsdHJlIGNpdHTDoC4KICAgIGlmICh0eXBlb2YgZ3BzUG9pbnQgIT09ICd1bmRlZmluZWQnICYmIGdwc1BvaW50ICYmCiAgICAgICAgTnVtYmVyLmlzRmluaXRlKE51bWJlcihncHNQb2ludC5sYXQpKSAmJiBOdW1iZXIuaXNGaW5pdGUoTnVtYmVyKGdwc1BvaW50LmxvbikpKSB7CiAgICAgIGNvbnN0IGxhdCA9IE51bWJlcihncHNQb2ludC5sYXQpLCBsb24gPSBOdW1iZXIoZ3BzUG9pbnQubG9uKTsKICAgICAgY29uc3QgZExhdCA9IDMuNSwgZExvbiA9IDUuMDsKICAgICAgcGFyYW1zLnNldCgndmlld2JveCcsIGAke2xvbi1kTG9ufSwke2xhdCtkTGF0fSwke2xvbitkTG9ufSwke2xhdC1kTGF0fWApOwogICAgICBwYXJhbXMuc2V0KCdib3VuZGVkJywgJzAnKTsKICAgIH0KCiAgICByZXR1cm4gYXdhaXQgZmV0Y2hKU09OKAogICAgICAnaHR0cHM6Ly9ub21pbmF0aW0ub3BlbnN0cmVldG1hcC5vcmcvc2VhcmNoPycgKyBwYXJhbXMudG9TdHJpbmcoKQogICAgKTsKICB9CgogIGFzeW5jIGZ1bmN0aW9uIHNlYXJjaE9wZW5NZXRlbyhxdWVyeSl7CiAgICBjb25zdCBkYXRhID0gYXdhaXQgZmV0Y2hKU09OKAogICAgICAnaHR0cHM6Ly9nZW9jb2RpbmctYXBpLm9wZW4tbWV0ZW8uY29tL3YxL3NlYXJjaD9uYW1lPScgKwogICAgICBlbmNvZGVVUklDb21wb25lbnQocXVlcnkpICsKICAgICAgJyZjb3VudD01Jmxhbmd1YWdlPWl0JmZvcm1hdD1qc29uJwogICAgKTsKICAgIHJldHVybiAoZGF0YS5yZXN1bHRzIHx8IFtdKS5tYXAoeCA9PiAoewogICAgICBsYXQ6IHgubGF0aXR1ZGUsCiAgICAgIGxvbjogeC5sb25naXR1ZGUsCiAgICAgIG5hbWU6IFt4Lm5hbWUsIHguYWRtaW4yLCB4LmFkbWluMV0uZmlsdGVyKEJvb2xlYW4pLmpvaW4oJywgJykKICAgIH0pKTsKICB9CgogIGdlb2NvZGVEZXN0ID0gYXN5bmMgZnVuY3Rpb24ocXVlcnkpewogICAgY29uc3QgcSA9IFN0cmluZyhxdWVyeSB8fCAnJykudHJpbSgpOwogICAgaWYoIXEpIHRocm93IG5ldyBFcnJvcignSW5zZXJpc2NpIHVuYSBkZXN0aW5hemlvbmUnKTsKCiAgICBjb25zdCBjbGVhbmVkID0gcQogICAgICAucmVwbGFjZSgvXHMqLFxzKi9nLCAnLCAnKQogICAgICAucmVwbGFjZSgvKFthLXrDoC3DuV0pKFswLTldKS9naSwgJyQxICQyJykKICAgICAgLnJlcGxhY2UoL1xzKy9nLCAnICcpCiAgICAgIC50cmltKCk7CgogICAgLy8gMSkgUmljZXJjYSBsaWJlcmE6IGhvdGVsLCByaXN0b3JhbnRpLCBuZWdvemksIG9zcGVkYWxpLCBjZW50cmkgY29tbWVyY2lhbGksCiAgICAvLyAgICBtb251bWVudGksIGF0dGl2aXTDoCwgdmllLCBudW1lcmkgY2l2aWNpLCBjaXR0w6AsIGVjYy4KICAgIHRyeXsKICAgICAgY29uc3QgbGlzdCA9IGF3YWl0IHNlYXJjaE5vbWluYXRpbShjbGVhbmVkKTsKICAgICAgaWYobGlzdCAmJiBsaXN0Lmxlbmd0aCl7CiAgICAgICAgLy8gUHJlZmVyaXNjZSB1biByaXN1bHRhdG8gbm9taW5hdG8vUE9JIHF1YW5kbyBsJ3V0ZW50ZSBpbnNlcmlzY2UgdW4gbm9tZSBzdHJ1dHR1cmEuCiAgICAgICAgY29uc3QgZXhhY3QgPSBsaXN0LmZpbmQoeCA9PiB7CiAgICAgICAgICBjb25zdCBuID0gU3RyaW5nKHgubmFtZSB8fCB4Lm5hbWVkZXRhaWxzPy5uYW1lIHx8ICcnKS50b0xvd2VyQ2FzZSgpOwogICAgICAgICAgcmV0dXJuIG4gJiYgY2xlYW5lZC50b0xvd2VyQ2FzZSgpLmluY2x1ZGVzKG4pOwogICAgICAgIH0pIHx8IGxpc3RbMF07CgogICAgICAgIHJldHVybiB7CiAgICAgICAgICBsYXQ6IE51bWJlcihleGFjdC5sYXQpLAogICAgICAgICAgbG9uOiBOdW1iZXIoZXhhY3QubG9uKSwKICAgICAgICAgIG5hbWU6IHJlc3VsdE5hbWUoZXhhY3QsIGNsZWFuZWQpCiAgICAgICAgfTsKICAgICAgfQogICAgfSBjYXRjaChlKXt9CgogICAgLy8gMikgU2Vjb25kbyB0ZW50YXRpdm8gcGnDuSB0b2xsZXJhbnRlIHBlciBpbmRpcml6emkuCiAgICBjb25zdCBzaW1wbGlmaWVkID0gY2xlYW5lZAogICAgICAucmVwbGFjZSgvXGIoaG90ZWx8YWxiZXJnb3xyaXN0b3JhbnRlfHRyYXR0b3JpYXxwaXp6ZXJpYXxiYXJ8Y2VudHJvIGNvbW1lcmNpYWxlKVxiL2lnLCAnJykKICAgICAgLnJlcGxhY2UoL1xzKy9nLCAnICcpCiAgICAgIC50cmltKCk7CgogICAgaWYoc2ltcGxpZmllZCAmJiBzaW1wbGlmaWVkICE9PSBjbGVhbmVkKXsKICAgICAgdHJ5ewogICAgICAgIGNvbnN0IGxpc3QgPSBhd2FpdCBzZWFyY2hOb21pbmF0aW0oc2ltcGxpZmllZCk7CiAgICAgICAgaWYobGlzdCAmJiBsaXN0WzBdKXsKICAgICAgICAgIHJldHVybiB7CiAgICAgICAgICAgIGxhdDogTnVtYmVyKGxpc3RbMF0ubGF0KSwKICAgICAgICAgICAgbG9uOiBOdW1iZXIobGlzdFswXS5sb24pLAogICAgICAgICAgICBuYW1lOiByZXN1bHROYW1lKGxpc3RbMF0sIGNsZWFuZWQpCiAgICAgICAgICB9OwogICAgICAgIH0KICAgICAgfSBjYXRjaChlKXt9CiAgICB9CgogICAgLy8gMykgRmFsbGJhY2sgcGVyIGNpdHTDoC9sb2NhbGl0w6AuCiAgICB0cnl7CiAgICAgIGNvbnN0IGxpc3QgPSBhd2FpdCBzZWFyY2hPcGVuTWV0ZW8oY2xlYW5lZCk7CiAgICAgIGlmKGxpc3QubGVuZ3RoKSByZXR1cm4gbGlzdFswXTsKICAgIH0gY2F0Y2goZSl7fQoKICAgIHRocm93IG5ldyBFcnJvcigKICAgICAgJ0Rlc3RpbmF6aW9uZSBub24gdHJvdmF0YS4gUHJvdmEgY29uIG5vbWUgc3RydXR0dXJhICsgY2l0dMOgLCBhZCBlc2VtcGlvIOKAnEhvdGVsIENhc2NpbmEgTWFyaXNhIE9wZXJh4oCdLicKICAgICk7CiAgfTsKCiAgLy8gQWdnaW9ybmEgaWwgdGVzdG8gZGkgc3RhdG8gcGVyIGNoaWFyaXJlIGNoZSBhY2NldHRhIGFuY2hlIHN0cnV0dHVyZS9QT0kuCiAgY29uc3QgdHJpcEJveCA9IGRvY3VtZW50LnF1ZXJ5U2VsZWN0b3IoJy50cmlwYm94Jyk7CiAgaWYgKHRyaXBCb3ggJiYgIWRvY3VtZW50LmdldEVsZW1lbnRCeUlkKCdwb2lTZWFyY2hIaW50JykpewogICAgY29uc3QgaGludCA9IGRvY3VtZW50LmNyZWF0ZUVsZW1lbnQoJ2RpdicpOwogICAgaGludC5pZCA9ICdwb2lTZWFyY2hIaW50JzsKICAgIGhpbnQuY2xhc3NOYW1lID0gJ3N1Yic7CiAgICBoaW50LnN0eWxlLm1hcmdpblRvcCA9ICc2cHgnOwogICAgaGludC50ZXh0Q29udGVudCA9ICdQdW9pIGNlcmNhcmUgaG90ZWwsIHJpc3RvcmFudGksIGF0dGl2aXTDoCwgbHVvZ2hpLCB2aWUgZSBjaXR0w6AuJzsKICAgIGNvbnN0IHNlYXJjaCA9IHRyaXBCb3gucXVlcnlTZWxlY3RvcignLnNlYXJjaCcpOwogICAgaWYgKHNlYXJjaCkgc2VhcmNoLmluc2VydEFkamFjZW50RWxlbWVudCgnYWZ0ZXJlbmQnLCBoaW50KTsKICB9CgogIGNvbnN0IHN1YiA9IGRvY3VtZW50LnF1ZXJ5U2VsZWN0b3IoJy5icmFuZCAuc3ViJyk7CiAgaWYgKHN1Yikgc3ViLnRleHRDb250ZW50ID0gJ01ldGVvIHJlYWxlIHF1aSBlIGx1bmdvIGlsIHZpYWdnaW8gwrcgdjExLjAtcmljZXJjYS1sdW9naGknOwp9KSgpOwo="),
+        c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)
+      ).join('')
+    );
+
+    const injected = '<script>\n' + patchText.replace(/<\/script>/gi,'<\\/script>') + '\n<\\/script>';
+
+    if (original.includes('</body>')) {
+      original = original.replace('</body>', injected + '\n</body>');
+    } else {
+      original += injected;
     }
 
-    // 3) Fallback per città/località.
-    try{
-      const list = await searchOpenMeteo(cleaned);
-      if(list.length) return list[0];
-    } catch(e){}
-
-    throw new Error(
-      'Destinazione non trovata. Prova con nome struttura + città, ad esempio “Hotel Cascina Marisa Opera”.'
-    );
-  };
-
-  // Aggiorna il testo di stato per chiarire che accetta anche strutture/POI.
-  const tripBox = document.querySelector('.tripbox');
-  if (tripBox && !document.getElementById('poiSearchHint')){
-    const hint = document.createElement('div');
-    hint.id = 'poiSearchHint';
-    hint.className = 'sub';
-    hint.style.marginTop = '6px';
-    hint.textContent = 'Puoi cercare hotel, ristoranti, attività, luoghi, vie e città.';
-    const search = tripBox.querySelector('.search');
-    if (search) search.insertAdjacentElement('afterend', hint);
-  }
-
-  const sub = document.querySelector('.brand .sub');
-  if (sub) sub.textContent = 'Meteo reale qui e lungo il viaggio · v11.0-ricerca-luoghi';
-})();
-<\/script>`;
-    if (html.includes('</body>')) html = html.replace('</body>', patch + '\n</body>');
-    else html += patch;
     document.open();
-    document.write(html);
+    document.write(original);
     document.close();
-  } catch(e) {
-    document.getElementById('boot').innerHTML =
-      '<div><h2>Meteo Viaggio</h2><p>Errore di caricamento.</p><p>Controlla la connessione e riprova.</p></div>';
+  } catch (e) {
+    boot.innerHTML =
+      '<div><b>Meteo Viaggio non è riuscito ad avviarsi.</b>' +
+      '<div class="small">Riapri con connessione internet attiva.<br>Errore: ' +
+      String(e.message || e) + '</div></div>';
   }
 })();
 </script>
