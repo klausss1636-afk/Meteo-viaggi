@@ -57,7 +57,7 @@ h1{font-size:23px;margin:0}.sub,.status,.updated,.foot{color:var(--muted);font-s
 </head>
 <body>
 <main class="app">
-<header class="top"><div class="brand"><div class="logo">🌦️</div><div><h1>Meteo Viaggio</h1><div class="sub">Meteo reale qui e lungo il viaggio · v11.3-preferiti-avvio-diretto</div></div></div><div class="live"><i class="dot"></i>LIVE</div></header>
+<header class="top"><div class="brand"><div class="logo">🌦️</div><div><h1>Meteo Viaggio</h1><div class="sub">Meteo reale qui e lungo il viaggio · v11.4-fix-js</div></div></div><div class="live"><i class="dot"></i>LIVE</div></header>
 
 <section class="card">
 <div class="title">🚗 Controlla il meteo del viaggio</div>
@@ -257,7 +257,7 @@ function useFav(k){
   $('tripdest').value=value;
   st('Destinazione selezionata: '+value+'. Avvio controllo meteo viaggio…');
   setTimeout(()=>trip(),120);
-}$('tripdest').value=favs[k];st('Destinazione selezionata. Premi “Controlla meteo viaggio”.')}
+}
 $('voice').checked=voiceOn;$('voice').onchange=()=>{voiceOn=$('voice').checked;localStorage.setItem('meteoViaggioVoce',voiceOn?'on':'off')};
 $('here').onclick=here;$('refresh').onclick=()=>p?load():here;$('backhere').onclick=here;$('citygo').onclick=citySearch;$('city').onkeydown=e=>e.key==='Enter'&&citySearch();
 $('tripgo').onclick=trip;$('tripdest').onkeydown=e=>e.key==='Enter'&&trip();$('play').onclick=toggleRadar;$('latest').onclick=()=>setFrame(frames.length-1);
