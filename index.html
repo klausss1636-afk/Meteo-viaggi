@@ -190,7 +190,7 @@ async function weatherAt(x,days=7){
  let qs=new URLSearchParams({latitude:x.lat,longitude:x.lon,timezone:'auto',forecast_days:String(days),current:'temperature_2m,relative_humidity_2m,apparent_temperature,is_day,precipitation,rain,weather_code,wind_speed_10m',hourly:'temperature_2m,apparent_temperature,precipitation_probability,precipitation,weather_code,visibility,wind_gusts_10m',daily:'weather_code,temperature_2m_max,temperature_2m_min,apparent_temperature_max,apparent_temperature_min,precipitation_probability_max,precipitation_sum,wind_gusts_10m_max'});
  return fetchJSON('https://api.open-meteo.com/v1/forecast?'+qs);
 }
-function initMap(){if(map)return;map=L.map('radar').setView([43.8,11.1],7);L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}@2x.png',{subdomains:'abcd',maxZoom:20,attribution:'© OpenStreetMap © CARTO'}).addTo(map)}
+function initMap(){if(map)return;map=L.map('radar').setView([43.8,11.1],7);L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap'}).addTo(map)}
 function mapPos(){initMap();map.setView([p.lat,p.lon],9);if(marker)marker.remove();marker=L.circleMarker([p.lat,p.lon],{radius:8,color:'#fff',weight:3,fillColor:'#268cff',fillOpacity:1}).addTo(map);setTimeout(()=>map.invalidateSize(),100)}
 function warning(j,n){
  let h=j.hourly,r=[];
