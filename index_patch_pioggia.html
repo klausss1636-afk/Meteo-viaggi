@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<title>Meteo Viaggio - patch pioggia oraria</title>
+</head>
+<body>
+<!--
+Questo file è una PATCH, non l'index completo originale.
+La versione completa è troppo grande per essere ricostruita qui senza rischiare di perdere parti.
+-->
+<script>
+function rainCountdown(j,n){
+ let h=j.hourly,now=Date.now(),found=-1,end=-1,wet=(j.current.precipitation||0)>.1;
+ for(let z=n;z<Math.min(n+24,h.time.length);z++){
+  let mm=h.precipitation[z]||0,prob=h.precipitation_probability[z]||0;
+  if(mm>.1||(prob>=60&&mm>0)){found=z;break}
+ }
+ if(found>=0){
+  end=found;
+  while(end+1<Math.min(n+24,h.time.length)&&((h.precipitation[end+1]||0)>.1||((h.precipitation_probability[end+1]||0)>=60&&(h.precipitation[end+1]||0)>0))) end++;
+ }
+ if(wet){
+  $('raincount').innerHTML='<strong>🌧️ Sta piovendo adesso</strong><span>Controllo automatico delle prossime 24 ore.</span>';
+ }else if(found>=0){
+  let start=new Date(h.time[found]),mins=Math.max(1,Math.round((start.getTime()-now)/60000));
+  let hh=start.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'});
+  let prob=Math.round(h.precipitation_probability[found]||0);
+  let until=end>found?' · fino alle '+new Date(h.time[end]).toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'}):'';
+  let when=mins<60?'tra circa '+mins+' min':'dalle '+hh;
+  $('raincount').innerHTML=`<strong>🌧️ Pioggia prevista ${when}</strong><span>Inizio previsto: ${hh}${until} · probabilità ${prob}%</span>`;
+ }else{
+  $('raincount').innerHTML='<strong>☀️ Nessuna pioggia prevista nelle prossime 24 ore</strong><span>Il controllo si aggiorna automaticamente.</span>';
+ }
+}
+</script>
+</body>
+</html>
