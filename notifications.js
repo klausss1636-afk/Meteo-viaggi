@@ -1,70 +1,174 @@
-/* Meteo Viaggio - notifiche meteo v1.3.0 */
+/* Meteo Viaggio - notifiche meteo v1.4.0 */
 (()=>{
   const KEY='mv-weather-notifications';
   const LAST='mv-weather-last-alert';
   const CHECK_MS=15*60*1000;
 
-  const enabled=()=>localStorage.getItem(KEY)==='1' && 'Notification' in window && Notification.permission==='granted';
-  const fmt=d=>d.toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'});
+  const enabled=()=>localStorage.getItem(KEY)==='1';
+
+  const fmt=d=>d.toLocaleTimeString('it-IT',{
+    hour:'2-digit',
+    minute:'2-digit'
+  });
 
   function getEvent(j){
-    const h=j?.hourly;if(!h?.time?.length)return null;
-    const now=Date.now(), end=now+12*3600*1000;
+    const h=j?.hourly;
+    if(!h?.time?.length) return null;
+
+    const now=Date.now();
+    const end=now+12*3600*1000;
     let best=null;
+
     for(let i=0;i<h.time.length;i++){
       const t=new Date(h.time[i]).getTime();
-      if(t<now-30*60000||t>end)continue;
-      const code=h.weather_code?.[i]??0;
-      const pop=h.precipitation_probability?.[i]??0;
-      const gust=h.wind_gusts_10m?.[i]??0;
-      let ev=null;
-      if([96,99].includes(code)) ev={rank:5,kind:'grandine',title:'⛈️ Allerta temporale / grandine',body:`Possibile temporale con grandine verso le ${fmt(new Date(t))}.`};
-      else if(code===95) ev={rank:4,kind:'temporale',title:'⛈️ Temporale in arrivo',body:`Temporale previsto verso le ${fmt(new Date(t))}.`};
-      else if([65,82].includes(code)) ev={rank:4,kind:'pioggia-forte',title:'🌧️ Pioggia forte in arrivo',body:`Rovesci forti previsti verso le ${fmt(new Date(t))}.`};
-      else if([61,63,80,81].includes(code)||pop>=60) ev={rank:2,kind:'pioggia',title:'🌧️ Pioggia vicina',body:`Pioggia prevista verso le ${fmt(new Date(t))}${pop?` · probabilità ${Math.round(pop)}%`:''}.`};
-      if(gust>=75){const w={rank:5,kind:'vento-forte',title:'💨 Raffiche molto forti',body:`Raffiche fino a circa ${Math.round(gust)} km/h verso le ${fmt(new Date(t))}.`};if(!ev||w.rank>ev.rank)ev=w;}
-      else if(gust>=55){const w={rank:3,kind:'vento',title:'💨 Vento forte in arrivo',body:`Raffiche fino a circa ${Math.round(gust)} km/h verso le ${fmt(new Date(t))}.`};if(!ev||w.rank>ev.rank)ev=w;}
-      if(ev){ev.time=t;if(!best||ev.rank>best.rank||(ev.rank===best.rank&&t<best.time))best=ev;}
+      if(t<now || t>end) continue;
+
+      const code=Number(h.weather_code?.[i] ?? 0);
+      const rain=Number(h.precipitation_probability?.[i] ?? 0);
+      const precip=Number(h.precipitation?.[i] ?? 0);
+      const wind=Number(h.wind_gusts_10m?.[i] ?? 0);
+
+      let rank=0, type='', text='';
+
+      if(code===96 || code===99){
+        rank=100; type='grandine';
+        text='⛈️ Possibile GRANDINE / temporale forte';
+      } else if(code===95){
+        rank=90; type='temporale';
+        text='⛈️ Temporale in arrivo';
+      } else if(wind>=75){
+        rank=80; type='vento-forte';
+        text=`💨 Vento molto forte in arrivo: raffiche ${Math.round(wind)} km/h`;
+      } else if(wind>=55){
+        rank=70; type='vento';
+        text=`💨 Vento forte in arrivo: raffiche ${Math.round(wind)} km/h`;
+      } else if(rain>=80 || precip>=5){
+        rank=60; type='pioggia-forte';
+        text=`🌧️ Pioggia forte in arrivo (${Math.round(rain)}%)`;
+      } else if(rain>=60){
+        rank=50; type='pioggia';
+        text=`🌧️ Sta per piovere (${Math.round(rain)}%)`;
+      }
+
+      if(rank && (!best || rank>best.rank)){
+        best={rank,type,text,time:new Date(h.time[i]),stamp:h.time[i]};
+      }
     }
     return best;
   }
 
   async function notify(j,force=false){
-    if(!enabled())return;
-    const ev=getEvent(j);if(!ev)return;
-    const sig=`${ev.kind}:${new Date(ev.time).toISOString().slice(0,13)}`;
-    const old=JSON.parse(localStorage.getItem(LAST)||'{}');
-    if(!force&&old.sig===sig&&Date.now()-(old.at||0)<6*3600*1000)return;
-    const reg=await navigator.serviceWorker.ready;
-    await reg.showNotification(ev.title,{body:ev.body,icon:'/meteo-viaggio-192-v124.png',badge:'/favicon-32x32.png',tag:'meteo-viaggio-'+ev.kind,renotify:true,data:{url:'/'}});
-    localStorage.setItem(LAST,JSON.stringify({sig,at:Date.now()}));
+    const ev=getEvent(j);
+    if(!ev) return;
+
+    const id=`${ev.type}-${ev.stamp}`;
+    if(!force && localStorage.getItem(LAST)===id) return;
+
+    const title='⚠️ Meteo Viaggio';
+    const body=`${ev.text}\nPrevisto verso le ${fmt(ev.time)}`;
+
+    if('Notification' in window && Notification.permission==='granted'){
+      try{
+        new Notification(title,{
+          body,
+          icon:'icon-192.png',
+          tag:'meteo-viaggio-weather',
+          renotify:true
+        });
+      }catch(e){}
+    }
+
+    localStorage.setItem(LAST,id);
+  }
+
+  async function weather(){
+    if(!navigator.geolocation) return;
+
+    navigator.geolocation.getCurrentPosition(async pos=>{
+      try{
+        const lat=pos.coords.latitude;
+        const lon=pos.coords.longitude;
+        const url=
+          `https://api.open-meteo.com/v1/forecast`+
+          `?latitude=${lat}`+
+          `&longitude=${lon}`+
+          `&hourly=weather_code,precipitation_probability,precipitation,wind_gusts_10m`+
+          `&forecast_days=2&timezone=auto`;
+
+        const r=await fetch(url);
+        if(!r.ok) return;
+        await notify(await r.json(),false);
+      }catch(e){}
+    },()=>{},{
+      enableHighAccuracy:false,
+      timeout:10000,
+      maximumAge:300000
+    });
+  }
+
+  async function askPermission(){
+    if(!('Notification' in window)){
+      alert('Le notifiche non sono supportate su questo dispositivo.');
+      return;
+    }
+
+    const p=await Notification.requestPermission();
+    if(p==='granted'){
+      localStorage.setItem(KEY,'1');
+      sync();
+      weather();
+      alert('Allerte meteo attivate.');
+    }else{
+      localStorage.setItem(KEY,'0');
+      sync();
+      alert('Permesso notifiche non concesso.');
+    }
   }
 
   function addButton(){
-    if(document.getElementById('weatherNotify'))return;
-    const card=document.querySelector('.alerts-card');if(!card)return;
-    const b=document.createElement('button');b.id='weatherNotify';b.className='weather-notify-btn';
-    const sync=()=>{b.textContent=enabled()?'🔔 Notifiche meteo attive':'🔔 Attiva notifiche meteo';b.classList.toggle('active',enabled());};
+    if(document.getElementById('mv-weather-alert-btn')) return;
+
+    const b=document.createElement('button');
+    b.id='mv-weather-alert-btn';
+
     b.onclick=async()=>{
-      if(!('Notification' in window)){alert('Le notifiche non sono supportate su questo dispositivo/browser. Su iPhone installa Meteo Viaggio nella schermata Home e aprila da lì.');return;}
-      if(Notification.permission!=='granted'){
-        const p=await Notification.requestPermission();
-        if(p!=='granted'){localStorage.removeItem(KEY);sync();alert('Permesso notifiche non concesso.');return;}
+      if(enabled()){
+        localStorage.setItem(KEY,'0');
+        sync();
+      }else{
+        await askPermission();
       }
-      localStorage.setItem(KEY,'1');sync();
-      try{if(window.pos){const j=await window.wx(pos.lat,pos.lon);await notify(j,true);}}catch{}
     };
-    card.appendChild(b);sync();
+
+    Object.assign(b.style,{
+      position:'fixed', right:'14px', bottom:'86px', zIndex:'99999',
+      border:'0', borderRadius:'14px', padding:'11px 15px',
+      fontWeight:'700', fontSize:'14px', background:'#123b55',
+      color:'#fff', boxShadow:'0 3px 12px #0008'
+    });
+
+    document.body.appendChild(b);
+    sync();
   }
 
-  const oldRender=window.render;
-  if(typeof oldRender==='function'){
-    window.render=function(j,n){const out=oldRender.apply(this,arguments);notify(j).catch(()=>{});return out;};
+  function sync(){
+    const b=document.getElementById('mv-weather-alert-btn');
+    if(!b) return;
+    b.textContent=enabled() ? '🔔 Allerte meteo ON' : '🔕 Attiva allerte meteo';
+    b.title=enabled()
+      ? 'Tocca per disattivare le allerte meteo'
+      : 'Tocca per attivare le allerte meteo';
   }
-  document.addEventListener('DOMContentLoaded',addButton);
-  if(document.readyState!=='loading')addButton();
 
-  setInterval(async()=>{
-    try{if(enabled()&&window.pos&&typeof window.wx==='function'){const j=await window.wx(pos.lat,pos.lon);await notify(j);}}catch{}
-  },CHECK_MS);
+  function start(){
+    addButton();
+    if(enabled()) weather();
+    setInterval(()=>{ if(enabled()) weather(); },CHECK_MS);
+  }
+
+  if(document.readyState==='loading'){
+    document.addEventListener('DOMContentLoaded',start);
+  }else{
+    start();
+  }
 })();
