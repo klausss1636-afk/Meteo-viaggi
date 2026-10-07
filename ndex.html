@@ -2414,5 +2414,318 @@ setInterval(()=>{if(radarOn&&map)refreshRadar()},5*60*1000);
 
 </section>
 
+<!-- METEO VIAGGIO - ALLERTE AUTOMATICHE -->
+<script>
+(() => {
+  const MV_ALERT_CHECK_MS = 5 * 60 * 1000;
+  let mvLastAlert = "";
+  let mvLastAlertTime = 0;
+
+  function mvCreateAlertBox() {
+    if (document.getElementById("mv-weather-alert")) return;
+
+    const box = document.createElement("div");
+    box.id = "mv-weather-alert";
+
+    box.style.cssText = `
+      display:none;
+      position:fixed;
+      top:18px;
+      left:50%;
+      transform:translateX(-50%);
+      z-index:999999;
+      width:min(520px,90vw);
+      padding:16px 20px;
+      border-radius:16px;
+      background:#ffc400;
+      color:#111;
+      border:3px solid #111;
+      box-shadow:0 6px 24px rgba(0,0,0,.45);
+      font-family:Arial,sans-serif;
+      font-size:18px;
+      font-weight:800;
+      text-align:center;
+    `;
+
+    document.body.appendChild(box);
+  }
+
+  function mvBeep() {
+    try {
+      const ctx = new (window.AudioContext || window.webkitAudioContext)();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+
+      osc.frequency.value = 880;
+      gain.gain.value = 0.15;
+
+      osc.start();
+
+      setTimeout(() => {
+        osc.stop();
+        ctx.close();
+      }, 350);
+    } catch (e) {}
+  }
+
+  function mvShowAlert(icon, title, message) {
+    mvCreateAlertBox();
+
+    const key = title + "|" + message;
+    const now = Date.now();
+
+    /* evita di ripetere continuamente lo stesso avviso */
+    if (key === mvLastAlert && now - mvLastAlertTime < 30 * 60 * 1000) {
+      return;
+    }
+
+    mvLastAlert = key;
+    mvLastAlertTime = now;
+
+    const box = document.getElementById("mv-weather-alert");
+
+    box.innerHTML =
+      `<div style="font-size:23px;margin-bottom:5px">${icon} ${title}</div>` +
+      `<div>${message}</div>`;
+
+    box.style.display = "block";
+
+    mvBeep();
+
+    if (navigator.vibrate) {
+      navigator.vibrate([250,150,250]);
+    }
+
+    /* lettura vocale */
+    try {
+      speechSynthesis.cancel();
+      const speech = new SpeechSynthesisUtterance(
+        title + ". " + message
+      );
+      speech.lang = "it-IT";
+      speech.rate = 0.95;
+      speechSynthesis.speak(speech);
+    } catch (e) {}
+
+    setTimeout(() => {
+      box.style.display = "none";
+    }, 15000);
+  }
+
+  async function mvCheckWeather(lat, lon) {
+    try {
+      const url =
+        "https://api.open-meteo.com/v1/forecast" +
+        "?latitude=" + encodeURIComponent(lat) +
+        "&longitude=" + encodeURIComponent(lon) +
+        "&current=weather_code,precipitation,rain,wind_speed_10m,wind_gusts_10m" +
+        "&hourly=precipitation_probability,weather_code,wind_gusts_10m,visibility" +
+        "&forecast_days=1&timezone=auto";
+
+      const res = await fetch(url);
+
+      if (!res.ok) return;
+
+      const data = await res.json();
+      const current = data.current || {};
+
+      const code = Number(current.weather_code || 0);
+      const gust = Number(current.wind_gusts_10m || 0);
+      const wind = Number(current.wind_speed_10m || 0);
+
+      /* GRANDINE */
+      if (code === 96 || code === 99) {
+        mvShowAlert(
+          "🧊",
+          "ATTENZIONE GRANDINE",
+          "Grandine o temporale con grandine nella tua zona. Guida con prudenza."
+        );
+        return;
+      }
+
+      /* TEMPORALE */
+      if (code >= 95 && code <= 99) {
+        mvShowAlert(
+          "⛈️",
+          "TEMPORALE",
+          "Temporale nella tua zona. Possibili forti precipitazioni."
+        );
+        return;
+      }
+
+      /* VENTO MOLTO FORTE */
+      if (gust >= 70) {
+        mvShowAlert(
+          "💨",
+          "RAFFICHE MOLTO FORTI",
+          "Raffiche fino a " + Math.round(gust) +
+          " km/h. Riduci la velocità."
+        );
+        return;
+      }
+
+      /* VENTO FORTE */
+      if (gust >= 50 || wind >= 40) {
+        mvShowAlert(
+          "💨",
+          "VENTO FORTE",
+          "Possibili raffiche fino a " +
+          Math.round(gust) + " km/h."
+        );
+        return;
+      }
+
+      /* NEBBIA */
+      if (code === 45 || code === 48) {
+        mvShowAlert(
+          "🌫️",
+          "NEBBIA",
+          "Visibilità ridotta. Procedi con prudenza."
+        );
+        return;
+      }
+
+      /* PIOGGIA ATTUALE */
+      if (
+        Number(current.rain || 0) > 0 ||
+        Number(current.precipitation || 0) > 0 ||
+        (code >= 51 && code <= 67) ||
+        (code >= 80 && code <= 82)
+      ) {
+        mvShowAlert(
+          "🌧️",
+          "PIOGGIA",
+          "Sta piovendo nella zona in cui ti trovi."
+        );
+        return;
+      }
+
+      /* CONTROLLO PROSSIME 3 ORE */
+      if (!data.hourly || !data.hourly.time) return;
+
+      const now = Date.now();
+
+      for (let i = 0; i < data.hourly.time.length; i++) {
+        const forecastTime = new Date(data.hourly.time[i]).getTime();
+
+        if (
+          forecastTime < now ||
+          forecastTime > now + (3 * 60 * 60 * 1000)
+        ) continue;
+
+        const probability =
+          Number(data.hourly.precipitation_probability[i] || 0);
+
+        const futureCode =
+          Number(data.hourly.weather_code[i] || 0);
+
+        const futureGust =
+          Number(data.hourly.wind_gusts_10m[i] || 0);
+
+        const visibility =
+          Number(data.hourly.visibility[i] || 99999);
+
+        const ora = new Date(data.hourly.time[i])
+          .toLocaleTimeString("it-IT", {
+            hour:"2-digit",
+            minute:"2-digit"
+          });
+
+        if (futureCode === 96 || futureCode === 99) {
+          mvShowAlert(
+            "🧊",
+            "RISCHIO GRANDINE",
+            "Possibile grandine verso le " + ora + "."
+          );
+          return;
+        }
+
+        if (futureCode >= 95 && futureCode <= 99) {
+          mvShowAlert(
+            "⛈️",
+            "TEMPORALE IN ARRIVO",
+            "Possibile temporale verso le " + ora + "."
+          );
+          return;
+        }
+
+        if (futureGust >= 60) {
+          mvShowAlert(
+            "💨",
+            "VENTO FORTE IN ARRIVO",
+            "Raffiche previste fino a " +
+            Math.round(futureGust) +
+            " km/h verso le " + ora + "."
+          );
+          return;
+        }
+
+        if (visibility < 1000) {
+          mvShowAlert(
+            "🌫️",
+            "NEBBIA IN ARRIVO",
+            "Visibilità molto ridotta prevista verso le " + ora + "."
+          );
+          return;
+        }
+
+        if (probability >= 60) {
+          mvShowAlert(
+            "🌧️",
+            "PIOGGIA IN ARRIVO",
+            "Probabilità di pioggia " +
+            probability +
+            "%. Prevista verso le " + ora + "."
+          );
+          return;
+        }
+      }
+
+    } catch (err) {
+      console.warn("Meteo Viaggio - errore controllo allerte:", err);
+    }
+  }
+
+  function mvGetPositionAndCheck() {
+    if (!navigator.geolocation) return;
+
+    navigator.geolocation.getCurrentPosition(
+      pos => {
+        mvCheckWeather(
+          pos.coords.latitude,
+          pos.coords.longitude
+        );
+      },
+      err => {
+        console.warn(
+          "Meteo Viaggio - posizione non disponibile:",
+          err
+        );
+      },
+      {
+        enableHighAccuracy:true,
+        timeout:15000,
+        maximumAge:60000
+      }
+    );
+  }
+
+  /* Avvio */
+  mvCreateAlertBox();
+
+  setTimeout(mvGetPositionAndCheck, 3000);
+
+  /* Aggiornamento automatico ogni 5 minuti */
+  setInterval(
+    mvGetPositionAndCheck,
+    MV_ALERT_CHECK_MS
+  );
+
+})();
+</script>
+<!-- FINE ALLERTE METEO VIAGGIO -->
 </body>
 </html>
