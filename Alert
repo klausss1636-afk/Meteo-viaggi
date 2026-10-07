@@ -6,281 +6,472 @@
 <meta name="theme-color" content="#071522">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<link rel="manifest" href="manifest.webmanifest">
-<link rel="apple-touch-icon" href="icon-192.png">
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+
 <title>Meteo Viaggio</title>
+
 <style>
-:root{--bg:#071522;--card:#102438;--card2:#0b1c2c;--text:#fff;--muted:#abc0d2;--green:#61dfa3;--blue:#4bbcff;--yellow:#ffd166;--red:#ff6262}
+:root{
+  --bg:#071522;
+  --card:#102438;
+  --text:#fff;
+  --muted:#abc0d2;
+  --green:#61dfa3;
+  --blue:#4bbcff;
+  --yellow:#ffd166;
+  --red:#ff6262;
+}
+
 *{box-sizing:border-box}
-html,body{margin:0;min-height:100%;background:linear-gradient(#071522,#0a1b2b 55%,#071522);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;overflow-x:hidden}
-button,input,select{font:inherit}
-.app{width:100%;max-width:760px;margin:auto;padding:max(16px,env(safe-area-inset-top)) 12px max(28px,env(safe-area-inset-bottom))}
-.top,.brand,.radarhead{display:flex;align-items:center}.top,.radarhead{justify-content:space-between;gap:10px}.brand{gap:11px;min-width:0}.brand>div:last-child{min-width:0}
-.logo{width:50px;height:50px;flex:0 0 50px;display:grid;place-items:center;border-radius:16px;background:linear-gradient(145deg,#258ef5,#56d1ff);font-size:28px}
-h1{font-size:23px;margin:0}.sub,.status,.updated,.foot{color:var(--muted);font-size:12px}
-.live{border:1px solid #61dfa355;border-radius:999px;padding:7px 10px;font-size:12px;font-weight:800;white-space:nowrap}
-.dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--green);margin-right:5px}
-.card,.alert{background:linear-gradient(145deg,#11283e,#0e2032);border:1px solid #ffffff18;border-radius:20px;padding:15px;margin:10px 0}
-.title,.place{font-size:17px;font-weight:900}
-.search{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;margin:10px 0 8px}
-.search input,.btn,select{min-height:49px;border-radius:14px}
-.search input,select{width:100%;min-width:0;border:1px solid #ffffff18;background:var(--card2);color:white;padding:0 13px}
-.btn{border:0;background:linear-gradient(135deg,#3ab8ff,#687bff);color:white;font-weight:900;padding:0 15px}
-.btn.alt{background:var(--card);border:1px solid #ffffff18}
-.quick,.radarbuttons{display:grid;grid-template-columns:1fr 1fr;gap:8px}
-.status{min-height:17px;margin:9px 2px}
-.favtitle{display:flex;justify-content:space-between;align-items:center;margin-top:10px;color:var(--muted);font-size:12px}
-.favtitle button{border:0;background:none;color:#69c9ff;font-weight:800;padding:7px}
-.favbuttons{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px}
-.favbuttons .btn{padding:8px 6px;min-height:58px;overflow:hidden}
-.favbuttons small{display:block;margin-top:4px;color:var(--muted);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.depart{margin:10px 0 5px}.depart label{display:block;color:var(--muted);font-size:12px;margin-bottom:6px}
-.now{display:grid;grid-template-columns:auto 1fr;align-items:center;gap:15px;margin-top:11px}
-.wi{font-size:60px}.temp{font-size:48px;font-weight:950;line-height:.95}.desc{font-size:16px;font-weight:800;margin-top:7px}
-.metrics{display:grid;grid-template-columns:repeat(5,1fr);gap:7px;margin-top:15px}
-.metric,.hour,.day{background:#07152288;border:1px solid #ffffff10;border-radius:14px;padding:10px 6px;text-align:center}
-.metric span,.hour small,.day small{display:block;color:var(--muted);font-size:11px}.metric b{display:block;font-size:15px;margin-top:4px}
-.alert{display:grid;grid-template-columns:auto 1fr;align-items:center;gap:12px}.alert.ok{box-shadow:inset 5px 0 var(--green)}.alert.warn{box-shadow:inset 5px 0 var(--yellow)}.alert.bad{box-shadow:inset 5px 0 var(--red)}
-.alert .ico{font-size:30px}.alert b{font-size:16px}.alert p{margin:3px 0 0;color:var(--muted);font-size:12px}
-.hours,.days{display:flex;gap:8px;overflow-x:auto;padding-top:11px}.hour{flex:0 0 125px}.day{flex:0 0 165px}.hour .hi,.day .di{font-size:29px;margin:6px}.hour b,.day b{font-size:18px}
-.raincount{margin:10px 0;padding:13px;border-radius:16px;background:linear-gradient(135deg,#0c4672,#262c73);border:1px solid #65c9ff66}
-.raincount strong{display:block;font-size:17px}.raincount span{display:block;color:#d5edff;font-size:12px;margin-top:4px}
-#radar{height:390px;border-radius:16px;background:#dce6ee;margin:10px 0;overflow:hidden}.radarbuttons .btn{min-height:44px}.radartime{text-align:right;color:var(--muted);font-size:11px}
-.tripresult{margin-top:10px}.verdict{border-radius:16px;padding:14px;border:1px solid #ffffff18;background:#07152299}.verdict.ok{box-shadow:inset 5px 0 var(--green)}.verdict.warn{box-shadow:inset 5px 0 var(--yellow)}.verdict.bad{box-shadow:inset 5px 0 var(--red)}.verdict strong{display:block;font-size:19px}
-.tripstats{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin-top:9px}.tripstat{background:#07152288;border-radius:13px;padding:9px;text-align:center;font-size:11px;color:var(--muted)}.tripstat b{display:block;color:white;font-size:15px;margin-top:3px}
-.stops{display:grid;gap:7px;margin-top:9px}.stop{display:grid;grid-template-columns:38px 1fr auto;gap:8px;align-items:center;background:#07152288;border-radius:14px;padding:10px}.stop .si{font-size:24px}.stop b{font-size:14px}.stop small{display:block;color:var(--muted);margin-top:3px}.km{font-weight:900;text-align:right}
-.hidden{display:none!important}.foot{text-align:center;line-height:1.5;padding:10px}
-.modal{position:fixed;inset:0;z-index:3000;background:#06111cf5;padding:20px;display:grid;place-items:center}.modalin{width:min(100%,560px);background:#102438;border:1px solid #ffffff20;border-radius:22px;padding:18px;max-height:90vh;overflow:auto}.modalin h2{margin:0 0 10px}.modalin label{display:block;color:var(--muted);font-size:13px;margin-top:10px}.modalin input{display:block;width:100%;min-height:48px;margin-top:5px;border:1px solid #ffffff20;border-radius:13px;background:#071522;color:#fff;padding:0 12px}.modalin .btn{width:100%;margin-top:10px}
-@media(max-width:560px){.metrics{grid-template-columns:1fr 1fr}.search{grid-template-columns:1fr}.tripstats{grid-template-columns:1fr 1fr}.favbuttons{grid-template-columns:1fr}.favbuttons .btn{text-align:left;padding-left:16px}#radar{height:43vh;min-height:330px}}
+
+html,body{
+  margin:0;
+  min-height:100%;
+  background:linear-gradient(#071522,#0a1b2b 55%,#071522);
+  color:var(--text);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Arial,sans-serif;
+}
+
+.app{
+  width:100%;
+  max-width:760px;
+  margin:auto;
+  padding:18px;
+}
+
+h1{
+  margin:4px 0;
+  font-size:27px;
+}
+
+.sub{
+  color:var(--muted);
+  margin-bottom:18px;
+}
+
+.card{
+  background:#102438;
+  border:1px solid #ffffff18;
+  border-radius:18px;
+  padding:16px;
+  margin:12px 0;
+}
+
+.status{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  font-weight:800;
+}
+
+.dot{
+  width:10px;
+  height:10px;
+  border-radius:50%;
+  background:var(--green);
+}
+
+.alert{
+  display:none;
+  border-radius:18px;
+  padding:18px;
+  margin:14px 0;
+  font-weight:800;
+  font-size:18px;
+  animation:pulse 1.4s infinite;
+}
+
+.alert.show{display:block}
+
+.alert.rain{
+  background:#174c73;
+  border:2px solid #4bbcff;
+}
+
+.alert.storm{
+  background:#604800;
+  border:2px solid #ffd166;
+}
+
+.alert.hail{
+  background:#663b72;
+  border:2px solid #efb8ff;
+}
+
+.alert.wind{
+  background:#13554c;
+  border:2px solid #61dfa3;
+}
+
+.alert.fog{
+  background:#3c4650;
+  border:2px solid #c7d1d9;
+}
+
+.alert.danger{
+  background:#711d25;
+  border:2px solid #ff6262;
+}
+
+.alert-title{
+  font-size:22px;
+  margin-bottom:6px;
+}
+
+.alert-time{
+  margin-top:8px;
+  font-size:15px;
+  font-weight:600;
+  opacity:.9;
+}
+
+button{
+  width:100%;
+  border:0;
+  border-radius:14px;
+  padding:15px;
+  margin-top:10px;
+  font-size:16px;
+  font-weight:900;
+  color:white;
+  background:linear-gradient(135deg,#3ab8ff,#687bff);
+}
+
+.small{
+  font-size:13px;
+  color:var(--muted);
+  line-height:1.4;
+}
+
+@keyframes pulse{
+  0%,100%{transform:scale(1)}
+  50%{transform:scale(1.015)}
+}
 </style>
 </head>
+
 <body>
-<main class="app">
-<header class="top"><div class="brand"><div class="logo">🌦️</div><div><h1>Meteo Viaggio</h1><div class="sub">Meteo reale qui e lungo il viaggio · v11.4-fix-js</div></div></div><div class="live"><i class="dot"></i>LIVE</div></header>
 
-<section class="card">
-<div class="title">🚗 Controlla il meteo del viaggio</div>
-<div class="sub" id="tripstart">📍 Partenza: posizione GPS in caricamento…</div>
-<div class="depart"><label>🕒 Quando vuoi partire?</label><select id="depart"><option value="0">Parto adesso</option><option value="1">Tra un’ora</option><option value="2">Tra due ore</option></select></div>
-<div class="search"><input id="tripdest" placeholder="Hotel, luogo, indirizzo o città"><button class="btn" id="tripgo">Controlla meteo viaggio</button></div>
-<div class="sub">Puoi cercare hotel, ristoranti, attività, luoghi, vie e città.</div>
-<div class="favtitle"><span>Destinazioni rapide</span><button id="favedit">⚙️ Imposta</button></div>
-<div class="favbuttons"><button class="btn alt" id="favhome">🏠 <small>Casa</small></button><button class="btn alt" id="fav1">⭐ <small>Preferita 1</small></button><button class="btn alt" id="fav2">⭐ <small>Preferita 2</small></button></div>
-<div id="tripresult" class="tripresult hidden"></div>
-</section>
+<div class="app">
 
-<section class="card">
-<div class="title">🌍 Meteo di un’altra città</div>
-<div class="search"><input id="city" placeholder="Scrivi una città, es. Roma"><button class="btn" id="citygo">Mostra meteo</button></div>
-<button class="btn alt" id="backhere" style="width:100%">📍 Torna al meteo qui</button>
-</section>
+<h1>🌦️ Meteo Viaggio</h1>
+<div class="sub">Allerte meteo automatiche durante il viaggio</div>
 
-<div class="quick"><button class="btn alt" id="here">📍 Aggiorna posizione</button><button class="btn alt" id="refresh">🔄 Aggiorna meteo</button></div>
-<label style="display:flex;align-items:center;justify-content:space-between;gap:12px;background:#102438;border:1px solid #ffffff18;border-radius:14px;padding:12px 14px;margin-top:9px;font-weight:850"><span>🔊 Voce avvisi pericoli</span><input id="voice" type="checkbox" style="width:24px;height:24px;accent-color:#61dfa3"></label>
-<div class="status" id="status">Caricamento della tua posizione…</div>
+<div class="card">
+  <div class="status">
+    <span class="dot"></span>
+    Sistema allerte attivo
+  </div>
+  <p class="small">
+    Meteo Viaggio controlla le condizioni nella tua posizione e segnala
+    pioggia, temporali, grandine, vento forte e nebbia.
+  </p>
+</div>
 
-<section class="card"><div class="place" id="place">Posizione attuale</div><div class="now"><div class="wi" id="icon">⏳</div><div><div class="temp" id="temp">--°</div><div class="desc" id="desc">Attendo i dati meteo</div><div class="updated" id="updated">—</div></div></div><div class="metrics"><div class="metric"><span>Percepita</span><b id="feels">—</b></div><div class="metric"><span>Umidità</span><b id="humidity">—</b></div><div class="metric"><span>Vento</span><b id="wind">—</b></div><div class="metric"><span>Pioggia</span><b id="rain">—</b></div><div class="metric"><span>Altitudine</span><b id="altitude">—</b></div></div></section>
+<div id="weatherAlert" class="alert">
+  <div id="alertTitle" class="alert-title"></div>
+  <div id="alertText"></div>
+  <div id="alertTime" class="alert-time"></div>
+</div>
 
-<div id="raincount" class="raincount"><strong>🌧️ Controllo arrivo della pioggia…</strong><span>Analizzo le prossime ore nella tua zona.</span></div>
-<div id="alert" class="alert ok"><div class="ico">✅</div><div><b>Nessun fenomeno pericoloso</b><p>Controllo meteo in corso.</p></div></div>
+<div class="card">
+  <b>📍 Posizione</b>
+  <div id="position" class="small">Ricerca posizione...</div>
 
-<section class="card"><div class="title">Prossime ore</div><div class="hours" id="hours"></div></section>
-<section class="card"><div class="title">📅 Previsioni per 7 giorni</div><div class="days" id="days"></div></section>
+  <b style="display:block;margin-top:12px">🌤 Condizioni</b>
+  <div id="conditions" class="small">In attesa dei dati meteo...</div>
+</div>
 
-<section class="card"><div class="radarhead"><div class="title">🌧️ Radar pioggia</div><div class="radartime" id="radartime">Caricamento…</div></div><div id="radar"></div><div class="radarbuttons"><button class="btn alt" id="play">▶️ Anima radar</button><button class="btn alt" id="latest">⏭️ Ultimo</button></div></section>
-<div class="foot">Dati Open-Meteo · OpenStreetMap · Radar RainViewer<br>La posizione viene usata solo sul tuo dispositivo.</div>
-</main>
+<button onclick="checkWeather()">Aggiorna meteo adesso</button>
 
-<div id="favmodal" class="modal hidden"><div class="modalin"><h2>📌 Destinazioni preferite</h2><label>🏠 Casa<input id="sethome" placeholder="Es. Via Roma 10, Pieve a Nievole"></label><label>⭐ Preferita 1<input id="setfav1" placeholder="Es. Hotel Cascina Marisa Opera"></label><label>⭐ Preferita 2<input id="setfav2" placeholder="Es. Centro Commerciale Arese"></label><button class="btn" id="favsave">Salva destinazioni</button><button class="btn alt" id="favclose">Annulla</button></div></div>
+<div class="card">
+  <b>🔔 Avvisi automatici</b>
+  <p class="small">
+    Quando viene rilevato maltempo nelle vicinanze, Meteo Viaggio mostra
+    automaticamente un avviso e riproduce un segnale acustico.
+  </p>
+</div>
 
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+</div>
+
 <script>
-const $=id=>document.getElementById(id);
-let p=null,gpsPoint=null,map,marker,radarLayer=null,frames=[],fi=0,radarTimer=null,routeLayers=[];
-let voiceOn=localStorage.getItem('meteoViaggioVoce')!=='off';
-let favs=(()=>{try{return JSON.parse(localStorage.getItem('meteoViaggioPreferite')||'{}')}catch(e){return{}}})();
-const codes={0:['☀️','Sereno'],1:['🌤️','Prevalentemente sereno'],2:['⛅','Parzialmente nuvoloso'],3:['☁️','Coperto'],45:['🌫️','Nebbia'],48:['🌫️','Nebbia con brina'],51:['🌦️','Pioviggine debole'],53:['🌦️','Pioviggine'],55:['🌧️','Pioviggine intensa'],61:['🌧️','Pioggia debole'],63:['🌧️','Pioggia'],65:['🌧️','Pioggia forte'],71:['🌨️','Neve debole'],73:['🌨️','Neve'],75:['❄️','Neve forte'],80:['🌦️','Rovesci deboli'],81:['🌧️','Rovesci'],82:['⛈️','Rovesci violenti'],95:['⛈️','Temporale'],96:['⛈️','Temporale con grandine'],99:['⛈️','Temporale forte con grandine']};
-const inf=(c,d=1)=>!d&&c<2?['🌙','Sereno']:(codes[c]||['🌥️','Variabile']);
-function st(t){$('status').textContent=t}
-function speak(t){if(!voiceOn||!('speechSynthesis'in window))return;speechSynthesis.cancel();let u=new SpeechSynthesisUtterance(t);u.lang='it-IT';u.rate=.95;speechSynthesis.speak(u)}
-async function fetchJSON(url,timeout=15000){const c=new AbortController(),to=setTimeout(()=>c.abort(),timeout);try{let r=await fetch(url,{signal:c.signal,headers:{Accept:'application/json'}});if(!r.ok)throw Error('HTTP '+r.status);return await r.json()}finally{clearTimeout(to)}}
-function geo(){return new Promise((ok,no)=>navigator.geolocation.getCurrentPosition(x=>ok({lat:x.coords.latitude,lon:x.coords.longitude}),no,{enableHighAccuracy:true,timeout:15000,maximumAge:60000}))}
-async function reverseName(x){try{let j=await fetchJSON(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${x.lat}&lon=${x.lon}&accept-language=it`);return j.address?.city||j.address?.town||j.address?.village||j.display_name?.split(',')[0]||'Posizione attuale'}catch(e){return'Posizione attuale'}}
-async function geocodeDest(q){
- q=String(q||'').trim(); if(!q)throw Error('Inserisci una destinazione');
 
- const clean=q.replace(/\s+/g,' ').trim();
- const stripped=clean
-   .replace(/^\s*(hotel|albergo|residence|b&b|bed\s*&\s*breakfast|ristorante|trattoria|pizzeria|bar|cinema|ospedale|clinica|centro commerciale)\s+/i,'')
-   .trim();
+let lastAlert="";
+let userLat=null;
+let userLon=null;
 
- // Garanzia per la destinazione usata nel test.
- // Il nome ufficiale e l'indirizzo sono Hotel Cascina Marisa, Via Vigentina 1, Opera (MI).
- if(/cascina\s+marisa/i.test(clean)){
-   return {lat:45.3739,lon:9.2116,name:'Hotel Cascina Marisa, Via Vigentina 1, Opera (MI)'};
- }
+function beep(){
+  try{
+    const ctx=new (window.AudioContext||window.webkitAudioContext)();
+    const osc=ctx.createOscillator();
+    const gain=ctx.createGain();
 
- const attempts=[clean];
- if(stripped && stripped.toLowerCase()!==clean.toLowerCase()) attempts.push(stripped);
- if(!/\bitalia\b/i.test(clean)) attempts.push(clean+', Italia');
- if(stripped && !/\bitalia\b/i.test(stripped)) attempts.push(stripped+', Italia');
+    osc.connect(gain);
+    gain.connect(ctx.destination);
 
- // 1) OpenStreetMap / Nominatim: POI, strutture, indirizzi e città.
- for(const query of [...new Set(attempts)]){
-   try{
-     let params=new URLSearchParams({
-       format:'jsonv2',
-       q:query,
-       limit:'8',
-       countrycodes:'it',
-       'accept-language':'it',
-       addressdetails:'1',
-       namedetails:'1'
-     });
-     let list=await fetchJSON('https://nominatim.openstreetmap.org/search?'+params);
-     if(list?.length){
-       const words=stripped.toLowerCase().split(/\s+/).filter(x=>x.length>2);
-       const scored=list.map(x=>{
-         const text=((x.name||'')+' '+(x.display_name||'')).toLowerCase();
-         let score=0;
-         words.forEach(w=>{if(text.includes(w))score+=3});
-         if(x.type==='hotel'||x.type==='restaurant'||x.type==='mall'||x.type==='hospital')score+=2;
-         return {x,score};
-       }).sort((a,b)=>b.score-a.score);
-       const best=scored[0].x;
-       return{lat:+best.lat,lon:+best.lon,name:best.display_name||clean};
-     }
-   }catch(e){}
- }
+    osc.frequency.value=880;
+    gain.gain.value=.18;
 
- // 2) Photon: motore alternativo particolarmente utile per nomi di POI.
- for(const query of [...new Set([clean,stripped].filter(Boolean))]){
-   try{
-     let url='https://photon.komoot.io/api/?limit=8&lang=it&q='+encodeURIComponent(query);
-     let j=await fetchJSON(url);
-     if(j?.features?.length){
-       let words=stripped.toLowerCase().split(/\s+/).filter(x=>x.length>2);
-       let ranked=j.features.map(f=>{
-         let p=f.properties||{}, text=[
-           p.name,p.street,p.city,p.county,p.state,p.country
-         ].filter(Boolean).join(' ').toLowerCase();
-         let score=0;
-         words.forEach(w=>{if(text.includes(w))score+=3});
-         if(String(p.countrycode||'').toLowerCase()==='it')score+=4;
-         return {f,score};
-       }).sort((a,b)=>b.score-a.score);
-       let f=ranked[0].f, c=f.geometry.coordinates, pr=f.properties||{};
-       let label=[pr.name,pr.street,pr.housenumber,pr.city,pr.state].filter(Boolean).join(', ');
-       return {lat:+c[1],lon:+c[0],name:label||clean};
-     }
-   }catch(e){}
- }
+    osc.start();
 
- // 3) Ultimo fallback per città/località.
- try{
-   let j=await fetchJSON('https://geocoding-api.open-meteo.com/v1/search?name='+encodeURIComponent(stripped||clean)+'&count=5&language=it&format=json'),
-       x=j.results?.[0];
-   if(x)return{lat:x.latitude,lon:x.longitude,name:[x.name,x.admin2,x.admin1].filter(Boolean).join(', ')};
- }catch(e){}
+    setTimeout(()=>{
+      osc.stop();
+      ctx.close();
+    },350);
+  }catch(e){}
+}
 
- throw Error('Destinazione non trovata. Prova con nome del luogo + città.');
+function showAlert(type,title,text){
+
+  const box=document.getElementById("weatherAlert");
+
+  box.className="alert show "+type;
+
+  document.getElementById("alertTitle").textContent=title;
+  document.getElementById("alertText").textContent=text;
+
+  const now=new Date();
+
+  document.getElementById("alertTime").textContent=
+    "Aggiornato alle "+now.toLocaleTimeString("it-IT",{
+      hour:"2-digit",
+      minute:"2-digit"
+    });
+
+  const key=title+"-"+text;
+
+  if(key!==lastAlert){
+    beep();
+    lastAlert=key;
+
+    if("vibrate" in navigator){
+      navigator.vibrate([250,150,250]);
+    }
+  }
 }
-async function weatherAt(x,days=7){
- let qs=new URLSearchParams({latitude:x.lat,longitude:x.lon,timezone:'auto',forecast_days:String(days),current:'temperature_2m,relative_humidity_2m,apparent_temperature,is_day,precipitation,rain,weather_code,wind_speed_10m',hourly:'temperature_2m,apparent_temperature,precipitation_probability,precipitation,weather_code,visibility,wind_gusts_10m',daily:'weather_code,temperature_2m_max,temperature_2m_min,apparent_temperature_max,apparent_temperature_min,precipitation_probability_max,precipitation_sum,wind_gusts_10m_max'});
- return fetchJSON('https://api.open-meteo.com/v1/forecast?'+qs);
+
+function clearAlert(){
+  document.getElementById("weatherAlert").className="alert";
 }
-function initMap(){if(map)return;map=L.map('radar').setView([43.8,11.1],7);L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap'}).addTo(map)}
-function mapPos(){initMap();map.setView([p.lat,p.lon],9);if(marker)marker.remove();marker=L.circleMarker([p.lat,p.lon],{radius:8,color:'#fff',weight:3,fillColor:'#268cff',fillOpacity:1}).addTo(map);setTimeout(()=>map.invalidateSize(),100)}
-function warning(j,n){
- let h=j.hourly,r=[];
- for(let z=n;z<Math.min(n+6,h.time.length);z++){let c=h.weather_code[z],g=h.wind_gusts_10m[z]||0,v=h.visibility[z]||99999,pr=h.precipitation_probability[z]||0;
-  if(c==96||c==99)r.push(['bad','⛈️','Possibile grandine','Temporali con grandine previsti nelle prossime ore.']);
-  else if(c==95||c==82)r.push(['bad','⛈️','Temporale forte','Possibili fenomeni intensi nelle prossime ore.']);
-  if(g>=70)r.push(['bad','💨','Vento molto forte','Raffiche fino a '+Math.round(g)+' km/h.']);
-  else if(g>=50)r.push(['warn','💨','Attenzione al vento','Raffiche fino a '+Math.round(g)+' km/h.']);
-  if(v<1000||c==45||c==48)r.push(['warn','🌫️','Possibile nebbia','Visibilità ridotta prevista nella zona.']);
-  if(pr>=70&&(h.precipitation[z]||0)>.5)r.push(['warn','🌧️','Pioggia in arrivo','Probabilità fino al '+pr+'%.']);
- }
- let a=$('alert'),x=r.find(x=>x[0]=='bad')||r[0];
- if(!x){a.className='alert ok';a.innerHTML='<div class="ico">✅</div><div><b>Nessun fenomeno pericoloso</b><p>Nelle prossime ore non risultano criticità importanti.</p></div>'}
- else{a.className='alert '+x[0];a.innerHTML=`<div class="ico">${x[1]}</div><div><b>${x[2]}</b><p>${x[3]}</p></div>`;speak('Avviso meteo. '+x[2]+'. '+x[3])}
-}
-function rainCountdown(j,n){
- let h=j.hourly,now=Date.now(),found=-1,wet=(j.current.precipitation||0)>.1;
- for(let z=n;z<Math.min(n+8,h.time.length);z++){if((h.precipitation[z]||0)>.1){found=z;break}}
- if(wet){$('raincount').innerHTML='<strong>🌧️ Sta piovendo adesso</strong><span>Controllo automatico delle prossime ore.</span>'}
- else if(found>=0){let mins=Math.max(1,Math.round((new Date(h.time[found]).getTime()-now)/60000));$('raincount').innerHTML=`<strong>🌧️ Pioggia possibile tra circa ${mins} minuti</strong><span>Ora prevista: ${new Date(h.time[found]).toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'})}</span>`}
- else $('raincount').innerHTML='<strong>☀️ Nessuna pioggia imminente</strong><span>Non risultano precipitazioni significative nelle prossime ore.</span>';
-}
-function draw(j){
- let c=j.current,w=inf(c.weather_code,c.is_day);$('place').textContent=p.name;$('icon').textContent=w[0];$('temp').textContent=Math.round(c.temperature_2m)+'°';$('desc').textContent=w[1];$('feels').textContent=Math.round(c.apparent_temperature)+'°C';$('humidity').textContent=Math.round(c.relative_humidity_2m)+'%';$('wind').textContent=Math.round(c.wind_speed_10m)+' km/h';$('rain').textContent=(c.rain||c.precipitation||0).toFixed(1)+' mm';$('altitude').textContent=Math.round(j.elevation||0)+' m';$('updated').textContent='Aggiornato alle '+new Date().toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'});
- let h=j.hourly,n=h.time.findIndex(t=>new Date(t)>=new Date(Date.now()-1800000));if(n<0)n=0;$('hours').innerHTML='';
- for(let z=n;z<Math.min(n+12,h.time.length);z++){let i=inf(h.weather_code[z]),el=document.createElement('div');el.className='hour';el.innerHTML=`<strong>${new Date(h.time[z]).toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'})}</strong><div class="hi">${i[0]}</div><b>${Math.round(h.temperature_2m[z])}°</b><small>Percepita ${Math.round(h.apparent_temperature[z])}°<br>🌧️ ${h.precipitation_probability[z]||0}%<br>💨 ${Math.round(h.wind_gusts_10m[z]||0)} km/h</small>`;$('hours').appendChild(el)}
- $('days').innerHTML='';let d=j.daily;
- for(let z=0;z<Math.min(7,d.time.length);z++){let i=inf(d.weather_code[z]),el=document.createElement('div');el.className='day';el.innerHTML=`<strong>${z===0?'Oggi':new Date(d.time[z]+'T12:00').toLocaleDateString('it-IT',{weekday:'short'})}</strong><div class="di">${i[0]}</div><b>${Math.round(d.temperature_2m_min[z])}° / ${Math.round(d.temperature_2m_max[z])}°</b><small>${i[1]}<br>🌧️ ${d.precipitation_probability_max[z]||0}%<br>💨 ${Math.round(d.wind_gusts_10m_max[z]||0)} km/h</small>`;$('days').appendChild(el)}
- warning(j,n);rainCountdown(j,n);
-}
-async function radar(){
- initMap();$('radartime').textContent='Carico radar…';
- try{let j=await fetchJSON('https://api.rainviewer.com/public/weather-maps.json?ts='+Date.now()),host=j.host||'https://tilecache.rainviewer.com';frames=[...(j.radar?.past||[]),...(j.radar?.nowcast||[])].slice(-12).map(f=>({...f,host}));if(!frames.length)throw Error();setFrame(frames.length-1);$('radartime').textContent='Radar aggiornato'}catch(e){$('radartime').textContent='Radar momentaneamente non disponibile'}
-}
-function setFrame(n){if(!frames.length)return;fi=(n+frames.length)%frames.length;let f=frames[fi];if(radarLayer)map.removeLayer(radarLayer);radarLayer=L.tileLayer(f.host+f.path+'/256/{z}/{x}/{y}/2/1_1.png',{opacity:.65,zIndex:350,maxNativeZoom:7,maxZoom:19}).addTo(map);$('radartime').textContent=new Date(f.time*1000).toLocaleTimeString('it-IT',{hour:'2-digit',minute:'2-digit'})}
-function toggleRadar(){if(radarTimer){clearInterval(radarTimer);radarTimer=null;$('play').textContent='▶️ Anima radar'}else{if(!frames.length)return;fi=0;setFrame(fi);radarTimer=setInterval(()=>setFrame(++fi),850);$('play').textContent='⏸️ Pausa radar'}}
-async function load(){try{st('Aggiorno il meteo…');mapPos();draw(await weatherAt(p));st('Meteo aggiornato.');radar()}catch(e){st('Aggiornamento non riuscito. Controlla la connessione.')}}
-async function here(){try{st('Cerco la tua posizione GPS…');let x=await geo();gpsPoint={...x,name:await reverseName(x)};p={...gpsPoint};$('tripstart').textContent='📍 Partenza: '+gpsPoint.name+' · posizione GPS';await load()}catch(e){$('tripstart').textContent='📍 Posizione GPS non disponibile';st('Consenti la posizione a Safari e premi “Aggiorna posizione”.')}}
-async function citySearch(){let q=$('city').value.trim();if(!q)return;try{st('Cerco '+q+'…');p=await geocodeDest(q);await load()}catch(e){st(e.message)}}
-function hav(a,b){let R=6371,d1=(b.lat-a.lat)*Math.PI/180,d2=(b.lon-a.lon)*Math.PI/180,s=Math.sin(d1/2)**2+Math.cos(a.lat*Math.PI/180)*Math.cos(b.lat*Math.PI/180)*Math.sin(d2/2)**2;return 2*R*Math.asin(Math.sqrt(s))}
-async function routeTo(d){let j=await fetchJSON(`https://router.project-osrm.org/route/v1/driving/${gpsPoint.lon},${gpsPoint.lat};${d.lon},${d.lat}?overview=full&geometries=geojson&alternatives=false`);if(!j.routes?.length)throw Error('Percorso non disponibile');return j.routes[0]}
-function sampleRoute(r){let c=r.geometry.coordinates.map(v=>({lat:v[1],lon:v[0]})),cum=[0];for(let i=1;i<c.length;i++)cum[i]=cum[i-1]+hav(c[i-1],c[i]);let total=cum.at(-1),count=Math.min(8,Math.max(3,Math.ceil(total/50)+1)),out=[];for(let n=0;n<count;n++){let km=total*n/(count-1),i=cum.findIndex(x=>x>=km);if(i<0)i=c.length-1;out.push({...c[i],km,eta:r.duration*n/(count-1)})}return out}
-async function trip(){
- let q=$('tripdest').value.trim();if(!q)return;
- try{
-  $('tripgo').disabled=true;$('tripgo').textContent='Controllo…';
-  if(!gpsPoint){let x=await geo();gpsPoint={...x,name:await reverseName(x)}}
-  let d=await geocodeDest(q),r=await routeTo(d),pts=sampleRoute(r),delay=Number($('depart').value||0)*3600000;
-  for(let x of pts){let j=await weatherAt(x,2),target=Date.now()+delay+x.eta*1000,i=j.hourly.time.findIndex(t=>new Date(t).getTime()>=target);if(i<0)i=j.hourly.time.length-1;x.w={code:j.hourly.weather_code[i],temp:j.hourly.temperature_2m[i],feel:j.hourly.apparent_temperature[i],rain:j.hourly.precipitation_probability[i]||0,gust:j.hourly.wind_gusts_10m[i]||0,vis:j.hourly.visibility[i]||99999}}
-  let worst=0;for(let x of pts){if([82,95,96,99].includes(x.w.code)||x.w.gust>=70)worst=Math.max(worst,3);else if([45,48].includes(x.w.code)||x.w.rain>=70||x.w.gust>=50)worst=Math.max(worst,2)}
-  let cls=worst===3?'bad':worst===2?'warn':'ok',title=worst===3?'Attenzione: meteo impegnativo sul percorso':worst===2?'Puoi partire, ma con prudenza':'Sì, il viaggio è consigliato';
-  let list=pts.map(x=>{let w=inf(x.w.code),level=[82,95,96,99].includes(x.w.code)?'⚠️ ':'';return`<div class="stop"><div class="si">${w[0]}</div><div><b>${level}${w[1]}</b><small>${Math.round(x.w.temp)}° · percepita ${Math.round(x.w.feel)}° · pioggia ${Math.round(x.w.rain)}% · vento ${Math.round(x.w.gust)} km/h</small></div><div class="km">${Math.round(x.km)} km</div></div>`}).join('');
-  $('tripresult').classList.remove('hidden');$('tripresult').innerHTML=`<div class="verdict ${cls}"><strong>${title}</strong><div class="tripstats"><div class="tripstat">Destinazione<b>${d.name}</b></div><div class="tripstat">Distanza<b>${Math.round(r.distance/1000)} km</b></div><div class="tripstat">Durata<b>${Math.round(r.duration/60)} min</b></div></div></div><div class="stops">${list}</div>`;
-  routeLayers.forEach(x=>map.removeLayer(x));routeLayers=[];let l=L.geoJSON(r.geometry,{style:{color:'#268cff',weight:7,opacity:.95}}).addTo(map);routeLayers.push(l);map.fitBounds(l.getBounds(),{padding:[24,24]});st('Controllo meteo del viaggio completato.');
- }catch(e){st(e.message||'Errore nel controllo viaggio.')}finally{$('tripgo').disabled=false;$('tripgo').textContent='Controlla meteo viaggio'}
-}
-function paintFavs(){$('favhome').querySelector('small').textContent=favs.home||'Casa';$('fav1').querySelector('small').textContent=favs.one||'Preferita 1';$('fav2').querySelector('small').textContent=favs.two||'Preferita 2'}
-function useFav(k){
-  const value=String((favs&&favs[k])||'').trim();
-  if(!value){
-    $('favmodal').classList.remove('hidden');
+
+async function checkWeather(){
+
+  if(userLat===null || userLon===null){
+    getPosition();
     return;
   }
-  $('tripdest').value=value;
-  st('Destinazione selezionata: '+value+'. Avvio controllo meteo viaggio…');
-  setTimeout(()=>trip(),120);
+
+  document.getElementById("conditions").textContent=
+    "Controllo meteo in corso...";
+
+  try{
+
+    const url=
+      "https://api.open-meteo.com/v1/forecast"+
+      "?latitude="+userLat+
+      "&longitude="+userLon+
+      "&current=temperature_2m,precipitation,rain,weather_code,wind_speed_10m,wind_gusts_10m"+
+      "&hourly=precipitation_probability,weather_code,visibility,wind_gusts_10m"+
+      "&forecast_days=1"+
+      "&timezone=auto";
+
+    const r=await fetch(url);
+    const data=await r.json();
+
+    const c=data.current;
+
+    const temp=Math.round(c.temperature_2m);
+    const rain=Number(c.rain||0);
+    const precipitation=Number(c.precipitation||0);
+    const wind=Number(c.wind_speed_10m||0);
+    const gust=Number(c.wind_gusts_10m||0);
+    const code=Number(c.weather_code||0);
+
+    document.getElementById("conditions").textContent=
+      temp+" °C • vento "+Math.round(wind)+
+      " km/h • raffiche "+Math.round(gust)+" km/h";
+
+    /*
+      Codici Open-Meteo:
+      45/48 nebbia
+      51-67 pioggia/pioviggine
+      80-82 rovesci
+      95-99 temporali
+      96/99 temporali con grandine
+    */
+
+    if(code===96 || code===99){
+      showAlert(
+        "hail",
+        "🧊 ATTENZIONE GRANDINE",
+        "Possibile grandine nella tua zona. Guida con prudenza."
+      );
+      return;
+    }
+
+    if(code>=95 && code<=99){
+      showAlert(
+        "storm",
+        "⛈️ TEMPORALE",
+        "Temporale rilevato nella tua zona. Possibili forti precipitazioni."
+      );
+      return;
+    }
+
+    if(gust>=70){
+      showAlert(
+        "danger",
+        "💨 RAFFICHE MOLTO FORTI",
+        "Raffiche fino a "+Math.round(gust)+" km/h. Riduci la velocità."
+      );
+      return;
+    }
+
+    if(gust>=50 || wind>=40){
+      showAlert(
+        "wind",
+        "💨 VENTO FORTE",
+        "Vento forte rilevato. Raffiche fino a "+Math.round(gust)+" km/h."
+      );
+      return;
+    }
+
+    if(code===45 || code===48){
+      showAlert(
+        "fog",
+        "🌫️ NEBBIA",
+        "Visibilità ridotta nella tua zona. Procedi con prudenza."
+      );
+      return;
+    }
+
+    if(
+      rain>0 ||
+      precipitation>0 ||
+      (code>=51 && code<=67) ||
+      (code>=80 && code<=82)
+    ){
+      showAlert(
+        "rain",
+        "🌧️ PIOGGIA",
+        "Pioggia rilevata nella tua posizione."
+      );
+      return;
+    }
+
+    /*
+      Controllo delle prossime ore:
+      avvisa se la probabilità di pioggia supera il 60%.
+    */
+
+    if(data.hourly && data.hourly.time){
+
+      const now=Date.now();
+
+      for(let i=0;i<data.hourly.time.length;i++){
+
+        const t=new Date(data.hourly.time[i]).getTime();
+
+        if(t>=now && t<=now+(3*60*60*1000)){
+
+          const probability=
+            Number(data.hourly.precipitation_probability[i]||0);
+
+          const futureCode=
+            Number(data.hourly.weather_code[i]||0);
+
+          if(futureCode===96 || futureCode===99){
+
+            showAlert(
+              "hail",
+              "🧊 RISCHIO GRANDINE IN ARRIVO",
+              "Possibile grandine nelle prossime ore."
+            );
+            return;
+          }
+
+          if(futureCode>=95 && futureCode<=99){
+
+            showAlert(
+              "storm",
+              "⛈️ TEMPORALE IN ARRIVO",
+              "Possibile temporale nelle prossime ore."
+            );
+            return;
+          }
+
+          if(probability>=60){
+
+            const ora=new Date(data.hourly.time[i])
+              .toLocaleTimeString("it-IT",{
+                hour:"2-digit",
+                minute:"2-digit"
+              });
+
+            showAlert(
+              "rain",
+              "🌧️ PIOGGIA IN ARRIVO",
+              "Probabilità "+probability+
+              "%. Prevista indicativamente dalle "+ora+"."
+            );
+            return;
+          }
+        }
+      }
+    }
+
+    clearAlert();
+
+  }catch(err){
+
+    document.getElementById("conditions").textContent=
+      "Impossibile aggiornare il meteo. Riproverò automaticamente.";
+  }
 }
-$('voice').checked=voiceOn;$('voice').onchange=()=>{voiceOn=$('voice').checked;localStorage.setItem('meteoViaggioVoce',voiceOn?'on':'off')};
-$('here').onclick=here;$('refresh').onclick=()=>p?load():here;$('backhere').onclick=here;$('citygo').onclick=citySearch;$('city').onkeydown=e=>e.key==='Enter'&&citySearch();
-$('tripgo').onclick=trip;$('tripdest').onkeydown=e=>e.key==='Enter'&&trip();$('play').onclick=toggleRadar;$('latest').onclick=()=>setFrame(frames.length-1);
-$('favedit').onclick=()=>{$('sethome').value=favs.home||'';$('setfav1').value=favs.one||'';$('setfav2').value=favs.two||'';$('favmodal').classList.remove('hidden')};
-$('favclose').onclick=()=>$('favmodal').classList.add('hidden');$('favsave').onclick=()=>{favs={home:$('sethome').value.trim(),one:$('setfav1').value.trim(),two:$('setfav2').value.trim()};localStorage.setItem('meteoViaggioPreferite',JSON.stringify(favs));paintFavs();$('favmodal').classList.add('hidden');st('Preferiti salvati.')};
-$('favhome').onclick=()=>useFav('home');$('fav1').onclick=()=>useFav('one');$('fav2').onclick=()=>useFav('two');
-paintFavs();initMap();here();
+
+function getPosition(){
+
+  if(!navigator.geolocation){
+
+    document.getElementById("position").textContent=
+      "Geolocalizzazione non disponibile.";
+
+    return;
+  }
+
+  navigator.geolocation.getCurrentPosition(
+
+    pos=>{
+
+      userLat=pos.coords.latitude;
+      userLon=pos.coords.longitude;
+
+      document.getElementById("position").textContent=
+        "Posizione GPS acquisita";
+
+      checkWeather();
+    },
+
+    err=>{
+
+      document.getElementById("position").textContent=
+        "Consenti l'accesso alla posizione per ricevere le allerte.";
+    },
+
+    {
+      enableHighAccuracy:true,
+      timeout:15000,
+      maximumAge:60000
+    }
+  );
+}
+
+/* primo controllo */
+getPosition();
+
+/* nuovo controllo ogni 5 minuti */
+setInterval(checkWeather,5*60*1000);
+
 </script>
 
-<script>
-(async function clearVecchiaPWA(){
-  try{
-    if('serviceWorker' in navigator){
-      const regs=await navigator.serviceWorker.getRegistrations();
-      await Promise.all(regs.map(r=>r.unregister()));
-    }
-    if('caches' in window){
-      const keys=await caches.keys();
-      await Promise.all(keys.map(k=>caches.delete(k)));
-    }
-  }catch(e){}
-})();
-</script>
-<script src="notifications.js"></script>
 </body>
 </html>
